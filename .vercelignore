@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+
+# Local env
+.env*.local
+.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scripts de desarrollo
+scripts/limpiar-duplicados.js
+scripts/generate-icons.js
+
+# Documentación de desarrollo
+docs/TESTING.md
+docs/TROUBLESHOOTING.md
+
+# Git
+.git
+.gitignore
