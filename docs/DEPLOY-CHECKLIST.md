@@ -3,6 +3,7 @@
 ## Pre-Deploy
 
 ### Configuración de Archivos
+
 - [x] `vercel.json` - Configuración de Vercel con headers y regiones
 - [x] `.vercelignore` - Archivos a excluir del deploy
 - [x] `.eslintrc.json` - Configuración de ESLint
@@ -11,12 +12,14 @@
 - [x] `docs/DEPLOY-VERCEL.md` - Documentación completa
 
 ### Build y Tests
+
 - [x] `npm run build` - Build exitoso ✅
 - [x] Verificación de errores de TypeScript ✅
 - [x] Imágenes optimizadas configuradas
 - [x] PWA configurado (manifest.json + sw.js)
 
 ### Seguridad
+
 - [x] `.env.local` en `.gitignore` ✅
 - [x] Headers de seguridad configurados
 - [x] Variables sensibles no expuestas en código
@@ -43,6 +46,7 @@ NEXT_PUBLIC_GEMINI_MODEL=gemini-2.5-flash
 ## Deploy Steps
 
 ### 1. Push a GitHub
+
 ```bash
 git add .
 git commit -m "chore: preparar deploy en Vercel"
@@ -50,16 +54,19 @@ git push origin main
 ```
 
 ### 2. Conectar a Vercel
+
 1. Ve a https://vercel.com/new
 2. Import Git Repository: `Angel-Baez/gondolapp-beta`
 3. Framework: Next.js (auto-detectado)
 
 ### 3. Configurar Variables
+
 - Añade `MONGODB_URI`
 - Añade `NEXT_PUBLIC_GEMINI_API_KEY`
 - Añade `NEXT_PUBLIC_GEMINI_MODEL`
 
 ### 4. Deploy
+
 - Click "Deploy"
 - Espera 2-3 minutos
 
@@ -70,11 +77,13 @@ git push origin main
 ### Checks Obligatorios
 
 #### 1. ✅ Homepage carga
+
 ```bash
 curl https://tu-app.vercel.app
 ```
 
 #### 2. ✅ API funciona
+
 ```bash
 # Health check
 curl https://tu-app.vercel.app/api/sync
@@ -84,18 +93,21 @@ curl "https://tu-app.vercel.app/api/productos/buscar?ean=7790310081457"
 ```
 
 #### 3. ✅ PWA instala
+
 - Abre en Chrome Mobile
 - Menú > "Agregar a pantalla de inicio"
 - Verifica ícono en home screen
 - Abre y verifica splash screen
 
 #### 4. ✅ Offline funciona
+
 - Abre la app
 - Activa modo avión
 - Navega por la app
 - Verifica que funcione
 
 #### 5. ✅ Escáner funciona
+
 - Permite acceso a cámara
 - Escanea código de barras
 - Verifica que busque en API
@@ -119,6 +131,7 @@ Comment: Vercel serverless functions
 ### Alternativa Segura
 
 Usa MongoDB Vercel Integration:
+
 ```bash
 vercel integration add mongodb-atlas
 ```
@@ -134,6 +147,7 @@ lighthouse https://tu-app.vercel.app --view
 ```
 
 ### Objetivos
+
 - 🎯 Performance: >90
 - 🎯 PWA: 100
 - 🎯 Accessibility: >90
@@ -145,27 +159,34 @@ lighthouse https://tu-app.vercel.app --view
 ## Troubleshooting Común
 
 ### ❌ Build falla con error de MongoDB
+
 **Causa**: Conexión a MongoDB durante build time  
 **Solución**: Normal, el build continúa. Verificar que `MONGODB_URI` esté en variables de entorno.
 
 ### ❌ API devuelve 500
+
 **Causa**: MongoDB no accesible  
-**Solución**: 
+**Solución**:
+
 1. Verificar whitelist de IPs (0.0.0.0/0)
 2. Verificar `MONGODB_URI` en Vercel
 3. Revisar logs: `vercel logs --follow`
 
 ### ❌ PWA no instala
+
 **Causa**: Varios posibles  
 **Solución**:
+
 1. Verificar HTTPS (Vercel lo hace automático)
 2. Verificar `/manifest.json` carga
 3. Verificar `/sw.js` carga
 4. DevTools > Application > Service Workers
 
 ### ❌ Cámara no funciona
+
 **Causa**: Permisos o HTTP  
 **Solución**:
+
 1. HTTPS requerido ✅ (Vercel automático)
 2. Verificar permisos del navegador
 3. Probar en dispositivo real (no emulador)
@@ -199,16 +220,19 @@ vercel rm [deployment-url]
 ## Monitoreo Continuo
 
 ### Logs de Producción
+
 ```bash
 vercel logs gondolapp-beta --prod --follow
 ```
 
 ### Analytics (Opcional)
+
 ```bash
 npm install @vercel/analytics
 ```
 
 ### Uptime Monitoring
+
 - Usar: UptimeRobot, Pingdom, o StatusCake
 - Endpoint: `https://tu-app.vercel.app/api/sync`
 - Frecuencia: 5 minutos

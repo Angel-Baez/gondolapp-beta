@@ -90,12 +90,15 @@ curl https://tu-app.vercel.app/api/sync
 ## 🔧 Troubleshooting
 
 ### "MONGODB_URI is not defined"
+
 ➡️ Añade la variable en Vercel Dashboard > Settings > Environment Variables
 
 ### Build falla
+
 ➡️ Ejecuta `npm run build` localmente para ver errores
 
 ### PWA no instala
+
 ➡️ Verifica que estés usando HTTPS (Vercel lo hace automático)
 
 ---
@@ -103,6 +106,7 @@ curl https://tu-app.vercel.app/api/sync
 ## 📚 Documentación Completa
 
 Ver [DEPLOY-VERCEL.md](./DEPLOY-VERCEL.md) para:
+
 - Configuración avanzada
 - Monitoreo y logs
 - Optimizaciones

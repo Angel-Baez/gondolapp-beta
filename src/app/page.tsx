@@ -1,6 +1,5 @@
 "use client";
 
-import BarcodeScanner from "@/components/BarcodeScanner";
 import FormularioProductoManual from "@/components/FormularioProductoManual";
 import { ReposicionList } from "@/components/reposicion/ReposicionList";
 import { Button } from "@/components/ui/Button";
@@ -25,8 +24,22 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
+
+// 🚀 Lazy load del scanner para reducir bundle inicial
+const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+      <div className="bg-white rounded-2xl p-6">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-accent-primary mx-auto" />
+        <p className="mt-4 text-sm text-gray-600">Cargando escáner...</p>
+      </div>
+    </div>
+  ),
+});
 
 type ActiveView = "reposicion" | "vencimiento";
 

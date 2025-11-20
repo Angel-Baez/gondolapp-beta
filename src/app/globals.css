@@ -18,15 +18,30 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Touch target sizes for mobile */
-@media (max-width: 768px) {
-  button,
-  a,
-  input[type="button"],
-  input[type="submit"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
+/* Touch target sizes for mobile accessibility (Lighthouse AA) */
+/* Asegura que todos los elementos interactivos cumplan con el estándar de 44x44px */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"],
+.clickable {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px;
+}
+
+/* Asegurar que iconos dentro de botones no rompan el tamaño mínimo */
+button > svg,
+a > svg {
+  pointer-events: none;
+}
+
+/* Touch targets más grandes para acciones primarias */
+button.primary,
+a.primary {
+  min-height: 48px;
+  padding: 14px 20px;
 }
 
 /* Smooth scroll behavior */

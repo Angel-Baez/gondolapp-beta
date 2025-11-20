@@ -18,8 +18,9 @@ export const viewport: Viewport = {
   themeColor: "#06B6D4",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // ✅ Permitir zoom para mejor accesibilidad (Lighthouse)
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({
