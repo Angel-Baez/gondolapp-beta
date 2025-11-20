@@ -62,23 +62,23 @@ export function ReposicionCard({
       {/* Header */}
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`p-4 flex items-center justify-between cursor-pointer ${colors.hover} transition`}
+        className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
       >
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {productoBase.imagen && (
             <img
               src={productoBase.imagen}
               alt={productoBase.nombre}
-              className="w-12 h-12 object-cover rounded-lg"
+              className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
             />
           )}
-          <div className="flex-1">
-            <h3 className="font-bold text-gray-900 text-lg">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-tight truncate">
               {productoBase.nombre}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               {productoBase.marca && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 truncate">
                   {productoBase.marca}
                 </span>
               )}
@@ -87,15 +87,25 @@ export function ReposicionCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
           {cantidadTotal > 0 && (
             <div
-              className={`px-3 py-1 ${colors.badge} text-white rounded-lg font-bold`}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 ${colors.badge} text-white rounded-lg font-bold text-sm sm:text-base`}
             >
               x{cantidadTotal}
             </div>
           )}
-          {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+          {isExpanded ? (
+            <ChevronUp
+              size={20}
+              className="sm:w-6 sm:h-6 text-gray-600 flex-shrink-0"
+            />
+          ) : (
+            <ChevronDown
+              size={20}
+              className="sm:w-6 sm:h-6 text-gray-600 flex-shrink-0"
+            />
+          )}
         </div>
       </div>
 
@@ -111,96 +121,116 @@ export function ReposicionCard({
           >
             <div className="divide-y divide-gray-100">
               {variantes.map(({ item, variante }) => (
-                <div key={item.id} className="p-4">
-                  <div className="flex items-center justify-between gap-4">
+                <div key={item.id} className="p-3 sm:p-4">
+                  <div className="space-y-3">
                     {/* Info */}
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">
-                        {variante.nombreCompleto}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {variante.tamano && (
-                          <span className="text-xs text-gray-500">
-                            {variante.tamano}
-                          </span>
-                        )}
-                        {item.repuesto && (
-                          <Badge variant="success">REPUESTO</Badge>
-                        )}
-                        {item.sinStock && (
-                          <Badge variant="danger">SIN STOCK</Badge>
-                        )}
-                        {!item.repuesto && !item.sinStock && (
-                          <Badge variant="default">PENDIENTE</Badge>
-                        )}
+                    <div className="flex items-start gap-3">
+                      {variante.imagen && (
+                        <img
+                          src={variante.imagen}
+                          alt={variante.nombreCompleto}
+                          className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
+                          {variante.nombreCompleto}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          {variante.tamano && (
+                            <span className="text-xs text-gray-500">
+                              {variante.tamano}
+                            </span>
+                          )}
+                          {item.repuesto && (
+                            <Badge variant="success">REPUESTO</Badge>
+                          )}
+                          {item.sinStock && (
+                            <Badge variant="danger">SIN STOCK</Badge>
+                          )}
+                          {!item.repuesto && !item.sinStock && (
+                            <Badge variant="default">PENDIENTE</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Controls */}
-                    <div className="flex items-center gap-2">
+                    {/* Controls - Ahora en fila completa para más espacio */}
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
                       {/* Quantity Control */}
-                      {!item.repuesto && !item.sinStock && (
-                        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                          <button
-                            onClick={() =>
-                              actualizarCantidad(item.id, item.cantidad - 1)
-                            }
-                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-200 font-bold"
-                          >
-                            -
-                          </button>
-                          <span className="w-10 text-center font-bold">
-                            {item.cantidad}
+                      <div className="flex items-center gap-3">
+                        {!item.repuesto && !item.sinStock && (
+                          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                            <button
+                              onClick={() =>
+                                actualizarCantidad(item.id, item.cantidad - 1)
+                              }
+                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-12 text-center font-bold text-base">
+                              {item.cantidad}
+                            </span>
+                            <button
+                              onClick={() =>
+                                actualizarCantidad(item.id, item.cantidad + 1)
+                              }
+                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+
+                        {(item.repuesto || item.sinStock) && (
+                          <span className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">
+                            x{item.cantidad}
                           </span>
-                          <button
-                            onClick={() =>
-                              actualizarCantidad(item.id, item.cantidad + 1)
-                            }
-                            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-200 font-bold"
-                          >
-                            +
-                          </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
-                      {item.repuesto || item.sinStock ? (
-                        <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg font-bold">
-                          x{item.cantidad}
-                        </span>
-                      ) : null}
+                      {/* Action Buttons - Más grandes y con mejor espaciado */}
+                      <div className="flex items-center gap-2">
+                        <IconButton
+                          variant={item.repuesto ? "primary" : "ghost"}
+                          onClick={() =>
+                            marcarRepuesto(item.id, !item.repuesto)
+                          }
+                          title={
+                            item.repuesto
+                              ? "Desmarcar repuesto"
+                              : "Marcar como repuesto"
+                          }
+                          className="w-10 h-10 sm:w-11 sm:h-11"
+                        >
+                          <CheckCircle size={20} className="sm:w-6 sm:h-6" />
+                        </IconButton>
 
-                      {/* Action Buttons */}
-                      <IconButton
-                        variant={item.repuesto ? "primary" : "ghost"}
-                        onClick={() => marcarRepuesto(item.id, !item.repuesto)}
-                        title={
-                          item.repuesto
-                            ? "Desmarcar repuesto"
-                            : "Marcar como repuesto"
-                        }
-                      >
-                        <CheckCircle size={20} />
-                      </IconButton>
+                        <IconButton
+                          variant={item.sinStock ? "destructive" : "ghost"}
+                          onClick={() =>
+                            marcarSinStock(item.id, !item.sinStock)
+                          }
+                          title={
+                            item.sinStock
+                              ? "Desmarcar sin stock"
+                              : "Marcar como sin stock"
+                          }
+                          className="w-10 h-10 sm:w-11 sm:h-11"
+                        >
+                          <XCircle size={20} className="sm:w-6 sm:h-6" />
+                        </IconButton>
 
-                      <IconButton
-                        variant={item.sinStock ? "destructive" : "ghost"}
-                        onClick={() => marcarSinStock(item.id, !item.sinStock)}
-                        title={
-                          item.sinStock
-                            ? "Desmarcar sin stock"
-                            : "Marcar como sin stock"
-                        }
-                      >
-                        <XCircle size={20} />
-                      </IconButton>
-
-                      <IconButton
-                        variant="ghost"
-                        onClick={() => eliminarItem(item.id)}
-                        title="Eliminar"
-                      >
-                        <Trash2 size={20} />
-                      </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          onClick={() => eliminarItem(item.id)}
+                          title="Eliminar"
+                          className="w-10 h-10 sm:w-11 sm:h-11"
+                        >
+                          <Trash2 size={18} className="sm:w-5 sm:h-5" />
+                        </IconButton>
+                      </div>
                     </div>
                   </div>
                 </div>

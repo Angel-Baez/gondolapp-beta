@@ -109,12 +109,12 @@ export function VencimientoList() {
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <Clock size={64} className="mb-4 opacity-50" />
-        <p className="text-lg font-semibold">
+      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+        <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
+        <p className="text-base sm:text-lg font-semibold text-center">
           No hay productos con vencimiento registrado
         </p>
-        <p className="text-sm">
+        <p className="text-xs sm:text-sm text-center mt-1">
           Escanea productos para rastrear sus fechas de vencimiento
         </p>
       </div>
@@ -124,20 +124,23 @@ export function VencimientoList() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-bold text-gray-900">
+      <div className="mb-3 sm:mb-4">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
             Control de Vencimientos
           </h2>
-          <span className="px-3 py-1 bg-accent-primary text-white rounded-lg font-bold">
-            {totalItems} productos
+          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
+            {totalItems} producto{totalItems !== 1 ? "s" : ""}
           </span>
         </div>
 
         {itemsCriticos > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-alert-critico/10 border-2 border-alert-critico rounded-xl">
-            <AlertTriangle size={20} className="text-alert-critico" />
-            <p className="text-sm font-semibold text-alert-critico">
+          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 border-2 border-alert-critico rounded-xl">
+            <AlertTriangle
+              size={18}
+              className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
+            />
+            <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
               {itemsCriticos} producto{itemsCriticos > 1 ? "s" : ""} crítico
               {itemsCriticos > 1 ? "s" : ""} (vencido
               {itemsCriticos > 1 ? "s" : ""} o por vencer)
@@ -147,13 +150,16 @@ export function VencimientoList() {
       </div>
 
       {/* Lista de Items */}
-      <div className="space-y-2">
+      <div className="space-y-4 sm:space-y-6">
         {/* Críticos */}
         {itemsByAlertLevel.critico.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle size={20} className="text-alert-critico" />
-              <h3 className="text-sm font-bold text-alert-critico uppercase tracking-wider">
+          <div>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <AlertCircle
+                size={18}
+                className="text-alert-critico flex-shrink-0 sm:w-5 sm:h-5"
+              />
+              <h3 className="text-xs sm:text-sm font-bold text-alert-critico uppercase tracking-wider">
                 Críticos
               </h3>
             </div>
@@ -170,10 +176,13 @@ export function VencimientoList() {
 
         {/* Advertencia */}
         {itemsByAlertLevel.advertencia.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={20} className="text-alert-advertencia" />
-              <h3 className="text-sm font-bold text-alert-advertencia uppercase tracking-wider">
+          <div>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <AlertTriangle
+                size={18}
+                className="text-alert-advertencia flex-shrink-0 sm:w-5 sm:h-5"
+              />
+              <h3 className="text-xs sm:text-sm font-bold text-alert-advertencia uppercase tracking-wider">
                 Advertencia (15-30 días)
               </h3>
             </div>
@@ -190,10 +199,13 @@ export function VencimientoList() {
 
         {/* Precaución */}
         {itemsByAlertLevel.precaucion.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap size={20} className="text-alert-precaucion" />
-              <h3 className="text-sm font-bold text-alert-precaucion uppercase tracking-wider">
+          <div>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Zap
+                size={18}
+                className="text-alert-precaucion flex-shrink-0 sm:w-5 sm:h-5"
+              />
+              <h3 className="text-xs sm:text-sm font-bold text-alert-precaucion uppercase tracking-wider">
                 Precaución (30-60 días)
               </h3>
             </div>
@@ -210,10 +222,13 @@ export function VencimientoList() {
 
         {/* Normal */}
         {itemsByAlertLevel.normal.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 size={20} className="text-gray-600" />
-              <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wider">
+          <div>
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <CheckCircle2
+                size={18}
+                className="text-gray-600 flex-shrink-0 sm:w-5 sm:h-5"
+              />
+              <h3 className="text-xs sm:text-sm font-bold text-gray-600 uppercase tracking-wider">
                 Normales (+60 días)
               </h3>
             </div>

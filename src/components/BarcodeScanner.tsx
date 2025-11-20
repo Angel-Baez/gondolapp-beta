@@ -1,8 +1,8 @@
 "use client";
 
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { Camera, X, Keyboard, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Camera, Keyboard, Loader2, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -28,57 +28,75 @@ export default function BarcodeScanner({
   const scannerElementId = useRef(
     `barcode-scanner-reader-${Date.now()}`
   ).current;
+  const isStoppingRef = useRef(false);
+  const isStartingRef = useRef(false);
 
   const stopScanning = useCallback(async () => {
-    try {
-      if (scannerRef.current && isScanning) {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-        scannerRef.current = null;
-        setIsScanning(false);
-        setLastScannedCode(null);
-        console.log("🛑 Escáner detenido");
-      }
-    } catch (err) {
-      console.error("Error al detener escáner:", err);
+    // Evitar llamadas múltiples simultáneas
+    if (isStoppingRef.current) {
+      return;
     }
-  }, [isScanning]);
+
+    try {
+      const scanner = scannerRef.current;
+
+      // Verificar que existe un escáner y que está en un estado válido
+      if (!scanner) {
+        return;
+      }
+
+      // Verificar el estado real del escáner antes de intentar detenerlo
+      const scannerState = scanner.getState();
+
+      // Solo intentar detener si el escáner está escaneando
+      if (scannerState === 2) {
+        // 2 = SCANNING state
+        isStoppingRef.current = true;
+        await scanner.stop();
+        scanner.clear();
+      } else {
+        scanner.clear();
+      }
+
+      scannerRef.current = null;
+      setIsScanning(false);
+      setLastScannedCode(null);
+    } catch (err: any) {
+      // Silenciar errores de transición
+      if (
+        !err.message?.includes("Cannot stop") &&
+        !err.message?.includes("Cannot transition")
+      ) {
+        console.error("Error al detener escáner:", err);
+      }
+    } finally {
+      isStoppingRef.current = false;
+    }
+  }, []);
 
   const startScanning = useCallback(async () => {
-    if (isScanning || scannerRef.current || isClosing) return;
+    // Evitar llamadas múltiples simultáneas
+    if (isStartingRef.current) {
+      return;
+    }
+
+    if (isScanning || scannerRef.current || isClosing || showManualInput) {
+      return;
+    }
+
+    // Verificar que el elemento existe ANTES de hacer cualquier cosa
+    if (!readerElementRef.current) {
+      return;
+    }
+
+    isStartingRef.current = true;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      // Verificar que el elemento existe
-      if (!readerElementRef.current) {
-        throw new Error("El contenedor del escáner no está disponible");
-      }
-
-      // PASO 1: Solicitar permisos de cámara PRIMERO
-      console.log("📷 Solicitando permisos de cámara...");
-      let stream: MediaStream | null = null;
-
-      try {
-        // Intentar con cámara trasera
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-        });
-        console.log("✅ Permisos concedidos (cámara trasera)");
-      } catch (err) {
-        console.warn("⚠️ Intentando con cualquier cámara...");
-        // Si falla, usar cualquier cámara
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        console.log("✅ Permisos concedidos (cámara frontal/default)");
-      }
-
-      // Detener stream temporal (solo necesitábamos permisos)
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-
-      // PASO 2: Crear el escáner con todos los formatos
+      // Crear el escáner directamente sin solicitar permisos previos
+      // (html5-qrcode maneja los permisos automáticamente)
       const scanner = new Html5Qrcode(scannerElementId, {
         formatsToSupport: [
           Html5QrcodeSupportedFormats.QR_CODE,
@@ -93,16 +111,16 @@ export default function BarcodeScanner({
       });
       scannerRef.current = scanner;
 
+      // Configuración optimizada para detección rápida
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 150 },
+        fps: 30, // Aumentado de 10 a 30 para detección más rápida
+        qrbox: { width: 280, height: 180 }, // Área de escaneo más grande
         aspectRatio: 1.77,
         disableFlip: false,
       };
 
       const onScanSuccess = (decodedText: string) => {
         if (decodedText !== lastScannedCode && !isClosing) {
-          console.log(`✅ Código escaneado: ${decodedText}`);
           setLastScannedCode(decodedText);
           onScan(decodedText);
 
@@ -121,17 +139,14 @@ export default function BarcodeScanner({
         // Ignorar errores menores
       };
 
-      // PASO 3: Obtener cámaras disponibles
-      console.log("🎥 Obteniendo lista de cámaras...");
+      // Obtener cámaras y iniciar en paralelo para mayor velocidad
       const devices = await Html5Qrcode.getCameras();
 
       if (!devices || devices.length === 0) {
         throw new Error("No se encontraron cámaras disponibles");
       }
 
-      console.log(`📹 Cámaras encontradas (${devices.length}):`, devices);
-
-      // Buscar cámara trasera preferentemente
+      // Buscar cámara trasera preferentemente (sin logs verbosos)
       let selectedCamera = devices[0];
       const backCamera = devices.find(
         (device) =>
@@ -143,12 +158,9 @@ export default function BarcodeScanner({
 
       if (backCamera) {
         selectedCamera = backCamera;
-        console.log("✅ Usando cámara trasera:", selectedCamera.label);
-      } else {
-        console.log("✅ Usando primera cámara:", selectedCamera.label);
       }
 
-      // PASO 4: Iniciar escáner
+      // Iniciar escáner inmediatamente
       await scanner.start(
         selectedCamera.id,
         config,
@@ -158,7 +170,6 @@ export default function BarcodeScanner({
 
       setIsScanning(true);
       setIsLoading(false);
-      console.log("✅ Escáner iniciado correctamente");
     } catch (err: any) {
       console.error("❌ Error al iniciar escáner:", err);
 
@@ -187,10 +198,13 @@ export default function BarcodeScanner({
       setIsLoading(false);
       setIsScanning(false);
       setShowManualInput(true);
+    } finally {
+      isStartingRef.current = false;
     }
   }, [
     isScanning,
     isClosing,
+    showManualInput,
     scannerElementId,
     lastScannedCode,
     stopScanning,
@@ -203,15 +217,20 @@ export default function BarcodeScanner({
       return;
     }
 
+    // Reducir delay de 100ms a 50ms para inicio más rápido
     const timer = setTimeout(() => {
       startScanning();
-    }, 100);
+    }, 50);
 
     return () => {
       clearTimeout(timer);
-      stopScanning();
+      // Solo detener si realmente hay un escáner activo
+      if (scannerRef.current && !isStoppingRef.current) {
+        stopScanning();
+      }
     };
-  }, [isOpen, showManualInput, startScanning, stopScanning]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, showManualInput]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,24 +240,73 @@ export default function BarcodeScanner({
     }
   };
 
+  const handleToggleInputMode = async () => {
+    // Si está escaneando, detener primero
+    if (scannerRef.current && isScanning) {
+      await stopScanning();
+    }
+    setShowManualInput(!showManualInput);
+  };
+
   const handleClose = async () => {
-    if (isClosing) return;
+    if (isClosing || isStoppingRef.current) {
+      return;
+    }
 
     setIsClosing(true);
 
     if (scannerRef.current) {
       try {
-        if (scannerRef.current.isScanning) {
+        const scannerState = scannerRef.current.getState();
+
+        // Solo intentar detener si está escaneando (state === 2)
+        if (scannerState === 2) {
+          isStoppingRef.current = true;
           await scannerRef.current.stop();
         }
+
         scannerRef.current.clear();
-      } catch (err) {
-        console.error("Error al cerrar escáner:", err);
+        scannerRef.current = null;
+      } catch (err: any) {
+        // Ignorar errores de transición al cerrar
+        if (
+          !err.message?.includes("Cannot stop") &&
+          !err.message?.includes("Cannot transition")
+        ) {
+          console.error("Error al cerrar escáner:", err);
+        }
+      } finally {
+        isStoppingRef.current = false;
       }
     }
 
+    setIsScanning(false);
+    setLastScannedCode(null);
+    setError(null);
+    setIsLoading(false);
+
     onClose();
+
+    // CRÍTICO: Resetear el flag después de que onClose se ejecute
+    setTimeout(() => {
+      setIsClosing(false);
+    }, 100);
   };
+
+  // Resetear estados cuando el componente se cierra completamente
+  useEffect(() => {
+    if (!isOpen) {
+      setIsClosing(false);
+      setIsScanning(false);
+      setIsLoading(false);
+      setError(null);
+      setLastScannedCode(null);
+      setShowManualInput(false);
+      setManualCode("");
+      isStoppingRef.current = false;
+      isStartingRef.current = false;
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -254,7 +322,7 @@ export default function BarcodeScanner({
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowManualInput(!showManualInput)}
+            onClick={handleToggleInputMode}
             className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition backdrop-blur-sm text-white"
             aria-label={showManualInput ? "Usar cámara" : "Entrada manual"}
           >
@@ -318,11 +386,10 @@ export default function BarcodeScanner({
 
             {/* Loading Overlay */}
             {isLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 rounded-lg z-20">
-                <Loader2 className="h-16 w-16 text-white animate-spin mb-4" />
-                <p className="text-white text-sm">Iniciando cámara...</p>
-                <p className="text-white/70 text-xs mt-2">
-                  Esto puede tomar unos segundos
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 rounded-lg z-20">
+                <Loader2 className="h-12 w-12 text-cyan-400 animate-spin mb-3" />
+                <p className="text-white text-base font-medium">
+                  Cargando cámara...
                 </p>
               </div>
             )}

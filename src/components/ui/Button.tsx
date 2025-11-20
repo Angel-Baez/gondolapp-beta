@@ -78,6 +78,7 @@ export function IconButton({
   className = "",
   onClick,
   type = "button",
+  disabled,
   ...props
 }: IconButtonProps) {
   const variantClasses = {
@@ -87,12 +88,15 @@ export function IconButton({
     ghost: "bg-gray-100 text-gray-600 hover:bg-gray-200",
   };
 
+  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+
   return (
     <motion.button
-      whileTap={{ scale: 0.9 }}
-      className={`p-2 rounded-full transition-all duration-200 ${variantClasses[variant]} ${className}`}
+      whileTap={!disabled ? { scale: 0.9 } : {}}
+      className={`p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center flex-shrink-0 min-w-[44px] min-h-[44px] ${variantClasses[variant]} ${disabledClasses} ${className}`}
       onClick={onClick}
       type={type}
+      disabled={disabled}
       {...props}
     >
       {children}

@@ -129,10 +129,17 @@ export function ReposicionList() {
 
   if (itemsConProductos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <Archive size={64} className="mb-4 opacity-50" />
-        <p className="text-lg font-semibold">Tu lista está vacía</p>
-        <p className="text-sm">Escanea o busca productos para comenzar</p>
+      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+        <Archive
+          size={48}
+          className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
+        />
+        <p className="text-base sm:text-lg font-semibold text-center">
+          Tu lista está vacía
+        </p>
+        <p className="text-xs sm:text-sm text-center mt-1">
+          Escanea o busca productos para comenzar
+        </p>
       </div>
     );
   }
@@ -148,23 +155,23 @@ export function ReposicionList() {
     icon: any;
     colorClass: string;
   }) => (
-    <div className={`${colorClass} p-4 rounded-t-xl`}>
+    <div className={`${colorClass} p-3 sm:p-4 rounded-t-xl`}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Icon size={24} className="text-white" />
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Icon size={20} className="text-white sm:w-6 sm:h-6 flex-shrink-0" />
+          <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider">
             {title}
           </h3>
         </div>
-        <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-lg font-bold">
-          {count} productos
+        <span className="px-2.5 sm:px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
+          {count} producto{count !== 1 ? "s" : ""}
         </span>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Sección: PENDIENTES */}
       {groupedBySections.pendientes.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -174,7 +181,7 @@ export function ReposicionList() {
             icon={Package}
             colorClass="bg-gradient-to-r from-cyan-500 to-cyan-600"
           />
-          <div className="p-4 space-y-4 bg-cyan-50/30">
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-cyan-50/30">
             {groupedBySections.pendientes.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
@@ -196,7 +203,7 @@ export function ReposicionList() {
             icon={CheckCircle2}
             colorClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
           />
-          <div className="p-4 space-y-4 bg-emerald-50/30">
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-emerald-50/30">
             {groupedBySections.repuestos.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
@@ -218,7 +225,7 @@ export function ReposicionList() {
             icon={XCircle}
             colorClass="bg-gradient-to-r from-red-500 to-red-600"
           />
-          <div className="p-4 space-y-4 bg-red-50/30">
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-red-50/30">
             {groupedBySections.sinStock.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
