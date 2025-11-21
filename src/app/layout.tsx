@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import PWAProvider from "./PWAProvider";
 
@@ -36,6 +37,18 @@ export default function RootLayout({
       </head>
       <body>
         <PWAProvider />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              fontSize: "1rem",
+              borderRadius: "0.75rem",
+              background: "#fff",
+              color: "#222",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
+            },
+          }}
+        />
         {children}
       </body>
     </html>

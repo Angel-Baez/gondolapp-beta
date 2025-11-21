@@ -4,8 +4,8 @@ import { calcularDiasRestantes, formatearFecha } from "@/lib/utils";
 import { useVencimientoStore } from "@/store/vencimiento";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import { Calendar, Edit2, Trash2 } from "lucide-react";
-import { Badge } from "../ui/Badge";
-import { IconButton } from "../ui/Button";
+import { Badge, IconButton } from "../ui";
+
 
 interface VencimientoItemProps {
   item: ItemVencimiento;

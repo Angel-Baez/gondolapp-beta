@@ -11,9 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
-import { Modal } from "../ui/Modal";
+import { Modal, Input, Button } from "../ui";
 import { VencimientoItem } from "./VencimientoItem";
 
 interface ItemConVariante {

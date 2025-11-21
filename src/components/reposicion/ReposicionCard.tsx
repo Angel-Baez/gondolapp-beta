@@ -1,18 +1,21 @@
 "use client";
 
+import { useHaptics } from "@/hooks/useHaptics";
 import { useReposicionStore } from "@/store/reposicion";
 import { ItemReposicion, ProductoBase, ProductoVariante } from "@/types";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as m, motion } from "framer-motion";
 import {
+  Ban,
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
   Trash2,
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "../ui/Badge";
-import { IconButton } from "../ui/Button";
+import { toast } from "react-hot-toast";
+import { Badge, IconButton } from "../ui";
 
 interface ReposicionCardProps {
   productoBase: ProductoBase;
@@ -31,6 +34,7 @@ export function ReposicionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
+  const { haptic } = useHaptics();
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
 
@@ -194,9 +198,40 @@ export function ReposicionCard({
                       <div className="flex items-center gap-2">
                         <IconButton
                           variant={item.repuesto ? "primary" : "ghost"}
-                          onClick={() =>
-                            marcarRepuesto(item.id, !item.repuesto)
-                          }
+                          onClick={() => {
+                            marcarRepuesto(item.id, !item.repuesto);
+                            // Haptic feedback (Android compatibles)
+                            haptic(item.repuesto ? 50 : [30, 30, 30]);
+                            if (!item.repuesto) {
+                              toast.success(
+                                <m.div
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.8, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <CheckCircle className="text-emerald-500 w-5 h-5" />
+                                  <span>Producto marcado como repuesto</span>
+                                </m.div>,
+                                { duration: 2000 }
+                              );
+                            } else {
+                              toast(
+                                <m.div
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.8, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  <span>Producto desmarcado como repuesto</span>
+                                </m.div>,
+                                { duration: 2000 }
+                              );
+                            }
+                          }}
                           title={
                             item.repuesto
                               ? "Desmarcar repuesto"
@@ -209,9 +244,40 @@ export function ReposicionCard({
 
                         <IconButton
                           variant={item.sinStock ? "destructive" : "ghost"}
-                          onClick={() =>
-                            marcarSinStock(item.id, !item.sinStock)
-                          }
+                          onClick={() => {
+                            marcarSinStock(item.id, !item.sinStock);
+                            // Haptic feedback (Android compatibles)
+                            haptic(item.sinStock ? 50 : [30, 30, 30]);
+                            if (!item.sinStock) {
+                              toast.success(
+                                <m.div
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.8, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Ban className="text-red-500 w-5 h-5" />
+                                  <span>Producto marcado sin stock</span>
+                                </m.div>,
+                                { duration: 2000 }
+                              );
+                            } else {
+                              toast(
+                                <m.div
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.8, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex items-center gap-2"
+                                >
+                                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  <span>Producto reactivado</span>
+                                </m.div>,
+                                { duration: 2000 }
+                              );
+                            }
+                          }}
                           title={
                             item.sinStock
                               ? "Desmarcar sin stock"

@@ -6,6 +6,7 @@ import { ProductoBase, ProductoVariante } from "@/types";
 import { Archive, CheckCircle2, Package, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ReposicionCard } from "./ReposicionCard";
+import { SkeletonCard } from "./SkeletonCard";
 
 interface ItemConProducto {
   item: any;
@@ -120,9 +121,12 @@ export function ReposicionList() {
   }, [itemsConProductos]);
 
   if (loading) {
+    // Mostrar 3 skeletons de cards mientras carga
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary" />
+      <div className="space-y-4 py-10 px-4">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }
