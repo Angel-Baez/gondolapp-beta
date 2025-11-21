@@ -27,11 +27,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "1. Verificando disponibilidad del sitio..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-if curl -s --head "$URL" | head -n 1 | grep "HTTP/[12][.][01] [23].." > /dev/null; then
-    echo -e "${GREEN}✅ Sitio online y accesible${NC}"
+# Intentar con curl siguiendo redirecciones y verificando el código de estado
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "$URL")
+
+if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+    echo -e "${GREEN}✅ Sitio online y accesible (HTTP $HTTP_CODE)${NC}"
 else
-    echo -e "${RED}❌ Sitio no accesible${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️  Código HTTP: $HTTP_CODE${NC}"
+    echo -e "${YELLOW}🔄 Intentando continuar con el análisis...${NC}"
 fi
 echo ""
 

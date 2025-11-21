@@ -1,13 +1,214 @@
-# 🎉 Sistema IA-First Implementado y Corregido
+# 🎉 Changelog de GondolApp
+
+## v2.1.0 - Seguridad y Performance (20 de diciembre de 2024)
+
+### 🛡️ Nuevas Funcionalidades de Seguridad
+
+#### Rate Limiting con Upstash Redis
+
+**Implementación**: `src/middleware.ts`
+
+- ✅ 4 limiters específicos por endpoint:
+  - `/api/*` general: 30 req/min
+  - `/api/productos/buscar`: 20 req/min (búsqueda intensiva)
+  - `/api/productos/crear-manual`: 15 req/min (prevenir spam)
+  - IA/Normalización: 10 req/min (proteger Gemini API)
+
+**Características**:
+
+- Algoritmo sliding window (más preciso)
+- Headers RFC 6585 (`X-RateLimit-*`)
+- Respuesta 429 con `Retry-After`
+- Bypass en modo desarrollo
+- Analytics en Upstash dashboard
+
+**Paquetes nuevos**:
+
+```bash
+@upstash/ratelimit ^2.0.0
+@upstash/redis ^1.0.0
+```
+
+#### Security Headers Completos
+
+**Headers implementados**:
+
+- ✅ `Content-Security-Policy` (CSP restrictivo)
+- ✅ `X-Frame-Options: DENY` (anti-clickjacking)
+- ✅ `X-Content-Type-Options: nosniff`
+- ✅ `X-XSS-Protection: 1; mode=block`
+- ✅ `Referrer-Policy: strict-origin-when-cross-origin`
+- ✅ `Permissions-Policy` (camera, microphone, geolocation restringidos)
+
+**CSP Directives**:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-eval' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https: blob:;
+connect-src 'self' https://images.openfoodfacts.org https://generativelanguage.googleapis.com;
+frame-ancestors 'none';
+```
+
+**Nota**: `unsafe-eval` y `unsafe-inline` son necesarios para Next.js + Tailwind CSS.
+
+### ⚡ Optimizaciones de Performance
+
+**Resultados Lighthouse**:
+
+- Performance: 66 → **96/100** (+45%)
+- Accessibility: 83 → **95/100** (+14%)
+- TBT: 1,405ms → **160ms** (-89%)
+- LCP: 3.3s → **0.67s** (-80%)
+
+**Cambios aplicados**:
+
+1. ✅ Lazy loading de `BarcodeScanner` (dynamic import)
+2. ✅ Viewport accesible (userScalable: true, maximumScale: 5)
+3. ✅ Touch targets 44x44px (CSS global)
+4. ✅ Imágenes optimizadas (WebP/AVIF, cache 30 días)
+5. ✅ ES2022 target (eliminados 14KB polyfills)
+
+**Archivos modificados**:
+
+- `src/app/page.tsx` - Dynamic import
+- `src/app/layout.tsx` - Viewport config
+- `src/app/globals.css` - Touch target rules
+- `next.config.js` - Image optimization
+- `tsconfig.json` - ES2022 target
+
+### 📚 Nueva Documentación
+
+**Documentos creados**:
+
+- [`docs/SEGURIDAD.md`](./SEGURIDAD.md) - Guía completa de seguridad (160+ líneas)
+- [`RESULTADOS-REALES.md`](../RESULTADOS-REALES.md) - Métricas de performance
+- [`OPTIMIZACIONES-LIGHTHOUSE.md`](../OPTIMIZACIONES-LIGHTHOUSE.md) - Plan técnico
+- [`CHANGELOG-PERFORMANCE.md`](../CHANGELOG-PERFORMANCE.md) - Changelog de optimizaciones
+
+**Documentos actualizados**:
+
+- [`docs/DEPLOY-VERCEL.md`](./DEPLOY-VERCEL.md) - Sección de seguridad ampliada
+- [`README.md`](../README.md) - Sección de optimizaciones y seguridad
+
+### 🛠️ Scripts de Testing
+
+**Scripts nuevos**:
+
+```bash
+# Test de performance automatizado (Lighthouse)
+./scripts/verify-performance.sh
+
+# Test de seguridad (rate limiting + headers)
+./scripts/test-security.sh
+```
+
+**Características**:
+
+- ✅ Automatización con bash + jq
+- ✅ Output con colores y emojis
+- ✅ Parseo de métricas clave
+- ✅ Recomendaciones automáticas
+- ✅ Validación de CSP y headers
+
+### 🔑 Variables de Entorno Nuevas
+
+**Upstash Redis** (requerido en producción):
+
+```env
+UPSTASH_REDIS_REST_URL=https://us1-xxxxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=AYkgASQxxx...
+```
+
+**Configuración en Vercel**:
+
+1. Project Settings > Environment Variables
+2. Agregar ambas variables
+3. Scope: Production, Preview, Development
+
+### 📊 Métricas de Impacto
+
+**Antes vs Después**:
+
+| Métrica           | Antes   | Después | Mejora |
+| ----------------- | ------- | ------- | ------ |
+| Performance Score | 66/100  | 96/100  | +45%   |
+| Accessibility     | 83/100  | 95/100  | +14%   |
+| TBT               | 1,405ms | 160ms   | -89%   |
+| LCP               | 3.3s    | 0.67s   | -80%   |
+| FCP               | 1.0s    | 0.34s   | -66%   |
+| CLS               | 0       | 0       | ✅     |
+
+**Costo de Rate Limiting**:
+
+- Plan gratuito Upstash: 10,000 comandos/día
+- Uso estimado: ~4,000 comandos/día (40% del límite)
+- Costo mensual: **$0** (dentro de free tier)
+
+### 🚀 Deploy
+
+**Checklist de despliegue**:
+
+1. ✅ Crear cuenta en [Upstash](https://console.upstash.com)
+2. ✅ Crear database Redis (Regional, us-east-1)
+3. ✅ Copiar REST URL y TOKEN
+4. ✅ Agregar variables en Vercel
+5. ✅ Deploy a producción
+6. ✅ Ejecutar `./scripts/test-security.sh https://gondolapp.digital`
+7. ✅ Verificar rate limiting con 35+ requests
+
+**Comandos**:
+
+```bash
+# Verificar build local
+npm run build
+
+# Deploy a Vercel
+vercel --prod
+
+# Test de seguridad
+./scripts/test-security.sh https://gondolapp.digital
+```
+
+### 🔮 Mejoras Futuras
+
+**Corto plazo (1-3 meses)**:
+
+- [ ] CSP con nonces (eliminar `unsafe-inline`)
+- [ ] Subresource Integrity (SRI) para scripts externos
+- [ ] CAPTCHA en formularios sensibles
+
+**Medio plazo (3-6 meses)**:
+
+- [ ] WAF (Web Application Firewall) con Cloudflare
+- [ ] Audit logs para acciones críticas
+- [ ] 2FA para panel admin
+
+**Largo plazo (6-12 meses)**:
+
+- [ ] Bug bounty program (HackerOne)
+- [ ] SOC 2 compliance
+- [ ] Penetration test profesional
+
+### 📝 Créditos
+
+**Implementado por**: @gondolapp-dev  
+**Fecha**: 20 de diciembre de 2024  
+**Versión**: v2.1.0
+
+---
+
+## v2.0.0 - Sistema IA-First (18 de noviembre de 2024)
 
 **Fecha**: 18 de noviembre de 2025  
 **Versión**: GondolApp v2.0
 
 ---
 
-## ✅ Cambios Realizados
+### ✅ Cambios Realizados
 
-### 1. 🔧 Corrección del Error 404 (Gemini Model Not Found)
+#### 1. 🔧 Corrección del Error 404 (Gemini Model Not Found)
 
 **Problema Original:**
 

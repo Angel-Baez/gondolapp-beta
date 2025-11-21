@@ -286,6 +286,38 @@ db.productosVariantes.createIndex({ codigoBarras: 1 });
 
 ## 11. Seguridad
 
+### 🛡️ Medidas de Seguridad Implementadas
+
+#### Headers de Seguridad (Middleware)
+
+Todos los requests incluyen estos headers de protección:
+
+| Header                    | Valor                             | Propósito                         |
+| ------------------------- | --------------------------------- | --------------------------------- |
+| `Content-Security-Policy` | Restrictivo                       | Previene XSS, clickjacking        |
+| `X-Content-Type-Options`  | `nosniff`                         | Previene MIME sniffing            |
+| `X-Frame-Options`         | `DENY`                            | Previene clickjacking             |
+| `X-XSS-Protection`        | `1; mode=block`                   | Protección XSS legacy             |
+| `Referrer-Policy`         | `strict-origin-when-cross-origin` | Control de referrer               |
+| `Permissions-Policy`      | Restrictivo                       | Control de features del navegador |
+
+#### Content Security Policy (CSP)
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-eval' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https: blob:;
+connect-src 'self' https://images.openfoodfacts.org https://generativelanguage.googleapis.com;
+frame-ancestors 'none';
+```
+
+**Por qué `unsafe-eval` y `unsafe-inline`**:
+
+- Next.js requiere `unsafe-eval` para HMR y code splitting
+- Tailwind CSS requiere `unsafe-inline` para estilos dinámicos
+- En producción, considera usar nonces para mayor seguridad
+
 ### Whitelist de IPs MongoDB (Recomendado)
 
 En MongoDB Atlas > Network Access:
@@ -300,14 +332,58 @@ En MongoDB Atlas > Network Access:
 vercel integration add mongodb-atlas
 ```
 
-### Rate Limiting (Opcional)
+### Rate Limiting (✅ IMPLEMENTADO)
 
-```ts
-// middleware.ts
-export function middleware(request: NextRequest) {
-  const ip = request.ip ?? "unknown";
-  // Implementar rate limiting por IP
+**Configuración actual**: Rate limiting por IP con Upstash Redis
+
+#### Límites Configurados
+
+| Endpoint                                 | Límite | Ventana  |
+| ---------------------------------------- | ------ | -------- |
+| API General                              | 30 req | 1 minuto |
+| Búsqueda (`/api/productos/buscar`)       | 20 req | 1 minuto |
+| Creación (`/api/productos/crear-manual`) | 15 req | 1 minuto |
+| IA/Normalización                         | 10 req | 1 minuto |
+
+#### Setup en Vercel
+
+1. **Crear cuenta en Upstash**: [upstash.com](https://upstash.com)
+2. **Crear Redis database** (Free tier: 10,000 commands/day)
+3. **Agregar variables de entorno en Vercel**:
+
+```bash
+UPSTASH_REDIS_REST_URL=https://xxx-yyy.upstash.io
+UPSTASH_REDIS_REST_TOKEN=AxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxA
+```
+
+#### Comportamiento
+
+- ✅ **Desarrollo**: Rate limiting deshabilitado
+- ✅ **Producción**: Límites activos por IP
+- ✅ **Headers RFC 6585**:
+  - `X-RateLimit-Limit`: Límite total
+  - `X-RateLimit-Remaining`: Requests restantes
+  - `X-RateLimit-Reset`: Timestamp de reset
+
+#### Respuesta 429 (Rate Limit Exceeded)
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "Demasiadas peticiones. Intenta de nuevo en 45 segundos."
 }
+```
+
+#### Testing Local
+
+```bash
+# Sin Redis configurado, rate limiting está deshabilitado en dev
+npm run dev
+
+# Para testear rate limiting localmente:
+# 1. Crea Redis en Upstash
+# 2. Añade variables a .env.local
+# 3. npm run dev
 ```
 
 ---

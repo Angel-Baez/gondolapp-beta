@@ -12,6 +12,7 @@ Aplicación web progresiva (PWA) para la gestión de inventario de supermercado 
 - 🔄 **Funcionamiento Offline**: Todos los datos se almacenan localmente
 - 📱 **Instalable**: Funciona como app nativa en dispositivos móviles
 - 🎨 **UI Moderna**: Diseño con Tailwind CSS y animaciones con Framer Motion
+- 🛡️ **Seguridad**: Rate limiting con Redis + Security headers completos
 
 ### Arquitectura Técnica
 
@@ -259,21 +260,56 @@ Para obtener normalización inteligente de productos:
 
 ## 🔧 Optimizaciones
 
-### Performance
+### Performance ⚡
 
-- Lazy loading de componentes
-- Imágenes optimizadas
-- Paginación virtual para listas largas
-- Caching agresivo con Service Worker
+**Resultados Lighthouse**: 96/100 Performance, 95/100 Accessibility
 
-### UX Mobile
+- ✅ Lazy loading de componentes (BarcodeScanner dinámico)
+- ✅ Imágenes optimizadas (WebP/AVIF, cache 30 días)
+- ✅ ES2022 target (sin polyfills legacy)
+- ✅ Paginación virtual para listas largas
+- ✅ Caching agresivo con Service Worker
+
+**Scripts de testing**:
+
+```bash
+# Test de performance automatizado
+./scripts/verify-performance.sh
+
+# Test de seguridad
+./scripts/test-security.sh
+```
+
+📊 **Detalles completos**: [`RESULTADOS-REALES.md`](RESULTADOS-REALES.md)
+
+### Seguridad 🛡️
+
+**Rate Limiting** (Upstash Redis):
+
+- `/api/*` general: 30 req/min
+- `/api/productos/buscar`: 20 req/min (búsqueda intensiva)
+- `/api/productos/crear-manual`: 15 req/min
+- IA/Normalización: 10 req/min (costoso)
+
+**Security Headers**:
+
+- ✅ Content-Security-Policy (CSP)
+- ✅ X-Frame-Options: DENY (anti-clickjacking)
+- ✅ X-Content-Type-Options: nosniff
+- ✅ Permissions-Policy (restrictivo)
+- ✅ Referrer-Policy
+
+📖 **Guía completa**: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md)
+
+### UX Mobile 📱
 
 - Touch targets mínimo 44x44px
 - Swipe gestures
 - Haptic feedback
 - PWA instalable
+- Zoom habilitado (accesibilidad)
 
-### Offline-First
+### Offline-First 🔄
 
 - Todos los datos en IndexedDB
 - Service Worker con estrategias de cache
