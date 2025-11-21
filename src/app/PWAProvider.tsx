@@ -1,8 +1,7 @@
 "use client";
 
-import { usePWA } from "@/hooks/usePWA";
+import InstallBanner from "@/components/InstallBanner";
 
 export default function PWAProvider() {
-  usePWA();
-  return null;
+  return <InstallBanner />;
 }
