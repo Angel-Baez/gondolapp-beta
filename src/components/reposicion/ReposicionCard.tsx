@@ -3,7 +3,7 @@
 import { useHaptics } from "@/hooks/useHaptics";
 import { useReposicionStore } from "@/store/reposicion";
 import { ItemReposicion, ProductoBase, ProductoVariante } from "@/types";
-import { AnimatePresence, motion as m, motion } from "framer-motion";
+import { AnimatePresence, motion as m } from "framer-motion";
 import {
   Ban,
   CheckCircle,
@@ -34,7 +34,7 @@ export function ReposicionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
-  const { haptic } = useHaptics();
+  const { haptic, isSupported } = useHaptics();
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
 
@@ -116,7 +116,7 @@ export function ReposicionCard({
       {/* Body - Variantes */}
       <AnimatePresence>
         {isExpanded && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -159,31 +159,37 @@ export function ReposicionCard({
                       </div>
                     </div>
 
-                    {/* Controls - Ahora en fila completa para más espacio */}
+                    {/* Controls */}
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
                       {/* Quantity Control */}
                       <div className="flex items-center gap-3">
                         {!item.repuesto && !item.sinStock && (
                           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                            <button
+                            {/* ✨ Botón MENOS animado */}
+                            <m.button
+                              whileTap={{ scale: 0.85 }}
+                              whileHover={{ scale: 1.05 }}
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad - 1)
                               }
                               className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
                             >
                               -
-                            </button>
+                            </m.button>
                             <span className="w-12 text-center font-bold text-base">
                               {item.cantidad}
                             </span>
-                            <button
+                            {/* ✨ Botón MÁS animado */}
+                            <m.button
+                              whileTap={{ scale: 0.85 }}
+                              whileHover={{ scale: 1.05 }}
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad + 1)
                               }
                               className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
                             >
                               +
-                            </button>
+                            </m.button>
                           </div>
                         )}
 
@@ -194,24 +200,35 @@ export function ReposicionCard({
                         )}
                       </div>
 
-                      {/* Action Buttons - Más grandes y con mejor espaciado */}
+                      {/* Action Buttons */}
                       <div className="flex items-center gap-2">
+                        {/* ✨ BOTÓN REPUESTO - Icono animado */}
                         <IconButton
                           variant={item.repuesto ? "primary" : "ghost"}
                           onClick={() => {
                             marcarRepuesto(item.id, !item.repuesto);
-                            // Haptic feedback (Android compatibles)
                             haptic(item.repuesto ? 50 : [30, 30, 30]);
+
                             if (!item.repuesto) {
                               toast.success(
                                 <m.div
                                   initial={{ scale: 0.8, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
+                                  animate={{ scale: 1.2, opacity: 1 }}
                                   exit={{ scale: 0.8, opacity: 0 }}
                                   transition={{ duration: 0.3 }}
                                   className="flex items-center gap-2"
                                 >
-                                  <CheckCircle className="text-emerald-500 w-5 h-5" />
+                                  {/* ✅ Icono con rotación */}
+                                  <m.div
+                                    initial={{ rotate: -180, scale: 0 }}
+                                    animate={{ rotate: 0, scale: 1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 200,
+                                    }}
+                                  >
+                                    <CheckCircle className="text-emerald-500 w-5 h-5" />
+                                  </m.div>
                                   <span>Producto marcado como repuesto</span>
                                 </m.div>,
                                 { duration: 2000 }
@@ -225,7 +242,13 @@ export function ReposicionCard({
                                   transition={{ duration: 0.3 }}
                                   className="flex items-center gap-2"
                                 >
-                                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  {/* 🔄 Icono con spin */}
+                                  <m.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 0.5 }}
+                                  >
+                                    <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  </m.div>
                                   <span>Producto desmarcado como repuesto</span>
                                 </m.div>,
                                 { duration: 2000 }
@@ -239,15 +262,26 @@ export function ReposicionCard({
                           }
                           className="w-10 h-10 sm:w-11 sm:h-11"
                         >
-                          <CheckCircle size={20} className="sm:w-6 sm:h-6" />
+                          {/* ✨ Icono con bounce al activar */}
+                          <m.div
+                            animate={
+                              item.repuesto
+                                ? { scale: [1, 1.2, 1] }
+                                : { scale: 1 }
+                            }
+                            transition={{ duration: 0.3 }}
+                          >
+                            <CheckCircle size={20} className="sm:w-6 sm:h-6" />
+                          </m.div>
                         </IconButton>
 
+                        {/* ✨ BOTÓN SIN STOCK - Icono animado */}
                         <IconButton
                           variant={item.sinStock ? "destructive" : "ghost"}
                           onClick={() => {
                             marcarSinStock(item.id, !item.sinStock);
-                            // Haptic feedback (Android compatibles)
                             haptic(item.sinStock ? 50 : [30, 30, 30]);
+
                             if (!item.sinStock) {
                               toast.success(
                                 <m.div
@@ -257,7 +291,14 @@ export function ReposicionCard({
                                   transition={{ duration: 0.3 }}
                                   className="flex items-center gap-2"
                                 >
-                                  <Ban className="text-red-500 w-5 h-5" />
+                                  {/* 🚫 Icono con shake */}
+                                  <m.div
+                                    initial={{ x: -10 }}
+                                    animate={{ x: [0, -5, 5, -5, 0] }}
+                                    transition={{ duration: 0.5 }}
+                                  >
+                                    <Ban className="text-red-500 w-5 h-5" />
+                                  </m.div>
                                   <span>Producto marcado sin stock</span>
                                 </m.div>,
                                 { duration: 2000 }
@@ -271,7 +312,13 @@ export function ReposicionCard({
                                   transition={{ duration: 0.3 }}
                                   className="flex items-center gap-2"
                                 >
-                                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  {/* 🔄 Icono con spin */}
+                                  <m.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 0.5 }}
+                                  >
+                                    <RefreshCw className="text-cyan-500 w-5 h-5" />
+                                  </m.div>
                                   <span>Producto reactivado</span>
                                 </m.div>,
                                 { duration: 2000 }
@@ -285,16 +332,66 @@ export function ReposicionCard({
                           }
                           className="w-10 h-10 sm:w-11 sm:h-11"
                         >
-                          <XCircle size={20} className="sm:w-6 sm:h-6" />
+                          {/* ✨ Icono con pulse al activar */}
+                          <m.div
+                            animate={
+                              item.sinStock
+                                ? {
+                                    scale: [1, 1.1, 1],
+                                    opacity: [1, 0.8, 1],
+                                  }
+                                : { scale: 1 }
+                            }
+                            transition={{
+                              duration: 0.6,
+                              repeat: item.sinStock ? Infinity : 0,
+                              repeatDelay: 1,
+                            }}
+                          >
+                            <XCircle size={20} className="sm:w-6 sm:h-6" />
+                          </m.div>
                         </IconButton>
 
+                        {/* ✨ BOTÓN ELIMINAR - Icono animado */}
                         <IconButton
                           variant="ghost"
-                          onClick={() => eliminarItem(item.id)}
+                          onClick={() => {
+                            eliminarItem(item.id);
+                            haptic([50, 100, 50]); // Vibración de confirmación
+
+                            toast.error(
+                              <m.div
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.8, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-center gap-2"
+                              >
+                                {/* 🗑️ Icono con fade out */}
+                                <m.div
+                                  initial={{ y: 0 }}
+                                  animate={{ y: [0, -5, 0] }}
+                                  transition={{ duration: 0.4 }}
+                                >
+                                  <Trash2 className="text-red-500 w-5 h-5" />
+                                </m.div>
+                                <span>Producto eliminado</span>
+                              </m.div>,
+                              { duration: 2000 }
+                            );
+                          }}
                           title="Eliminar"
                           className="w-10 h-10 sm:w-11 sm:h-11"
                         >
-                          <Trash2 size={18} className="sm:w-5 sm:h-5" />
+                          {/* ✨ Icono con hover shake */}
+                          <m.div
+                            whileHover={{
+                              rotate: [0, -10, 10, -10, 0],
+                              transition: { duration: 0.5 },
+                            }}
+                          >
+                            <Trash2 size={18} className="sm:w-5 sm:h-5" />
+                          </m.div>
                         </IconButton>
                       </div>
                     </div>
@@ -302,7 +399,7 @@ export function ReposicionCard({
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

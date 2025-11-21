@@ -7,6 +7,7 @@ import { Archive, CheckCircle2, Package, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ReposicionCard } from "./ReposicionCard";
 import { SkeletonCard } from "./SkeletonCard";
+import { motion as m } from "framer-motion";
 
 interface ItemConProducto {
   item: any;
@@ -134,10 +135,22 @@ export function ReposicionList() {
   if (itemsConProductos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+        <m.div
+                  animate={{
+                    y: [0, -10, 0],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
         <Archive
           size={48}
           className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
         />
+        </m.div>
         <p className="text-base sm:text-lg font-semibold text-center">
           Tu lista está vacía
         </p>

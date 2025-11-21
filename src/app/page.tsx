@@ -27,6 +27,7 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
+import { motion as m } from "framer-motion";
 
 // 🚀 Lazy load del scanner para reducir bundle inicial
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
@@ -222,7 +223,20 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-extrabold flex items-center gap-2">
-                <Archive size={28} className="text-accent-primary" />
+                {/* ✨ Icono con animación de bounce */}
+                <m.div
+                  animate={{ 
+                    y: [0, -5, 0],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Archive size={28} className="text-accent-primary" />
+                </m.div>
                 GondolApp
               </h1>
               <p className="text-sm text-gray-400 mt-1">
@@ -233,7 +247,13 @@ export default function HomePage() {
               href="/admin"
               className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
             >
-              <Settings size={20} />
+              {/* ✨ Icono de settings con rotación en hover */}
+              <m.div
+                whileHover={{ rotate: 180 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Settings size={20} />
+              </m.div>
               <span className="hidden sm:inline">Admin</span>
             </Link>
           </div>
@@ -242,7 +262,9 @@ export default function HomePage() {
         {/* NAVIGATION TABS */}
         <nav className="p-4 bg-white border-b border-gray-100">
           <div className="flex justify-around bg-gray-100 p-1 rounded-full shadow-inner">
-            <button
+            <m.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView("reposicion")}
               className={`flex-1 py-2 rounded-full font-bold transition-all flex items-center justify-center ${
                 activeView === "reposicion"
@@ -250,9 +272,28 @@ export default function HomePage() {
                   : "text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <ListChecks size={20} className="mr-2" /> Reposición
-            </button>
-            <button
+              {/* ✨ Icono con animación cuando está activo */}
+              <m.div
+                animate={
+                  activeView === "reposicion"
+                    ? {
+                        y: [0, -3, 0],
+                        rotate: [0, -5, 5, 0],
+                      }
+                    : { y: 0, rotate: 0 }
+                }
+                transition={{
+                  duration: 1.5,
+                  ease: "easeInOut",
+                }}
+              >
+                <ListChecks size={20} className="mr-2" />
+              </m.div>
+              Reposición
+            </m.button>
+            <m.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView("vencimiento")}
               className={`flex-1 py-2 rounded-full font-bold transition-all flex items-center justify-center ${
                 activeView === "vencimiento"
@@ -260,8 +301,25 @@ export default function HomePage() {
                   : "text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <Clock size={20} className="mr-2" /> Vencimientos
-            </button>
+              {/* ✨ Icono con animación de reloj cuando está activo */}
+              <m.div
+                animate={
+                  activeView === "vencimiento"
+                    ? {
+                        rotate: [0, 15, -15, 0],
+                        scale: [1, 1.1, 1],
+                      }
+                    : { rotate: 0, scale: 1 }
+                }
+                transition={{
+                  duration: 2,
+                  ease: "easeInOut",
+                }}
+              >
+                <Clock size={20} className="mr-2" />
+              </m.div>
+              Vencimientos
+            </m.button>
           </div>
         </nav>
 
@@ -273,7 +331,9 @@ export default function HomePage() {
               : "border-accent-secondary/20"
           }`}
         >
-          <button
+          <m.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() =>
               openScanner(
                 activeView === "reposicion" ? "reposicion" : "vencimiento"
@@ -285,9 +345,22 @@ export default function HomePage() {
                 : "bg-accent-secondary hover:bg-accent-secondary/90"
             } transition shadow-md`}
           >
-            <Scan size={24} className="mr-2" />
+            {/* ✨ Icono de scanner con pulso */}
+            <m.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, -5, 5, 0]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Scan size={24} className="mr-2" />
+            </m.div>
             Escanear Producto
-          </button>
+          </m.button>
         </section>
 
         {/* MAIN CONTENT */}
@@ -329,24 +402,28 @@ export default function HomePage() {
           )}
 
           <div className="flex items-center justify-center gap-4">
-            <button
+            <m.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setCantidad(Math.max(1, cantidad - 1))}
               className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 text-2xl font-bold"
             >
               -
-            </button>
+            </m.button>
             <input
               type="number"
               value={cantidad}
               onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
               className="w-20 text-center text-4xl font-extrabold border-b-4 border-accent-primary focus:outline-none"
             />
-            <button
+            <m.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setCantidad(cantidad + 1)}
               className="w-12 h-12 rounded-full bg-accent-primary text-white hover:bg-accent-primary/90 text-2xl font-bold"
             >
               +
-            </button>
+            </m.button>
           </div>
 
           <Button onClick={handleAgregarReposicion} className="w-full">
@@ -554,9 +631,19 @@ export default function HomePage() {
               <div className="relative">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-primary mb-4" />
                 {isUsingIA && (
-                  <div className="absolute -top-2 -right-2 bg-purple-500 text-white p-1 rounded-full animate-pulse">
+                  <m.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 360]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity
+                    }}
+                    className="absolute -top-2 -right-2 bg-purple-500 text-white p-1 rounded-full"
+                  >
                     <Bot size={16} />
-                  </div>
+                  </m.div>
                 )}
               </div>
               <p className="text-lg font-bold text-gray-900">

@@ -5,7 +5,9 @@ import { useVencimientoStore } from "@/store/vencimiento";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import { Calendar, Edit2, Trash2 } from "lucide-react";
 import { Badge, IconButton } from "../ui";
-
+import { motion as m } from "framer-motion";
+import { useHaptics } from "@/hooks/useHaptics";
+import { toast } from "react-hot-toast";
 
 interface VencimientoItemProps {
   item: ItemVencimiento;
@@ -19,6 +21,7 @@ export function VencimientoItem({
   onEdit,
 }: VencimientoItemProps) {
   const { eliminarItem } = useVencimientoStore();
+  const { haptic } = useHaptics();
   const diasRestantes = calcularDiasRestantes(item.fechaVencimiento);
 
   const getMensajeVencimiento = () => {
@@ -82,20 +85,62 @@ export function VencimientoItem({
         {/* Actions - En fila completa */}
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
           <IconButton
-            onClick={onEdit}
+            onClick={() => {
+              haptic(50);
+              onEdit();
+            }}
             title="Editar fecha"
             className="w-10 h-10 sm:w-11 sm:h-11"
           >
-            <Edit2 size={18} className="sm:w-5 sm:h-5" />
+            {/* ✨ Icono con hover y tap animation */}
+            <m.div
+              whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Edit2 size={18} className="sm:w-5 sm:h-5" />
+            </m.div>
           </IconButton>
 
           <IconButton
             variant="ghost"
-            onClick={() => eliminarItem(item.id)}
+            onClick={() => {
+              haptic([50, 100, 50]);
+              eliminarItem(item.id);
+
+              toast.error(
+                <m.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center gap-2"
+                >
+                  <m.div
+                    initial={{ y: 0 }}
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <Trash2 className="text-red-500 w-5 h-5" />
+                  </m.div>
+                  <span>Producto eliminado</span>
+                </m.div>,
+                { duration: 2000 }
+              );
+            }}
             title="Eliminar"
             className="w-10 h-10 sm:w-11 sm:h-11"
           >
-            <Trash2 size={18} className="sm:w-5 sm:h-5" />
+            {/* ✨ Icono con shake en hover */}
+            <m.div
+              whileHover={{
+                rotate: [0, -10, 10, -10, 0],
+                transition: { duration: 0.5 },
+              }}
+              whileTap={{ scale: 0.85 }}
+            >
+              <Trash2 size={18} className="sm:w-5 sm:h-5" />
+            </m.div>
           </IconButton>
         </div>
       </div>

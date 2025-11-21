@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Input, Button } from "../ui";
 import { VencimientoItem } from "./VencimientoItem";
+import { motion as m } from "framer-motion";
 
 interface ItemConVariante {
   item: ItemVencimiento;
@@ -108,7 +109,23 @@ export function VencimientoList() {
   if (totalItems === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
-        <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
+        {/* ✨ Icono con animación flotante */}
+        <m.div
+          animate={{
+            y: [0, -10, 0],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <Clock
+            size={48}
+            className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
+          />
+        </m.div>
         <p className="text-base sm:text-lg font-semibold text-center">
           No hay productos con vencimiento registrado
         </p>
@@ -134,10 +151,23 @@ export function VencimientoList() {
 
         {itemsCriticos > 0 && (
           <div className="flex items-start gap-2 p-3 bg-alert-critico/10 border-2 border-alert-critico rounded-xl">
-            <AlertTriangle
-              size={18}
-              className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
-            />
+            {/* ✨ Icono con pulso constante */}
+            <m.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, -5, 5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <AlertTriangle
+                size={18}
+                className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
+              />
+            </m.div>
             <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
               {itemsCriticos} producto{itemsCriticos > 1 ? "s" : ""} crítico
               {itemsCriticos > 1 ? "s" : ""} (vencido
@@ -153,10 +183,23 @@ export function VencimientoList() {
         {itemsByAlertLevel.critico.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <AlertCircle
-                size={18}
-                className="text-alert-critico flex-shrink-0 sm:w-5 sm:h-5"
-              />
+              {/* ✨ Icono crítico con shake */}
+              <m.div
+                animate={{
+                  x: [-2, 2, -2, 2, 0],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 0.5,
+                  repeat: Infinity,
+                  repeatDelay: 2,
+                }}
+              >
+                <AlertCircle
+                  size={18}
+                  className="text-alert-critico flex-shrink-0 sm:w-5 sm:h-5"
+                />
+              </m.div>
               <h3 className="text-xs sm:text-sm font-bold text-alert-critico uppercase tracking-wider">
                 Críticos
               </h3>
@@ -176,10 +219,23 @@ export function VencimientoList() {
         {itemsByAlertLevel.advertencia.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <AlertTriangle
-                size={18}
-                className="text-alert-advertencia flex-shrink-0 sm:w-5 sm:h-5"
-              />
+              {/* ✨ Icono advertencia con bounce */}
+              <m.div
+                animate={{
+                  y: [0, -5, 0],
+                  rotate: [0, 10, -10, 0],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <AlertTriangle
+                  size={18}
+                  className="text-alert-advertencia flex-shrink-0 sm:w-5 sm:h-5"
+                />
+              </m.div>
               <h3 className="text-xs sm:text-sm font-bold text-alert-advertencia uppercase tracking-wider">
                 Advertencia (15-30 días)
               </h3>
@@ -199,10 +255,23 @@ export function VencimientoList() {
         {itemsByAlertLevel.precaucion.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Zap
-                size={18}
-                className="text-alert-precaucion flex-shrink-0 sm:w-5 sm:h-5"
-              />
+              {/* ✨ Icono precaución con glow pulse */}
+              <m.div
+                animate={{
+                  scale: [1, 1.15, 1],
+                  opacity: [1, 0.7, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Zap
+                  size={18}
+                  className="text-alert-precaucion flex-shrink-0 sm:w-5 sm:h-5"
+                />
+              </m.div>
               <h3 className="text-xs sm:text-sm font-bold text-alert-precaucion uppercase tracking-wider">
                 Precaución (30-60 días)
               </h3>
@@ -222,10 +291,22 @@ export function VencimientoList() {
         {itemsByAlertLevel.normal.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <CheckCircle2
-                size={18}
-                className="text-gray-600 flex-shrink-0 sm:w-5 sm:h-5"
-              />
+              {/* ✨ Icono normal con rotación suave */}
+              <m.div
+                animate={{
+                  rotate: [0, 360],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                <CheckCircle2
+                  size={18}
+                  className="text-gray-600 flex-shrink-0 sm:w-5 sm:h-5"
+                />
+              </m.div>
               <h3 className="text-xs sm:text-sm font-bold text-gray-600 uppercase tracking-wider">
                 Normales (+60 días)
               </h3>

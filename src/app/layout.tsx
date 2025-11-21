@@ -32,19 +32,24 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon-192x192.svg" />
+        <link rel="icon" href="/icon-192x192.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <meta
+          name="permissions-policy"
+          content="vibrate=*, camera=*, microphone=*"
+        />
       </head>
       <body>
         <PWAProvider />
         <Toaster
           position="top-center"
           toastOptions={{
+            duration: 3000,
             style: {
               fontSize: "1rem",
               borderRadius: "0.75rem",
-              background: "#fff",
-              color: "#222",
+              background: "#333",
+              color: "#fff",
               boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
             },
           }}
