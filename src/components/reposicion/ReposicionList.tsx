@@ -43,6 +43,11 @@ export function ReposicionList() {
   const [isRepuestosExpanded, setIsRepuestosExpanded] = useState(false);
   const [isSinStockExpanded, setIsSinStockExpanded] = useState(false);
 
+  // Constantes para secciones colapsables
+  const MIN_ITEMS_FOR_COLLAPSE = 10;
+  const EXPANDED_HEIGHT = "600px";
+  const COLLAPSED_HEIGHT = "300px";
+
   // Cache de productos para evitar recargas innecesarias
   const productosCache = useRef<
     Map<string, { variante: ProductoVariante; base: ProductoBase }>
@@ -168,7 +173,7 @@ export function ReposicionList() {
     itemCount: number;
     bgColor: string;
   }) => {
-    const shouldCollapse = itemCount >= 10;
+    const shouldCollapse = itemCount >= MIN_ITEMS_FOR_COLLAPSE;
     
     if (!shouldCollapse) {
       // Comportamiento normal si hay menos de 10 productos
@@ -180,7 +185,7 @@ export function ReposicionList() {
         <m.div
           initial={false}
           animate={{
-            maxHeight: isExpanded ? "600px" : "300px",
+            maxHeight: isExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden"} relative`}
@@ -315,7 +320,7 @@ export function ReposicionList() {
             colorClass="bg-gradient-to-r from-cyan-500 to-cyan-600"
             isExpanded={isPendientesExpanded}
             onToggle={() => setIsPendientesExpanded(!isPendientesExpanded)}
-            showToggleButton={groupedBySections.pendientes.length >= 10}
+            showToggleButton={groupedBySections.pendientes.length >= MIN_ITEMS_FOR_COLLAPSE}
           />
           <CollapsibleSection
             isExpanded={isPendientesExpanded}
@@ -344,7 +349,7 @@ export function ReposicionList() {
             colorClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
             isExpanded={isRepuestosExpanded}
             onToggle={() => setIsRepuestosExpanded(!isRepuestosExpanded)}
-            showToggleButton={groupedBySections.repuestos.length >= 10}
+            showToggleButton={groupedBySections.repuestos.length >= MIN_ITEMS_FOR_COLLAPSE}
           />
           <CollapsibleSection
             isExpanded={isRepuestosExpanded}
@@ -373,7 +378,7 @@ export function ReposicionList() {
             colorClass="bg-gradient-to-r from-red-500 to-red-600"
             isExpanded={isSinStockExpanded}
             onToggle={() => setIsSinStockExpanded(!isSinStockExpanded)}
-            showToggleButton={groupedBySections.sinStock.length >= 10}
+            showToggleButton={groupedBySections.sinStock.length >= MIN_ITEMS_FOR_COLLAPSE}
           />
           <CollapsibleSection
             isExpanded={isSinStockExpanded}
