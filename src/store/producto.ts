@@ -1,7 +1,17 @@
-import { db } from "@/lib/db";
-import { generarUUID } from "@/lib/utils";
+/**
+ * Zustand Store refactorizado con principios SOLID
+ * 
+ * Single Responsibility Principle:
+ * - Store solo maneja estado UI
+ * - Delega lógica de negocio a ProductService
+ * 
+ * Dependency Inversion Principle:
+ * - Depende de ProductService (abstracción)
+ */
+
 import { ProductoBase, ProductoVariante } from "@/types";
 import { create } from "zustand";
+import { ProductService } from "@/core/services/ProductService";
 
 interface ProductoStore {
   productosBase: ProductoBase[];
@@ -23,6 +33,9 @@ interface ProductoStore {
   ) => Promise<ProductoVariante[]>;
 }
 
+// Instancia del servicio SOLID
+const productService = new ProductService();
+
 export const useProductoStore = create<ProductoStore>((set, get) => ({
   productosBase: [],
   variantes: [],
@@ -32,9 +45,9 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
   cargarProductos: async () => {
     set({ loading: true, error: null });
     try {
-      const productosBase = await db.productosBase.toArray();
-      const variantes = await db.productosVariantes.toArray();
-      set({ productosBase, variantes, loading: false });
+      // Delegar al servicio SOLID
+      const productos = await productService.searchProducts("");
+      set({ productosBase: productos, loading: false });
     } catch (error) {
       set({ error: "Error al cargar productos", loading: false });
     }
@@ -42,11 +55,9 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   buscarPorCodigoBarras: async (codigoBarras: string) => {
     try {
-      const variante = await db.productosVariantes
-        .where("codigoBarras")
-        .equals(codigoBarras)
-        .first();
-      return variante || null;
+      // Delegar al repositorio a través del servicio
+      const producto = await productService.getOrCreateProduct(codigoBarras);
+      return producto?.variante || null;
     } catch (error) {
       set({ error: "Error al buscar por código de barras" });
       return null;
@@ -55,35 +66,22 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   agregarProducto: async (producto, varianteData) => {
     try {
-      // Buscar si ya existe un producto base con el mismo nombre
-      let productoBase = await db.productosBase
-        .where("nombre")
-        .equalsIgnoreCase(producto.nombre)
-        .first();
-
-      if (!productoBase) {
-        // Crear nuevo producto base
-        const nuevoProductoBase: ProductoBase = {
-          ...producto,
-          id: generarUUID(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        await db.productosBase.add(nuevoProductoBase);
-        productoBase = nuevoProductoBase;
-      }
-
-      // Crear variante
-      const nuevaVariante: ProductoVariante = {
-        ...varianteData,
-        id: generarUUID(),
-        productoBaseId: productoBase.id,
-        createdAt: new Date(),
-      };
-      await db.productosVariantes.add(nuevaVariante);
+      // Esta funcionalidad debería usar el servicio en el futuro
+      // Por ahora, se mantiene la compatibilidad
+      const productoCompleto = await productService.createManualProduct(
+        varianteData.codigoBarras,
+        {
+          nombreBase: producto.nombre,
+          marca: producto.marca,
+          nombreVariante: varianteData.nombreCompleto,
+          tipo: varianteData.tipo,
+          tamano: varianteData.tamano,
+          sabor: varianteData.sabor,
+        }
+      );
 
       await get().cargarProductos();
-      return nuevaVariante;
+      return productoCompleto.variante;
     } catch (error) {
       set({ error: "Error al agregar producto" });
       throw error;
@@ -92,11 +90,7 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   obtenerVariantesDeBase: async (productoBaseId: string) => {
     try {
-      const variantes = await db.productosVariantes
-        .where("productoBaseId")
-        .equals(productoBaseId)
-        .toArray();
-      return variantes;
+      return await productService.getVariants(productoBaseId);
     } catch (error) {
       return [];
     }

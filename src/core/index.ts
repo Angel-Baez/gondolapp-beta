@@ -22,6 +22,12 @@ export * from "./datasources/LocalDataSource";
 export * from "./datasources/MongoDBDataSource";
 export * from "./datasources/DataSourceManager";
 
+// ==================== Sanitizadores ====================
+export * from "./sanitizers/ProductDataSanitizer";
+
+// ==================== Validadores ====================
+export * from "./validators";
+
 // ==================== Container ====================
 export * from "./container/ServiceContainer";
 export * from "./container/serviceConfig";
