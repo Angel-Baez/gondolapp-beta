@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import { useProductVerification } from "@/hooks/useProductVerification";
 import { useProductSync } from "@/hooks/useProductSync";
+import { ProductoCompleto } from "@/services/productos";
 
 // Lazy loading para optimización
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
@@ -62,7 +63,7 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
   };
 
   // Manejar producto creado exitosamente
-  const handleProductoCreado = async (producto: any) => {
+  const handleProductoCreado = async (producto: ProductoCompleto) => {
     console.log("✅ Producto creado en MongoDB:", producto);
 
     try {

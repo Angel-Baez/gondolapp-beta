@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { ScanMode } from "@/types";
-import { crearProductoManual } from "@/services/productos";
+import { ProductoCompleto } from "@/services/productos";
 
 // 🚀 Lazy load del scanner para reducir bundle inicial
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
@@ -31,6 +31,15 @@ const FormularioProductoManual = dynamic(
   () => import("@/components/FormularioProductoManual"),
   { ssr: false }
 );
+
+// Interface para el producto seleccionado en los modales
+interface ProductoSeleccionado {
+  id: string;
+  nombreCompleto: string;
+  nombreBase?: string;
+  marca?: string;
+  tamano?: string;
+}
 
 interface ScanWorkflowProps {
   scanMode: ScanMode;
@@ -51,7 +60,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   const [showExpiryModal, setShowExpiryModal] = useState(false);
   const [showManualProductModal, setShowManualProductModal] = useState(false);
   
-  const [productoSeleccionado, setProductoSeleccionado] = useState<any>(null);
+  const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoSeleccionado | null>(null);
   const [cantidad, setCantidad] = useState(1);
   const [fechaVencimiento, setFechaVencimiento] = useState("");
   const [lote, setLote] = useState("");
@@ -69,9 +78,11 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     if (result.success && result.producto) {
       // Guardar la variante completa con info del base
       setProductoSeleccionado({
-        ...result.producto.variante,
+        id: result.producto.variante.id,
+        nombreCompleto: result.producto.variante.nombreCompleto,
         nombreBase: result.producto.base.nombre,
         marca: result.producto.base.marca,
+        tamano: result.producto.variante.tamano,
       });
 
       // Mostrar modal según el modo
@@ -117,7 +128,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     }
   };
 
-  const handleProductoCreado = async (producto: any) => {
+  const handleProductoCreado = async (producto: ProductoCompleto) => {
     console.log("✅ Producto creado desde MongoDB:", producto);
 
     // Sincronizar con IndexedDB
@@ -129,6 +140,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       nombreCompleto: producto.variante.nombreCompleto,
       nombreBase: producto.base.nombre,
       marca: producto.base.marca,
+      tamano: producto.variante.tamano,
     });
 
     // Limpiar estados

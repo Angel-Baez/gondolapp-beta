@@ -24,8 +24,8 @@ export class ProductSyncService {
         db.productosVariantes.get(producto.variante.id),
       ]);
 
-      // Preparar operaciones de inserción con tipado explícito
-      const insertOperations: Promise<string>[] = [];
+      // Preparar operaciones de inserción
+      const insertOperations: Promise<unknown>[] = [];
 
       // Sincronizar ProductoBase con IndexedDB si no existe
       if (!baseExistente) {
