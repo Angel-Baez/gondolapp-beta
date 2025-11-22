@@ -3,11 +3,21 @@
 import { db } from "@/lib/db";
 import { useReposicionStore } from "@/store/reposicion";
 import { ProductoBase, ProductoVariante } from "@/types";
-import { Archive, CheckCircle2, Package, XCircle } from "lucide-react";
+import {
+  Archive,
+  CheckCircle2,
+  History,
+  Package,
+  Save,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ReposicionCard } from "./ReposicionCard";
 import { SkeletonCard } from "./SkeletonCard";
 import { motion as m } from "framer-motion";
+import Link from "next/link";
+import { Modal } from "@/components/ui/Modal";
+import toast from "react-hot-toast";
 
 interface ItemConProducto {
   item: any;
@@ -18,11 +28,13 @@ interface ItemConProducto {
 type SeccionType = "pendiente" | "repuesto" | "sinStock";
 
 export function ReposicionList() {
-  const { items, cargarItems } = useReposicionStore();
+  const { items, cargarItems, guardarListaActual } = useReposicionStore();
   const [itemsConProductos, setItemsConProductos] = useState<ItemConProducto[]>(
     []
   );
   const [loading, setLoading] = useState(true);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Cache de productos para evitar recargas innecesarias
   const productosCache = useRef<
@@ -121,6 +133,22 @@ export function ReposicionList() {
     };
   }, [itemsConProductos]);
 
+  const handleGuardarLista = async () => {
+    setSaving(true);
+    try {
+      await guardarListaActual();
+      toast.success("Lista guardada correctamente");
+      setShowSaveModal(false);
+      // Recargar items (la lista ahora debería estar vacía)
+      await cargarItems();
+    } catch (error) {
+      toast.error("Error al guardar la lista");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     // Mostrar 3 skeletons de cards mientras carga
     return (
@@ -188,7 +216,23 @@ export function ReposicionList() {
   );
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <>
+      {/* Header con link a historial */}
+      <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          Lista de Reposición
+        </h2>
+        <Link
+          href="/reposicion/historial"
+          className="flex items-center gap-2 text-sm sm:text-base text-cyan-600 hover:text-cyan-700 font-semibold transition-colors bg-cyan-50 px-3 py-2 rounded-lg hover:bg-cyan-100"
+        >
+          <History size={20} />
+          <span className="hidden sm:inline">Ver Historial</span>
+          <span className="sm:hidden">Historial</span>
+        </Link>
+      </div>
+
+      <div className="space-y-6 sm:space-y-8 pb-24">
       {/* Sección: PENDIENTES */}
       {groupedBySections.pendientes.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -255,5 +299,73 @@ export function ReposicionList() {
         </div>
       )}
     </div>
+
+    {/* Botón Guardar Lista - Solo si hay items */}
+    {itemsConProductos.length > 0 && (
+      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 z-20">
+        <button
+          onClick={() => setShowSaveModal(true)}
+          className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 max-w-md mx-auto"
+        >
+          <Save size={24} />
+          <span>Guardar Lista y Limpiar</span>
+        </button>
+      </div>
+    )}
+
+    {/* Modal de confirmación de guardado */}
+    <Modal
+      isOpen={showSaveModal}
+      onClose={() => setShowSaveModal(false)}
+      title="Guardar lista"
+    >
+      <div className="space-y-4">
+        <p className="text-gray-600">
+          ¿Deseas guardar esta lista? Se guardará el estado actual y la lista
+          se limpiará para comenzar una nueva.
+        </p>
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <div className="text-sm font-semibold text-blue-900 mb-2">
+            Resumen:
+          </div>
+          <div className="text-sm text-blue-800 space-y-1">
+            <div>Total de productos: {itemsConProductos.length}</div>
+            <div>
+              Repuestos:{" "}
+              {itemsConProductos.filter((i) => i.item.repuesto).length}
+            </div>
+            <div>
+              Sin stock:{" "}
+              {itemsConProductos.filter((i) => i.item.sinStock).length}
+            </div>
+            <div>
+              Pendientes:{" "}
+              {
+                itemsConProductos.filter(
+                  (i) => !i.item.repuesto && !i.item.sinStock
+                ).length
+              }
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowSaveModal(false)}
+            disabled={saving}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleGuardarLista}
+            disabled={saving}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  </>
   );
 }

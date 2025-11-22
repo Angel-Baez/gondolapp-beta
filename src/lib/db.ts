@@ -1,6 +1,7 @@
 import {
   ItemReposicion,
   ItemVencimiento,
+  ListaReposicionHistorial,
   ProductoBase,
   ProductoVariante,
 } from "@/types";
@@ -11,10 +12,12 @@ export class GondolAppDB extends Dexie {
   productosVariantes!: Table<ProductoVariante, string>;
   itemsReposicion!: Table<ItemReposicion, string>;
   itemsVencimiento!: Table<ItemVencimiento, string>;
+  listasHistorial!: Table<ListaReposicionHistorial, string>;
 
   constructor() {
     super("GondolAppDB");
 
+    // Version 1: Initial schema
     this.version(1).stores({
       productosBase: "id, nombre, categoria, marca, createdAt",
       productosVariantes:
@@ -23,6 +26,18 @@ export class GondolAppDB extends Dexie {
         "id, varianteId, repuesto, sinStock, agregadoAt, actualizadoAt",
       itemsVencimiento:
         "id, varianteId, fechaVencimiento, alertaNivel, agregadoAt",
+    });
+
+    // Version 2: Add historical lists table
+    this.version(2).stores({
+      productosBase: "id, nombre, categoria, marca, createdAt",
+      productosVariantes:
+        "id, productoBaseId, codigoBarras, nombreCompleto, createdAt",
+      itemsReposicion:
+        "id, varianteId, repuesto, sinStock, agregadoAt, actualizadoAt",
+      itemsVencimiento:
+        "id, varianteId, fechaVencimiento, alertaNivel, agregadoAt",
+      listasHistorial: "id, fechaGuardado, usuarioId",
     });
   }
 }
