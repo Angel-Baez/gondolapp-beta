@@ -18,7 +18,7 @@ function extraerVolumenUnidad(tamano: string): {
   );
   if (!match) return { volumen: null, unidad: null };
 
-  let volumen = parseFloat(match[1]);
+  const volumen = parseFloat(match[1]);
   let unidad = match[2].toUpperCase();
 
   if (unidad === "UNIDAD" || unidad === "UNIDADES" || unidad === "U") {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Buscar o crear ProductoBase
-    let productoBase = await productosCollection.findOne({
+    const productoBase = await productosCollection.findOne({
       nombre: body.productoBase.nombre.trim(),
       marca: body.productoBase.marca.trim(),
     });

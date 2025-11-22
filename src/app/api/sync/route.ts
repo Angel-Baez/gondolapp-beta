@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
       if (hasta) fechaFilter.$lte = new Date(hasta);
     }
 
-    let data: any = {};
-    let total: any = {};
+    const data: any = {};
+    const total: any = {};
 
     // Productos
     if (tipo === "productos" || tipo === "all") {

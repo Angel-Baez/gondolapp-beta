@@ -19,7 +19,7 @@ function extraerVolumenUnidad(tamano: string): {
   );
   if (!match) return { volumen: null, unidad: null };
 
-  let volumen = parseFloat(match[1]);
+  const volumen = parseFloat(match[1]);
   let unidad = match[2].toUpperCase();
 
   // Normalizar unidades

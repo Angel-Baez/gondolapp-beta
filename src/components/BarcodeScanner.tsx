@@ -229,7 +229,6 @@ export default function BarcodeScanner({
         stopScanning();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, showManualInput]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
