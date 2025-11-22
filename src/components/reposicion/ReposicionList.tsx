@@ -6,6 +6,8 @@ import { ProductoBase, ProductoVariante } from "@/types";
 import {
   Archive,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   History,
   Package,
   Save,
@@ -35,6 +37,11 @@ export function ReposicionList() {
   const [loading, setLoading] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Estados para controlar el colapso de cada sección
+  const [isPendientesExpanded, setIsPendientesExpanded] = useState(false);
+  const [isRepuestosExpanded, setIsRepuestosExpanded] = useState(false);
+  const [isSinStockExpanded, setIsSinStockExpanded] = useState(false);
 
   // Cache de productos para evitar recargas innecesarias
   const productosCache = useRef<
@@ -149,6 +156,48 @@ export function ReposicionList() {
     }
   };
 
+  // Componente wrapper para secciones con colapso
+  const CollapsibleSection = ({
+    children,
+    isExpanded,
+    itemCount,
+    bgColor,
+  }: {
+    children: React.ReactNode;
+    isExpanded: boolean;
+    itemCount: number;
+    bgColor: string;
+  }) => {
+    const shouldCollapse = itemCount >= 10;
+    
+    if (!shouldCollapse) {
+      // Comportamiento normal si hay menos de 10 productos
+      return <div className={`p-3 sm:p-4 space-y-3 sm:space-y-4 ${bgColor}`}>{children}</div>;
+    }
+
+    return (
+      <div className="relative">
+        <m.div
+          initial={false}
+          animate={{
+            maxHeight: isExpanded ? "600px" : "300px",
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className={`${isExpanded ? "overflow-y-auto" : "overflow-hidden"} relative`}
+        >
+          <div className={`p-3 sm:p-4 space-y-3 sm:space-y-4 ${bgColor}`}>
+            {children}
+          </div>
+        </m.div>
+        
+        {/* Gradiente fade-out cuando está colapsado */}
+        {!isExpanded && (
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     // Mostrar 3 skeletons de cards mientras carga
     return (
@@ -194,11 +243,17 @@ export function ReposicionList() {
     count,
     icon: Icon,
     colorClass,
+    isExpanded,
+    onToggle,
+    showToggleButton,
   }: {
     title: string;
     count: number;
     icon: any;
     colorClass: string;
+    isExpanded?: boolean;
+    onToggle?: () => void;
+    showToggleButton?: boolean;
   }) => (
     <div className={`${colorClass} p-3 sm:p-4 rounded-t-xl`}>
       <div className="flex items-center justify-between">
@@ -208,9 +263,26 @@ export function ReposicionList() {
             {title}
           </h3>
         </div>
-        <span className="px-2.5 sm:px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
-          {count} producto{count !== 1 ? "s" : ""}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="px-2.5 sm:px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
+            {count} producto{count !== 1 ? "s" : ""}
+          </span>
+          {showToggleButton && onToggle && (
+            <m.button
+              onClick={onToggle}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200"
+              aria-label={isExpanded ? "Colapsar sección" : "Expandir sección"}
+            >
+              {isExpanded ? (
+                <ChevronUp size={20} className="text-white" />
+              ) : (
+                <ChevronDown size={20} className="text-white" />
+              )}
+            </m.button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -241,8 +313,15 @@ export function ReposicionList() {
             count={groupedBySections.pendientes.length}
             icon={Package}
             colorClass="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            isExpanded={isPendientesExpanded}
+            onToggle={() => setIsPendientesExpanded(!isPendientesExpanded)}
+            showToggleButton={groupedBySections.pendientes.length >= 10}
           />
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-cyan-50/30">
+          <CollapsibleSection
+            isExpanded={isPendientesExpanded}
+            itemCount={groupedBySections.pendientes.length}
+            bgColor="bg-cyan-50/30"
+          >
             {groupedBySections.pendientes.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
@@ -251,7 +330,7 @@ export function ReposicionList() {
                 seccion="pendiente"
               />
             ))}
-          </div>
+          </CollapsibleSection>
         </div>
       )}
 
@@ -263,8 +342,15 @@ export function ReposicionList() {
             count={groupedBySections.repuestos.length}
             icon={CheckCircle2}
             colorClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
+            isExpanded={isRepuestosExpanded}
+            onToggle={() => setIsRepuestosExpanded(!isRepuestosExpanded)}
+            showToggleButton={groupedBySections.repuestos.length >= 10}
           />
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-emerald-50/30">
+          <CollapsibleSection
+            isExpanded={isRepuestosExpanded}
+            itemCount={groupedBySections.repuestos.length}
+            bgColor="bg-emerald-50/30"
+          >
             {groupedBySections.repuestos.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
@@ -273,7 +359,7 @@ export function ReposicionList() {
                 seccion="repuesto"
               />
             ))}
-          </div>
+          </CollapsibleSection>
         </div>
       )}
 
@@ -285,8 +371,15 @@ export function ReposicionList() {
             count={groupedBySections.sinStock.length}
             icon={XCircle}
             colorClass="bg-gradient-to-r from-red-500 to-red-600"
+            isExpanded={isSinStockExpanded}
+            onToggle={() => setIsSinStockExpanded(!isSinStockExpanded)}
+            showToggleButton={groupedBySections.sinStock.length >= 10}
           />
-          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 bg-red-50/30">
+          <CollapsibleSection
+            isExpanded={isSinStockExpanded}
+            itemCount={groupedBySections.sinStock.length}
+            bgColor="bg-red-50/30"
+          >
             {groupedBySections.sinStock.map(({ productoBase, items }) => (
               <ReposicionCard
                 key={productoBase.id}
@@ -295,7 +388,7 @@ export function ReposicionList() {
                 seccion="sinStock"
               />
             ))}
-          </div>
+          </CollapsibleSection>
         </div>
       )}
     </div>
