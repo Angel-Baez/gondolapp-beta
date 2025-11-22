@@ -13,30 +13,18 @@ import { generarIdBase } from "@/services/normalizador";
 import { IProductRepository } from "../interfaces/IProductRepository";
 import { IDataSourceManager } from "../interfaces/IDataSource";
 import { INormalizerChain } from "../interfaces/INormalizer";
-import {
-  getProductRepository,
-  getDataSourceManager,
-  getNormalizerChain,
-} from "../container/serviceConfig";
 
 /**
  * Servicio de productos que implementa principios SOLID
+ * 
+ * ✅ Dependency Injection pura - requiere todas las dependencias
  */
 export class ProductService {
-  private repository: IProductRepository;
-  private dataSourceManager: IDataSourceManager;
-  private normalizerChain: INormalizerChain;
-
   constructor(
-    repository?: IProductRepository,
-    dataSourceManager?: IDataSourceManager,
-    normalizerChain?: INormalizerChain
-  ) {
-    // Dependency Injection con valores por defecto desde el contenedor
-    this.repository = repository || getProductRepository();
-    this.dataSourceManager = dataSourceManager || getDataSourceManager();
-    this.normalizerChain = normalizerChain || getNormalizerChain();
-  }
+    private repository: IProductRepository,
+    private dataSourceManager: IDataSourceManager,
+    private normalizerChain: INormalizerChain
+  ) {}
 
   /**
    * Obtiene o crea un producto por código de barras

@@ -12,6 +12,11 @@
 import { ProductoBase, ProductoVariante } from "@/types";
 import { create } from "zustand";
 import { ProductService } from "@/core/services/ProductService";
+import {
+  getProductRepository,
+  getDataSourceManager,
+  getNormalizerChain,
+} from "@/core/container/serviceConfig";
 
 interface ProductoStore {
   productosBase: ProductoBase[];
@@ -33,8 +38,16 @@ interface ProductoStore {
   ) => Promise<ProductoVariante[]>;
 }
 
-// Instancia del servicio SOLID
-const productService = new ProductService();
+/**
+ * Obtiene instancia de ProductService desde el contenedor
+ */
+function getProductService(): ProductService {
+  return new ProductService(
+    getProductRepository(),
+    getDataSourceManager(),
+    getNormalizerChain()
+  );
+}
 
 export const useProductoStore = create<ProductoStore>((set, get) => ({
   productosBase: [],
@@ -45,8 +58,9 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
   cargarProductos: async () => {
     set({ loading: true, error: null });
     try {
+      const service = getProductService();
       // Delegar al servicio SOLID
-      const productos = await productService.searchProducts("");
+      const productos = await service.searchProducts("");
       set({ productosBase: productos, loading: false });
     } catch (error) {
       set({ error: "Error al cargar productos", loading: false });
@@ -55,8 +69,9 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   buscarPorCodigoBarras: async (codigoBarras: string) => {
     try {
+      const service = getProductService();
       // Delegar al repositorio a través del servicio
-      const producto = await productService.getOrCreateProduct(codigoBarras);
+      const producto = await service.getOrCreateProduct(codigoBarras);
       return producto?.variante || null;
     } catch (error) {
       set({ error: "Error al buscar por código de barras" });
@@ -66,9 +81,9 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   agregarProducto: async (producto, varianteData) => {
     try {
-      // Esta funcionalidad debería usar el servicio en el futuro
-      // Por ahora, se mantiene la compatibilidad
-      const productoCompleto = await productService.createManualProduct(
+      const service = getProductService();
+      // Esta funcionalidad usa el servicio SOLID
+      const productoCompleto = await service.createManualProduct(
         varianteData.codigoBarras,
         {
           nombreBase: producto.nombre,
@@ -90,7 +105,8 @@ export const useProductoStore = create<ProductoStore>((set, get) => ({
 
   obtenerVariantesDeBase: async (productoBaseId: string) => {
     try {
-      return await productService.getVariants(productoBaseId);
+      const service = getProductService();
+      return await service.getVariants(productoBaseId);
     } catch (error) {
       return [];
     }

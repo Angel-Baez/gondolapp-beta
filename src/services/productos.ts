@@ -1,25 +1,26 @@
 import { ProductoBase, ProductoVariante } from "@/types";
-import { v4 as uuidv4 } from "uuid";
-import { generarIdBase } from "./normalizador";
 import { ProductService } from "@/core/services/ProductService";
+import {
+  getProductRepository,
+  getDataSourceManager,
+  getNormalizerChain,
+} from "@/core/container/serviceConfig";
 
 export interface ProductoCompleto {
   base: ProductoBase;
   variante: ProductoVariante;
 }
 
-// Instancia singleton del servicio SOLID
-let productServiceInstance: ProductService | null = null;
-
 /**
- * Obtiene la instancia del servicio de productos
- * Patrón Singleton para mantener compatibilidad con código existente
+ * Obtiene instancia de ProductService desde el contenedor IoC
+ * ✅ Usa el contenedor para gestión del ciclo de vida
  */
 function getProductService(): ProductService {
-  if (!productServiceInstance) {
-    productServiceInstance = new ProductService();
-  }
-  return productServiceInstance;
+  return new ProductService(
+    getProductRepository(),
+    getDataSourceManager(),
+    getNormalizerChain()
+  );
 }
 
 /**

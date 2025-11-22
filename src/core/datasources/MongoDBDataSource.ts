@@ -15,8 +15,9 @@ export class MongoDBDataSource implements IDataSource {
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Verificar si el endpoint está disponible
-      const response = await fetch("/api/productos/buscar?ean=test", {
+      // Verificar disponibilidad con una petición simple
+      // Nota: Idealmente debería existir un endpoint de health check dedicado
+      const response = await fetch("/api/productos/buscar", {
         method: "HEAD",
       });
       return response.status !== 503;

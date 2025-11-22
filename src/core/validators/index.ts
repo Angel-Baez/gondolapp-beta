@@ -7,6 +7,10 @@
 
 import { IValidator } from "../interfaces/ISanitizer";
 
+// Unidades de medida válidas (configuración centralizada)
+export const VALID_UNITS = ["L", "ML", "G", "KG", "OZ", "LB"] as const;
+export type ValidUnit = typeof VALID_UNITS[number];
+
 /**
  * Validador de código de barras EAN
  */
@@ -86,10 +90,8 @@ export class PositiveNumberValidator implements IValidator<number> {
  * Validador de unidades de medida
  */
 export class UnitValidator implements IValidator<string> {
-  private readonly VALID_UNITS = ["L", "ML", "G", "KG", "OZ", "LB"];
-
   validate(value: string): boolean {
-    return this.VALID_UNITS.includes(value.toUpperCase());
+    return VALID_UNITS.includes(value.toUpperCase() as ValidUnit);
   }
 
   sanitize(value: string): string {

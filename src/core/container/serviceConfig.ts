@@ -36,7 +36,11 @@ export function initializeServices(): void {
     ServiceKeys.ProductRepository,
     () => {
       const repo = new IndexedDBProductRepository();
-      repo.initialize().catch(console.error);
+      // Inicializar de forma asíncrona
+      // El repositorio es funcional inmediatamente ya que Dexie se inicializa automáticamente
+      repo.initialize().catch((error) => {
+        console.error("⚠️ Error al inicializar repositorio:", error);
+      });
       return repo;
     }
   );
