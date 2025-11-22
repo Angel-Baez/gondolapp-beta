@@ -6,7 +6,7 @@
  */
 
 import { ISanitizer } from "../interfaces/ISanitizer";
-import { DatosNormalizados } from "@/services/normalizador";
+import { DatosNormalizados } from "../types";
 
 export class ProductDataSanitizer implements ISanitizer {
   sanitize(data: DatosNormalizados): DatosNormalizados {
