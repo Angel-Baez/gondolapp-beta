@@ -123,12 +123,8 @@ a.primary {
 ```javascript
 const nextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.openfoodfacts.org",
-      },
-    ],
+    // Ya no usamos Open Food Facts, solo assets locales
+    remotePatterns: [],
     // 🚀 Nuevas optimizaciones
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

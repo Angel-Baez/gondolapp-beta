@@ -25,8 +25,9 @@ Aplicación web progresiva (PWA) para la gestión de inventario de supermercado 
 - **Base de Datos Local**: IndexedDB (Dexie.js)
 - **Escaneo**: @zxing/browser
 - **Animaciones**: Framer Motion
-- **API Externa**: Open Food Facts
-- **🆕 IA**: Google Gemini 1.5 Flash (normalización inteligente)
+- **API Externa**: MongoDB Atlas (productos centralizados)
+- **IA**: Google Gemini 1.5 Flash (normalización inteligente)
+- **Cache**: Redis (Upstash) para rate limiting
 
 #### Sistema de Normalización IA-First 🤖
 
@@ -35,14 +36,14 @@ GondolApp v2.0 implementa un sistema donde **la IA es la fuente principal** de n
 **Flujo de Procesamiento:**
 
 ```
-Escaneo → Cache Local → Open Food Facts API → 🤖 IA Gemini → Sanitización → Guardar
+Escaneo → Cache Local (IndexedDB) → API MongoDB → Normalización SOLID → Guardar
 ```
 
 **Características:**
 
 - ✅ **IA como fuente principal**: Detección inteligente de marcas y sub-marcas
 - ✅ **Fallback robusto**: Normalización básica si IA falla
-- ✅ **Sanitización pura**: `normalizador.ts` solo limpia datos, no decide
+- ✅ **Arquitectura SOLID**: Código limpio y mantenible
 - ✅ **Offline-first**: Cache local instantáneo (5ms)
 - ✅ **Económico**: ~$0.000045 por producto nuevo
 
@@ -117,19 +118,19 @@ gondolapp-beta/
 │   │   ├── globals.css        # Estilos globales
 │   │   └── PWAProvider.tsx    # Proveedor de PWA
 │   ├── components/            # Componentes React
-│   │   ├── ui/                # Componentes base
-│   │   │   ├── Button.tsx
-│   │   │   ├── Card.tsx
-│   │   │   ├── Badge.tsx
-│   │   │   ├── Input.tsx
-│   │   │   └── Modal.tsx
+│   │   ├── ui/                # Componentes base (Button, Card, Badge, Input, Modal)
 │   │   ├── reposicion/        # Módulo de reposición
-│   │   │   ├── ReposicionList.tsx
-│   │   │   └── ReposicionCard.tsx
 │   │   ├── vencimiento/       # Módulo de vencimientos
-│   │   │   ├── VencimientoList.tsx
-│   │   │   └── VencimientoItem.tsx
 │   │   └── BarcodeScanner.tsx # Escáner de códigos
+│   ├── core/                  # Arquitectura SOLID
+│   │   ├── interfaces/        # Abstracciones (DIP)
+│   │   ├── repositories/      # Persistencia (IndexedDB)
+│   │   ├── normalizers/       # Sistema de normalización (IA + Manual)
+│   │   ├── datasources/       # Fuentes de datos (Local + MongoDB)
+│   │   ├── services/          # Lógica de negocio (ProductService)
+│   │   ├── types/             # Tipos del core
+│   │   ├── utils/             # Utilidades del core
+│   │   └── container/         # IoC Container (DI)
 │   ├── store/                 # Zustand stores
 │   │   ├── producto.ts
 │   │   ├── reposicion.ts
@@ -137,8 +138,8 @@ gondolapp-beta/
 │   ├── lib/                   # Utilidades y configuración
 │   │   ├── db.ts             # Configuración de Dexie
 │   │   └── utils.ts          # Funciones auxiliares
-│   ├── services/              # Servicios externos
-│   │   └── openFoodFacts.ts  # API de Open Food Facts
+│   ├── services/              # Capa de compatibilidad (Facade)
+│   │   └── productos.ts      # Interfaz legacy → ProductService
 │   ├── types/                 # Definiciones de tipos
 │   │   └── index.ts
 │   └── hooks/                 # Custom hooks
@@ -146,6 +147,11 @@ gondolapp-beta/
 ├── public/                    # Archivos estáticos
 │   ├── manifest.json         # Manifest de PWA
 │   └── sw.js                 # Service Worker
+├── docs/                      # Documentación técnica
+│   ├── ARQUITECTURA-IA-FIRST.md
+│   ├── SOLID-PRINCIPLES.md
+│   ├── DEPLOY-VERCEL.md
+│   └── SEGURIDAD.md
 ├── next.config.js            # Configuración de Next.js
 ├── tailwind.config.ts        # Configuración de Tailwind
 ├── tsconfig.json            # Configuración de TypeScript
@@ -321,7 +327,7 @@ Para obtener normalización inteligente de productos:
 - **Local-First**: Todos los datos se almacenan localmente en el dispositivo
 - **Sin servidor**: No se requiere backend ni cuenta de usuario
 - **Sin tracking**: No se recopilan datos de usuario
-- **Open Food Facts**: API pública para información de productos
+- **MongoDB Atlas**: Base de datos centralizada para productos compartidos entre usuarios
 
 ## 📝 Licencia
 
