@@ -232,9 +232,9 @@ vercel logs gondolapp-beta --follow
 ```js
 // next.config.js
 images: {
-  remotePatterns: [
-    { hostname: "images.openfoodfacts.org" }
-  ],
+  // Ya no usamos Open Food Facts
+  remotePatterns: [],
+  formats: ["image/webp", "image/avif"],
 }
 ```
 
@@ -308,7 +308,7 @@ default-src 'self';
 script-src 'self' 'unsafe-eval' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https: blob:;
-connect-src 'self' https://images.openfoodfacts.org https://generativelanguage.googleapis.com;
+connect-src 'self' https://generativelanguage.googleapis.com https://*.mongodb.net;
 frame-ancestors 'none';
 ```
 

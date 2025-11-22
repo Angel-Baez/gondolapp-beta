@@ -9,7 +9,7 @@
 import { ProductoCompleto } from "@/services/productos";
 import { ProductoBase, ProductoVariante } from "@/types";
 import { v4 as uuidv4 } from "uuid";
-import { generarIdBase } from "@/services/normalizador";
+import { generarIdBase } from "../utils/productUtils";
 import { IProductRepository } from "../interfaces/IProductRepository";
 import { IDataSourceManager } from "../interfaces/IDataSource";
 import { INormalizerChain } from "../interfaces/INormalizer";

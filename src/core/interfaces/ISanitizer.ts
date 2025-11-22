@@ -2,7 +2,7 @@
  * Single Responsibility Principle - Sanitización separada de normalización
  */
 
-import { DatosNormalizados } from "@/services/normalizador";
+import { DatosNormalizados } from "../types";
 
 /**
  * Interface para sanitizadores de datos

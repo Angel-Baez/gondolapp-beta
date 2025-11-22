@@ -1,88 +1,62 @@
-# Arquitectura de Normalización IA-First
+# Arquitectura de Normalización IA-First con SOLID
 
 ## 🎯 Filosofía del Sistema
 
-**La IA es la normalización principal, el normalizador.ts solo sanitiza.**
+**La IA es la normalización principal, implementada con principios SOLID.**
 
 Este sistema implementa una arquitectura donde:
 
 - ✅ **IA Gemini** es la fuente de verdad para decisiones inteligentes
-- ✅ **normalizador.ts** solo limpia y valida tipos de datos
+- ✅ **Arquitectura SOLID** garantiza código limpio y mantenible
 - ✅ **Fallback manual** actúa como red de seguridad básica
 - ✅ **Sanitización** garantiza consistencia de formato
 
 ---
 
-## 📊 Flujo de Datos
+## 📊 Flujo de Datos Actualizado
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ 1. Usuario Escanea EAN                              │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 2. Buscar en IndexedDB Local                        │
-│    ✅ Existe → Retornar inmediatamente (5ms)        │
-│    ❌ No existe → Continuar al paso 3               │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 3. Consultar Open Food Facts API                    │
-│    → Datos crudos del producto (200ms)              │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 4. 🤖 NORMALIZACIÓN IA (Gemini)                     │
-│    → Detecta marca, sub-marca, tipo, volumen        │
-│    → Genera nombres comerciales inteligentes        │
-│    → Tiempo: 300-700ms                              │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 5. ¿IA Exitosa?                                     │
-│    ✅ SÍ → Pasar a sanitización                     │
-│    ❌ NO → Fallback a normalizador manual           │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 6. 🧼 SANITIZACIÓN (normalizador.ts)                │
-│    → Solo limpia tipos (string → number)            │
-│    → Remueve espacios extras                        │
-│    → Valida estructura de datos                     │
-│    → NO cambia nombres ni toma decisiones           │
-│    → Tiempo: <5ms                                   │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 7. 💾 Guardar en IndexedDB                          │
-│    → ProductoBase + ProductoVariante                │
-└────────────────┬────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│ 8. 🚀 Retornar al Frontend                          │
-│    → Mostrar modal de cantidad o vencimiento        │
-└─────────────────────────────────────────────────────┘
+Usuario escanea código
+        ↓
+ProductService.getOrCreateProduct()
+        ↓
+DataSourceManager (Strategy Pattern)
+        ↓
+┌────────────────────────────────┐
+│ 1. LocalDataSource             │ → IndexedDB (5ms)
+│ 2. MongoDBDataSource           │ → API Rest + Cache Sync
+│ 3. Return null (no encontrado) │
+└────────────────────────────────┘
+        ↓
+Si no existe → Crear Manual
+        ↓
+NormalizerChain (Chain of Responsibility)
+        ↓
+┌────────────────────────────────┐
+│ 1. GeminiAINormalizer (IA)     │ → Priority 100
+│ 2. ManualNormalizer (Fallback) │ → Priority 50
+└────────────────────────────────┘
+        ↓
+Sanitización y validación
+        ↓
+Guardar en IndexedDB + MongoDB
 ```
 
 ---
 
 ## 🔧 Componentes del Sistema
 
-### 1. **normalizadorIA.ts** - Inteligencia Artificial
+### 1. **GeminiAINormalizer** - Inteligencia Artificial (SOLID)
 
+**Ubicación:** `src/core/normalizers/GeminiAINormalizer.ts`  
 **Responsabilidad:** Decisiones inteligentes de normalización
 
 ```typescript
-export async function normalizarConIA(
-  rawProductOFF: any
-): Promise<DatosNormalizados | null>;
+export class GeminiAINormalizer implements INormalizer {
+  async normalize(rawData: any): Promise<DatosNormalizados | null>;
+  canHandle(rawData: any): boolean;
+  priority: number; // 100 - Máxima prioridad
+}
 ```
 
 **Capacidades:**
@@ -115,8 +89,9 @@ REGLAS CRÍTICAS:
 
 ---
 
-### 2. **normalizador.ts** - Sanitización
+### 2. **ProductDataSanitizer** - Sanitización (SOLID)
 
+**Ubicación:** `src/core/sanitizers/ProductDataSanitizer.ts`  
 **Responsabilidad:** Limpieza y validación de tipos (NO decisiones)
 
 ```typescript

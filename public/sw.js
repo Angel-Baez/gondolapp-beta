@@ -52,10 +52,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Estrategia para imágenes (Cache First)
-  if (
-    request.destination === "image" ||
-    url.hostname === "images.openfoodfacts.org"
-  ) {
+  if (request.destination === "image") {
     event.respondWith(
       caches.match(request).then((response) => {
         return (
@@ -68,26 +65,6 @@ self.addEventListener("fetch", (event) => {
           })
         );
       })
-    );
-    return;
-  }
-
-  // Estrategia para API de Open Food Facts (Network First con fallback)
-  if (url.hostname === "world.openfoodfacts.org") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            return caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, response.clone());
-              return response;
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request);
-        })
     );
     return;
   }

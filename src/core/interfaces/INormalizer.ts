@@ -3,7 +3,7 @@
  * Liskov Substitution Principle (LSP) - Todos los normalizadores son intercambiables
  */
 
-import { DatosNormalizados } from "@/services/normalizador";
+import { DatosNormalizados } from "../types";
 
 /**
  * Interface base para normalizadores de productos

@@ -117,9 +117,13 @@ default-src 'self';
 script-src 'self' 'unsafe-eval' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https: blob:;
-connect-src 'self' https://images.openfoodfacts.org https://generativelanguage.googleapis.com;
+connect-src 'self' https://generativelanguage.googleapis.com https://*.mongodb.net;
 frame-ancestors 'none';
 ```
+
+**Cambios respecto a versión anterior:**
+- ❌ Removido: `https://images.openfoodfacts.org`
+- ✅ Mantenido: Gemini AI y MongoDB Atlas
 
 #### Directivas Explicadas
 
@@ -129,8 +133,8 @@ frame-ancestors 'none';
 | `script-src 'unsafe-eval'`   | Permite eval()     | **Next.js code splitting requiere** |
 | `script-src 'unsafe-inline'` | Permite inline JS  | **Next.js hydration requiere**      |
 | `style-src 'unsafe-inline'`  | Permite inline CSS | **Tailwind CSS requiere**           |
-| `img-src https: data: blob:` | Imágenes externas  | Open Food Facts + cámara            |
-| `connect-src`                | APIs específicas   | Open Food Facts + Gemini AI         |
+| `img-src https: data: blob:` | Imágenes externas  | Cámara y assets                     |
+| `connect-src`                | APIs específicas   | Gemini AI + MongoDB Atlas           |
 | `frame-ancestors 'none'`     | Sin iframes        | Previene clickjacking               |
 
 #### ⚠️ Riesgos de `unsafe-eval` y `unsafe-inline`

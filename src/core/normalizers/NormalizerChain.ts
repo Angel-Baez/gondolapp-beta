@@ -5,7 +5,7 @@
  */
 
 import { INormalizer, INormalizerChain } from "../interfaces/INormalizer";
-import { DatosNormalizados } from "@/services/normalizador";
+import { DatosNormalizados } from "../types";
 
 export class NormalizerChain implements INormalizerChain {
   private normalizers: INormalizer[] = [];

@@ -5,7 +5,8 @@
  */
 
 import { INormalizer } from "../interfaces/INormalizer";
-import { DatosNormalizados, normalizarManualmente } from "@/services/normalizador";
+import { DatosNormalizados } from "../types";
+import { normalizarManualmente } from "../utils/productUtils";
 
 export class ManualNormalizer implements INormalizer {
   public readonly priority = 10; // Baja prioridad (fallback)
