@@ -1,0 +1,78 @@
+name: ✨ Feature Request
+description: Sugerir una nueva funcionalidad para GondolApp
+title: "[FEATURE] "
+labels: ["enhancement", "needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Gracias por sugerir una mejora! Por favor describe tu idea en detalle.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué problema resuelve esta funcionalidad?
+      description: Describe el problema o necesidad que tienes
+      placeholder: "Como usuario de supermercado, necesito..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución propuesta
+      description: Describe cómo te gustaría que funcionara
+      placeholder: "Me gustaría que..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Categoría
+      description: ¿A qué área pertenece esta funcionalidad?
+      options:
+        - Gestión de inventario
+        - Control de vencimientos
+        - Scanner de códigos
+        - Reportes y estadísticas
+        - Sincronización
+        - Interfaz de usuario
+        - Performance
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridad sugerida
+      description: ¿Qué tan importante es para ti?
+      options:
+        - Alta (lo necesito pronto)
+        - Media (sería muy útil)
+        - Baja (nice to have)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: ¿Has pensado en otras formas de resolver esto?
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Screenshots
+      description: Si tienes diseños o ejemplos visuales, agrégalos aquí
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibilidad
+      options:
+        - label: Esta funcionalidad debe funcionar offline
+        - label: Requiere acceso a cámara/hardware
+        - label: Necesita sincronización con servidor
+        - label: Impacta en el rendimiento de la PWA

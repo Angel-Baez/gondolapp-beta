@@ -1,0 +1,97 @@
+name: 🐛 Bug Report
+description: Reportar un error o comportamiento inesperado
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar un bug. Por favor llena los siguientes campos para ayudarnos a resolverlo rápidamente.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción del bug
+      description: Una descripción clara y concisa del problema
+      placeholder: ¿Qué esperabas que sucediera y qué sucedió en realidad?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      description: Pasos detallados para reproducir el comportamiento
+      placeholder: |
+        1. Ve a '...'
+        2. Haz clic en '...'
+        3. Escanea el código '...'
+        4. Ver error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Sección afectada
+      description: ¿En qué parte de la app ocurre?
+      options:
+        - Reposición
+        - Vencimientos
+        - Scanner de códigos
+        - Lista de productos
+        - Sincronización
+        - Instalación PWA
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidad
+      description: ¿Qué tan crítico es este bug?
+      options:
+        - Crítico (bloquea funcionalidad principal)
+        - Alto (funcionalidad importante afectada)
+        - Medio (inconveniente pero hay workaround)
+        - Bajo (cosmético o menor)
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Entorno
+      description: Información sobre tu dispositivo y navegador
+      placeholder: |
+        - Dispositivo: [ej. iPhone 14, Samsung Galaxy S23, Desktop]
+        - OS: [ej. iOS 17, Android 13, Windows 11]
+        - Navegador: [ej. Chrome 120, Safari 17]
+        - Versión de la app: [ej. 1.0.0]
+        - ¿Online u offline?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Videos
+      description: Si aplica, agrega screenshots para explicar el problema
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console logs
+      description: Si hay errores en la consola del navegador, pégalos aquí
+      render: shell
+
+  - type: checkboxes
+    id: additional
+    attributes:
+      label: Información adicional
+      options:
+        - label: El error ocurre consistentemente
+        - label: El error solo ocurre en modo offline
+        - label: He limpiado el caché del navegador
+        - label: He verificado que no es un duplicado
