@@ -302,10 +302,11 @@ export function ReposicionList() {
 
     {/* Botón Guardar Lista - Solo si hay items */}
     {itemsConProductos.length > 0 && (
-      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 z-20">
+      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 z-20 pb-safe">
         <button
           onClick={() => setShowSaveModal(true)}
           className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 max-w-md mx-auto"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
         >
           <Save size={24} />
           <span>Guardar Lista y Limpiar</span>

@@ -239,8 +239,8 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
       // Crear lista historial
       const listaHistorial: ListaReposicionHistorial = {
         id: generarUUID(),
-        fechaCreacion: new Date(),
-        fechaGuardado: new Date(),
+        fechaCreacion: new Date(), // Timestamp when list was created (could be tracked from first item)
+        fechaGuardado: new Date(), // Timestamp when list was saved to history
         resumen: {
           totalProductos: items.length,
           totalRepuestos,
@@ -326,7 +326,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
         case "mes":
           fechaInicio.setMonth(ahora.getMonth() - 1);
           break;
-        case "año":
+        case "año": // Note: Using UTF-8 character for año (year in Spanish)
           fechaInicio.setFullYear(ahora.getFullYear() - 1);
           break;
       }
