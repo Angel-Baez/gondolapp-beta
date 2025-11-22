@@ -263,7 +263,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https://images.openfoodfacts.org https://generativelanguage.googleapis.com https://*.mongodb.net",
+      "connect-src 'self' https://generativelanguage.googleapis.com https://*.mongodb.net",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

@@ -2,12 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.openfoodfacts.org",
-      },
-    ],
+    remotePatterns: [],
     // 🚀 Optimizaciones para LCP y performance
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
