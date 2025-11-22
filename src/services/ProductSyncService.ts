@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { ProductoCompleto } from "./productos";
 
 /**
  * Servicio centralizado para sincronización con IndexedDB
@@ -12,10 +13,10 @@ export class ProductSyncService {
   /**
    * Sincroniza un producto (base + variante) con IndexedDB
    * 
-   * @param producto - Producto completo con base y variante
+   * @param producto - Producto completo con base y variante tipado
    * @returns Promise<void>
    */
-  static async syncProductToIndexedDB(producto: any): Promise<void> {
+  static async syncProductToIndexedDB(producto: ProductoCompleto): Promise<void> {
     try {
       // Verificar existencia de ambos registros en paralelo
       const [baseExistente, varianteExistente] = await Promise.all([
@@ -23,8 +24,8 @@ export class ProductSyncService {
         db.productosVariantes.get(producto.variante.id),
       ]);
 
-      // Preparar operaciones de inserción
-      const insertOperations: Promise<any>[] = [];
+      // Preparar operaciones de inserción con tipado explícito
+      const insertOperations: Promise<string>[] = [];
 
       // Sincronizar ProductoBase con IndexedDB si no existe
       if (!baseExistente) {
@@ -48,7 +49,7 @@ export class ProductSyncService {
           db.productosVariantes.add({
             id: producto.variante.id,
             productoBaseId: producto.base.id,
-            codigoBarras: producto.variante.ean,
+            codigoBarras: producto.variante.codigoBarras,
             nombreCompleto: producto.variante.nombreCompleto,
             tipo: producto.variante.tipo,
             tamano: producto.variante.tamano,
@@ -95,9 +96,9 @@ export class ProductSyncService {
    * Obtiene un producto completo por ID de variante
    * 
    * @param varianteId - ID de la variante
-   * @returns Promise<{base, variante} | null>
+   * @returns Promise<ProductoCompleto | null>
    */
-  static async getProductById(varianteId: string) {
+  static async getProductById(varianteId: string): Promise<ProductoCompleto | null> {
     try {
       const variante = await db.productosVariantes.get(varianteId);
       if (!variante) return null;
