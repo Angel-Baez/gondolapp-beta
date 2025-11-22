@@ -33,6 +33,9 @@ export default function AdminPage() {
   const [scannedEAN, setScannedEAN] = useState<string>("");
   const [isCheckingProduct, setIsCheckingProduct] = useState(false);
 
+  // Constantes
+  const SCANNER_REOPEN_DELAY = 500; // ms - Tiempo antes de reabrir scanner tras guardar
+
   // Abrir flujo de añadir productos
   const handleStartAddProducts = () => {
     setActiveTool("addProducts");
@@ -78,37 +81,54 @@ export default function AdminPage() {
     console.log("✅ Producto creado en MongoDB:", producto);
 
     try {
-      // Sincronizar ProductoBase con IndexedDB
-      const baseExistente = await db.productosBase.get(producto.base.id);
+      // Verificar existencia de ambos registros en paralelo
+      const [baseExistente, varianteExistente] = await Promise.all([
+        db.productosBase.get(producto.base.id),
+        db.productosVariantes.get(producto.variante.id),
+      ]);
+
+      // Preparar operaciones de inserción
+      const insertOperations = [];
+
+      // Sincronizar ProductoBase con IndexedDB si no existe
       if (!baseExistente) {
-        await db.productosBase.add({
-          id: producto.base.id,
-          nombre: producto.base.nombre,
-          marca: producto.base.marca,
-          categoria: producto.base.categoria,
-          imagen: undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        console.log("✅ ProductoBase sincronizado con IndexedDB");
+        insertOperations.push(
+          db.productosBase.add({
+            id: producto.base.id,
+            nombre: producto.base.nombre,
+            marca: producto.base.marca,
+            categoria: producto.base.categoria,
+            imagen: undefined,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+        );
+        console.log("✅ ProductoBase preparado para sincronizar");
       }
 
-      // Sincronizar ProductoVariante con IndexedDB
-      const varianteExistente = await db.productosVariantes.get(producto.variante.id);
+      // Sincronizar ProductoVariante con IndexedDB si no existe
       if (!varianteExistente) {
-        await db.productosVariantes.add({
-          id: producto.variante.id,
-          productoBaseId: producto.base.id,
-          codigoBarras: producto.variante.ean,
-          nombreCompleto: producto.variante.nombreCompleto,
-          tipo: producto.variante.tipo,
-          tamano: producto.variante.tamano,
-          sabor: undefined,
-          unidadMedida: undefined,
-          imagen: undefined,
-          createdAt: new Date(),
-        });
-        console.log("✅ ProductoVariante sincronizado con IndexedDB");
+        insertOperations.push(
+          db.productosVariantes.add({
+            id: producto.variante.id,
+            productoBaseId: producto.base.id,
+            codigoBarras: producto.variante.ean,
+            nombreCompleto: producto.variante.nombreCompleto,
+            tipo: producto.variante.tipo,
+            tamano: producto.variante.tamano,
+            sabor: undefined,
+            unidadMedida: undefined,
+            imagen: undefined,
+            createdAt: new Date(),
+          })
+        );
+        console.log("✅ ProductoVariante preparado para sincronizar");
+      }
+
+      // Ejecutar todas las inserciones en paralelo
+      if (insertOperations.length > 0) {
+        await Promise.all(insertOperations);
+        console.log("✅ Sincronización con IndexedDB completada");
       }
 
       // Mostrar notificación de éxito
@@ -121,14 +141,17 @@ export default function AdminPage() {
       setShowManualForm(false);
       setScannedEAN("");
 
-      // IMPORTANTE: Reabrir scanner después de 500ms
+      // IMPORTANTE: Reabrir scanner después del delay configurado
       setTimeout(() => {
         console.log("🔄 Reabriendo scanner para continuar...");
         setShowScanner(true);
-      }, 500);
+      }, SCANNER_REOPEN_DELAY);
     } catch (error) {
       console.error("❌ Error al sincronizar con IndexedDB:", error);
-      toast.error("Producto guardado en MongoDB pero error al sincronizar localmente");
+      toast.error(
+        "Producto guardado en MongoDB, pero hubo un error al sincronizar con el almacenamiento local. Por favor, recarga la página.",
+        { duration: 5000 }
+      );
     }
   };
 
