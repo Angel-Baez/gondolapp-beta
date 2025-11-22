@@ -66,13 +66,13 @@ export class ProductService {
    */
   async getProductById(variantId: string): Promise<ProductoCompleto | null> {
     try {
-      const variant = await this.repository.findById(variantId);
-      if (!variant) return null;
+      const variante = await this.repository.findById(variantId);
+      if (!variante) return null;
 
-      const base = await this.repository.findBaseById(variant.productoBaseId);
+      const base = await this.repository.findBaseById(variante.productoBaseId);
       if (!base) return null;
 
-      return { base, variant };
+      return { base, variante };
     } catch (error) {
       console.error("❌ ProductService: Error al obtener producto:", error);
       return null;
