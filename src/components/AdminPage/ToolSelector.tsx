@@ -1,4 +1,5 @@
-import { Cloud, FileSpreadsheet, Zap, ScanBarcode } from "lucide-react";
+import { Cloud, FileSpreadsheet, Zap, ScanBarcode, Database } from "lucide-react";
+import Link from "next/link";
 
 type ActiveTool = "import" | "preset" | "sync" | "addProducts" | null;
 
@@ -145,6 +146,39 @@ export function ToolSelector({ onSelectTool, onOpenPreset }: ToolSelectorProps) 
             </div>
           </div>
         </button>
+
+        {/* MongoDB Compass Admin */}
+        <Link href="/admin/mongo">
+          <button
+            className="w-full p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl shadow-md hover:shadow-xl transition-all group text-left border-2 border-indigo-200 hover:border-indigo-400"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition flex-shrink-0">
+                <Database className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  MongoDB Compass Admin
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Administra, edita y corrige productos directamente en MongoDB.
+                  Fusiona duplicados y reasigna variantes.
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                  <span className="px-2 py-1 bg-indigo-50 rounded">
+                    🔍 Búsqueda avanzada
+                  </span>
+                  <span className="px-2 py-1 bg-indigo-50 rounded">
+                    ✏️ Edición CRUD
+                  </span>
+                  <span className="px-2 py-1 bg-indigo-50 rounded">
+                    🔀 Fusionar duplicados
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+        </Link>
       </div>
     </div>
   );

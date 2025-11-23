@@ -24,6 +24,7 @@ export interface IProductWriter {
   saveVariant(variant: ProductoVariante): Promise<ProductoVariante>;
   updateBase(id: string, data: Partial<ProductoBase>): Promise<void>;
   deleteVariant(id: string): Promise<void>;
+  deleteBase(id: string): Promise<void>;
 }
 
 /**
