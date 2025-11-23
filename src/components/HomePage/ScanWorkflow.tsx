@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Plus, X, Bot } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { motion as m } from "framer-motion";
 import { useScanProduct } from "@/hooks/useScanProduct";
 import { useProductSync } from "@/hooks/useProductSync";
@@ -149,12 +149,15 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     clearError();
     setCodigoNoEncontrado(null);
 
-    // Abrir modal según modo de escaneo
-    if (scanMode === "reposicion") {
-      setShowQuantityModal(true);
-    } else {
-      setShowExpiryModal(true);
-    }
+    // ⚡ IMPORTANTE: Delay antes de abrir el siguiente modal
+    setTimeout(() => {
+      // Abrir modal según modo de escaneo
+      if (scanMode === "reposicion") {
+        setShowQuantityModal(true);
+      } else {
+        setShowExpiryModal(true);
+      }
+    }, 300); // 300ms de delay
   };
 
   const handleCloseManualModal = () => {
