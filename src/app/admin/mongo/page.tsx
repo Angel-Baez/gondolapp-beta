@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Database, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/MongoPage/Header";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
 import { ProductEditor } from "@/components/MongoAdmin/ProductEditor";
@@ -11,7 +12,6 @@ import { VariantReassigner } from "@/components/MongoAdmin/VariantReassigner";
 import { ProductMerger } from "@/components/MongoAdmin/ProductMerger";
 import { ProductoBase, ProductoVariante } from "@/types";
 import toast from "react-hot-toast";
-import Link from "next/link";
 
 /**
  * Página principal de administración MongoDB Compass
@@ -222,36 +222,19 @@ export default function MongoAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white border-b sticky top-0 z-10">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <Link href="/admin">
-                  <Button variant="outline" className="!p-2">
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <div className="flex items-center gap-2">
-                  <Database className="w-6 h-6 text-cyan-600" />
-                  <h1 className="text-xl font-bold text-gray-900">
-                    MongoDB Compass
-                  </h1>
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
+        <Header />
 
-            {/* Panel de búsqueda */}
-            <ProductSearchPanel
-              onSearch={(searchFilters) => searchProducts(searchFilters, 1)}
-            />
-          </div>
+        {/* Panel de búsqueda */}
+        <div className="p-4 bg-gray-50 border-b">
+          <ProductSearchPanel
+            onSearch={(searchFilters) => searchProducts(searchFilters, 1)}
+          />
         </div>
 
         {/* Contenido principal */}
-        <div className="p-4">
+        <main className="flex-1 overflow-y-auto p-4 bg-gray-50">
           {loading && productos.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="animate-spin w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full mx-auto mb-3"></div>
@@ -312,7 +295,7 @@ export default function MongoAdminPage() {
               </p>
             </div>
           )}
-        </div>
+        </main>
       </div>
 
       {/* Modales */}
