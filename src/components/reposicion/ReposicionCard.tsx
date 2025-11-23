@@ -34,7 +34,7 @@ export function ReposicionCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
-  const { haptic, isSupported } = useHaptics();
+  const { haptic } = useHaptics();
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
 

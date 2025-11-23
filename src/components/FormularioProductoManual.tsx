@@ -12,7 +12,7 @@ interface Props {
   eanEscaneado: string;
   isOpen: boolean;
   onClose: () => void;
-  onProductoCreado: (producto: any) => void;
+  onProductoCreado: (producto: CrearProductoDTO) => void;
 }
 
 export default function FormularioProductoManual({
@@ -59,11 +59,11 @@ export default function FormularioProductoManual({
 
   // Actualizar preview del nombreCompleto
   useEffect(() => {
-    const partes = [formData.tipo, formData.tamano, formData.sabor].filter(
+    const partes = [formData.tipo, formData.sabor, formData.tamano, ].filter(
       Boolean
     );
     setNombreCompletoPreview(partes.join(" "));
-  }, [formData.tipo, formData.tamano, formData.sabor]);
+  }, [formData.tipo, formData.sabor, formData.tamano, ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
