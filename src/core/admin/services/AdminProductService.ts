@@ -84,7 +84,7 @@ export class AdminProductService implements IAdminProductRepository {
       categoria: p.categoria,
       imagen: p.imagen,
       createdAt: p.createdAt,
-      updatedAt: p.createdAt, // MongoDB no tiene updatedAt por defecto
+      updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
     }));
 
     return {
@@ -160,7 +160,7 @@ export class AdminProductService implements IAdminProductRepository {
       categoria: producto.categoria,
       imagen: producto.imagen,
       createdAt: producto.createdAt,
-      updatedAt: producto.createdAt,
+      updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
     };
   }
 

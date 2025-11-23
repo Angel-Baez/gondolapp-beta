@@ -66,7 +66,7 @@ export class ProductMergerService implements IProductMerger {
           categoria: product.categoria,
           imagen: product.imagen,
           createdAt: product.createdAt,
-          updatedAt: product.createdAt,
+          updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
         });
       }
     }
@@ -103,7 +103,7 @@ export class ProductMergerService implements IProductMerger {
         categoria: targetProduct.categoria,
         imagen: targetProduct.imagen,
         createdAt: targetProduct.createdAt,
-        updatedAt: targetProduct.createdAt,
+        updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
       },
       sourceProducts,
       totalVariantes,
@@ -188,18 +188,14 @@ export class ProductMergerService implements IProductMerger {
 
             // Intentar eliminar de IndexedDB también
             try {
-              // IndexedDB no tiene método deleteBase, usar delete directamente
-              await this.localRepo.findBaseById(sourceId).then(async (base) => {
-                if (base) {
-                  // Verificar que no tenga variantes en local
-                  const localVariantes = await this.localRepo.findVariantsByBaseId(sourceId);
-                  if (localVariantes.length === 0) {
-                    // Eliminar directamente con Dexie
-                    const { db } = await import("@/lib/db");
-                    await db.productosBase.delete(sourceId);
-                  }
+              const base = await this.localRepo.findBaseById(sourceId);
+              if (base) {
+                // Verificar que no tenga variantes en local
+                const localVariantes = await this.localRepo.findVariantsByBaseId(sourceId);
+                if (localVariantes.length === 0) {
+                  await this.localRepo.deleteBase(sourceId);
                 }
-              });
+              }
             } catch (error) {
               console.warn("⚠️ No se pudo eliminar producto de IndexedDB:", error);
             }

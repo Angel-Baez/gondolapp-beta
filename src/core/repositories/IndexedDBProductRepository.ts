@@ -130,4 +130,13 @@ export class IndexedDBProductRepository implements IProductRepository {
       throw error;
     }
   }
+
+  async deleteBase(id: string): Promise<void> {
+    try {
+      await db.productosBase.delete(id);
+    } catch (error) {
+      console.error("Error al eliminar producto base:", error);
+      throw error;
+    }
+  }
 }
