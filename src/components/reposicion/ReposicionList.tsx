@@ -29,7 +29,7 @@ interface ItemConProducto {
 
 type SeccionType = "pendiente" | "repuesto" | "sinStock";
 
-// Componente para el header con el link a historial
+// Component for the header with history link
 const ReposicionHeader = () => (
   <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
     <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -235,7 +235,6 @@ export function ReposicionList() {
     return (
       <>
         <ReposicionHeader />
-        
         <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
           <m.div
                     animate={{
