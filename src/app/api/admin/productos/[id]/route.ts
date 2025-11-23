@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { AdminProductService } from "@/core/admin/services/AdminProductService";
-import { IndexedDBProductRepository } from "@/core/repositories/IndexedDBProductRepository";
+import { ServerSideProductRepository } from "@/core/repositories/ServerSideProductRepository";
 
 /**
  * GET /api/admin/productos/[id]
@@ -15,7 +15,7 @@ export async function GET(
     const { id } = await params;
 
     const db = await getDatabase();
-    const localRepo = new IndexedDBProductRepository();
+    const localRepo = new ServerSideProductRepository();
     const adminService = new AdminProductService(db, localRepo);
 
     const producto = await adminService.getProductoBaseConVariantes(id);
@@ -56,7 +56,7 @@ export async function PUT(
     const body = await request.json();
 
     const db = await getDatabase();
-    const localRepo = new IndexedDBProductRepository();
+    const localRepo = new ServerSideProductRepository();
     const adminService = new AdminProductService(db, localRepo);
 
     await adminService.updateProductoBase(id, body);
@@ -89,7 +89,7 @@ export async function DELETE(
     const { id } = await params;
 
     const db = await getDatabase();
-    const localRepo = new IndexedDBProductRepository();
+    const localRepo = new ServerSideProductRepository();
     const adminService = new AdminProductService(db, localRepo);
 
     await adminService.deleteProductoBase(id);

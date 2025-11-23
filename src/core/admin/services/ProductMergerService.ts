@@ -52,24 +52,21 @@ export class ProductMergerService implements IProductMerger {
       throw new Error("Producto destino no encontrado");
     }
 
-    // Obtener productos origen
-    const sourceProducts: ProductoBase[] = [];
-    for (const sourceId of sourceIds) {
-      const product = await productosCollection.findOne({
-        _id: new ObjectId(sourceId) as any,
-      });
-      if (product) {
-        sourceProducts.push({
-          id: product._id?.toString() || "",
-          nombre: product.nombre,
-          marca: product.marca,
-          categoria: product.categoria,
-          imagen: product.imagen,
-          createdAt: product.createdAt,
-          updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
-        });
-      }
-    }
+    // Obtener productos origen con una sola consulta (evita N+1)
+    const sourceObjectIds = sourceIds.map(id => new ObjectId(id) as any);
+    const products = await productosCollection.find({
+      _id: { $in: sourceObjectIds }
+    }).toArray();
+    
+    const sourceProducts: ProductoBase[] = products.map(product => ({
+      id: product._id?.toString() || "",
+      nombre: product.nombre,
+      marca: product.marca,
+      categoria: product.categoria,
+      imagen: product.imagen,
+      createdAt: product.createdAt,
+      updatedAt: new Date(), // MongoDB no tiene updatedAt, usar fecha actual
+    }));
 
     // Contar variantes totales
     const allIds = [targetId, ...sourceIds];
@@ -151,24 +148,30 @@ export class ProductMergerService implements IProductMerger {
       const errors: string[] = [];
       let variantesReasignadas = 0;
 
-      // Reasignar todas las variantes de los productos origen al destino
-      for (const sourceId of sourceIds) {
-        const variantes = await variantesCollection
-          .find({ productoBaseId: sourceId })
+      // Reasignar todas las variantes de los productos origen al destino (bulk update)
+      const bulkUpdateResult = await variantesCollection.updateMany(
+        { productoBaseId: { $in: sourceIds } },
+        { $set: { productoBaseId: targetId } }
+      );
+      variantesReasignadas = bulkUpdateResult.modifiedCount;
+
+      // Sincronizar con IndexedDB las variantes actualizadas
+      try {
+        const updatedVariantes = await variantesCollection
+          .find({ productoBaseId: targetId })
           .toArray();
-
-        for (const variante of variantes) {
-          const result = await this.reassigner.reassignVariant(
-            variante._id?.toString() || "",
-            targetId
-          );
-
-          if (result.success) {
-            variantesReasignadas++;
-          } else {
-            errors.push(`Error al reasignar variante ${variante.ean}: ${result.message}`);
+        
+        for (const variante of updatedVariantes) {
+          const localVariante = await this.localRepo.findById(variante._id?.toString() || "");
+          if (localVariante) {
+            await this.localRepo.saveVariant({
+              ...localVariante,
+              productoBaseId: targetId,
+            });
           }
         }
+      } catch (error) {
+        console.warn("⚠️ No se pudo sincronizar variantes con IndexedDB:", error);
       }
 
       // Eliminar productos origen que ya no tienen variantes

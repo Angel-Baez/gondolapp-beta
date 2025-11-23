@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ProductoVariante, ProductoBase } from "@/types";
 import { Search, ArrowRightLeft, X } from "lucide-react";
-import { ProductList } from "./ProductList";
 import toast from "react-hot-toast";
 
 interface VariantReassignerProps {

@@ -104,12 +104,42 @@ export class AdminValidator {
       if (data.ean && !/^\d{8,14}$/.test(data.ean)) {
         errors.push("El código EAN debe contener entre 8 y 14 dígitos");
       }
+      // Validar checksum para EAN-13 y EAN-8
+      if (data.ean && /^\d{8,14}$/.test(data.ean)) {
+        const eanLength = data.ean.length;
+        if ((eanLength === 13 || eanLength === 8) && !this.validateEANCheckDigit(data.ean)) {
+          errors.push("El código EAN tiene un dígito de verificación inválido");
+        }
+      }
     }
 
     return {
       valid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Valida el dígito de verificación de un código EAN-13 o EAN-8
+   * Algoritmo estándar de checksum EAN
+   */
+  private static validateEANCheckDigit(ean: string): boolean {
+    if (ean.length !== 13 && ean.length !== 8) {
+      return true; // No validamos otros formatos
+    }
+
+    const digits = ean.split('').map(Number);
+    const checkDigit = digits.pop()!;
+    
+    let sum = 0;
+    digits.forEach((digit, index) => {
+      // Para EAN-13: posiciones impares se multiplican por 3
+      // Para EAN-8: mismo algoritmo
+      sum += digit * (index % 2 === 0 ? 1 : 3);
+    });
+    
+    const calculatedCheck = (10 - (sum % 10)) % 10;
+    return calculatedCheck === checkDigit;
   }
 
   /**

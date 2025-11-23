@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { ProductMergerService } from "@/core/admin/services/ProductMergerService";
-import { IndexedDBProductRepository } from "@/core/repositories/IndexedDBProductRepository";
+import { ServerSideProductRepository } from "@/core/repositories/ServerSideProductRepository";
 
 /**
  * POST /api/admin/productos/merge
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    const localRepo = new IndexedDBProductRepository();
+    const localRepo = new ServerSideProductRepository();
     const mergerService = new ProductMergerService(db, localRepo);
 
     // Si es preview, solo mostrar la previsualización

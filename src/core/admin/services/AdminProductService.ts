@@ -15,7 +15,6 @@ import {
 import { ProductoBase, ProductoVariante, ProductoBaseMongo, ProductoVarianteMongo } from "@/types";
 import { AdminValidator } from "../validators/AdminValidator";
 import { IndexedDBProductRepository } from "@/core/repositories/IndexedDBProductRepository";
-import { ProductSyncService } from "@/services/ProductSyncService";
 
 /**
  * Servicio de administración de productos

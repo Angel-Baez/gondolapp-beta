@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { VariantReassignerService } from "@/core/admin/services/VariantReassignerService";
-import { IndexedDBProductRepository } from "@/core/repositories/IndexedDBProductRepository";
+import { ServerSideProductRepository } from "@/core/repositories/ServerSideProductRepository";
 
 /**
  * POST /api/admin/variantes/reassign
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    const localRepo = new IndexedDBProductRepository();
+    const localRepo = new ServerSideProductRepository();
     const reassignerService = new VariantReassignerService(db, localRepo);
 
     // Reasignación simple
