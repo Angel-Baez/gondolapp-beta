@@ -1,8 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { useState } from "react";
+import { 
+  Cloud, 
+  RefreshCw, 
+  ListChecks, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Database,
+  BarChart3,
+  Loader2,
+  Upload,
+  Download
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { confirmAsync } from "@/lib/confirm";
 
 interface SyncStats {
   productosBase: number;
@@ -90,11 +104,11 @@ export function SyncPanel() {
         setSyncResults(data.results);
         await fetchStats(); // Actualizar estadísticas
       } else {
-        alert(`Error: ${data.error}`);
+        toast.error(`Error: ${data.error}`);
       }
     } catch (error) {
       console.error("Error al sincronizar:", error);
-      alert("Error al sincronizar datos");
+      toast.error("Error al sincronizar datos");
     } finally {
       setLoading(false);
     }
@@ -111,10 +125,14 @@ export function SyncPanel() {
         const { db } = await import("@/lib/db");
 
         // Limpiar datos locales (opcional)
-        const confirmar = confirm(
-          "¿Deseas reemplazar todos los datos locales con los datos de la nube?"
-        );
-
+        const confirmar = await confirmAsync({
+          title: "¿Reemplazar datos locales?",
+          description:
+            "¿Deseas reemplazar todos los datos locales con los datos de la nube? Esta acción no se puede deshacer.",
+          confirmLabel: "Sí, reemplazar",
+          cancelLabel: "Cancelar",
+          variant: "danger",
+        });
         if (confirmar) {
           await db.transaction(
             "rw",
@@ -145,12 +163,12 @@ export function SyncPanel() {
             }
           );
 
-          alert("✅ Datos descargados correctamente");
+          toast.success("✅ Datos descargados correctamente");
         }
       }
     } catch (error) {
       console.error("Error al descargar:", error);
-      alert("Error al descargar datos");
+      toast.error("Error al descargar datos");
     } finally {
       setLoading(false);
     }
@@ -161,228 +179,139 @@ export function SyncPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
-            Sincronización en la Nube
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Mantén tus datos sincronizados entre dispositivos
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <Cloud className="text-blue-500" size={20} />
+            Estado de la Nube
+          </h3>
+          <p className="text-sm text-gray-500">
+            {lastSync 
+              ? `Última sinc: ${new Date(lastSync).toLocaleTimeString()}` 
+              : "Verifica el estado actual de MongoDB"}
           </p>
         </div>
-        <Button
+        <button 
           onClick={() => fetchStats(filterDays)}
-          variant="outline"
           disabled={loading}
-          className="text-sm"
+          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Refrescar Estadísticas"
         >
-          🔄 Actualizar
-        </Button>
+          <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+        </button>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-6 bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-cyan-600">
-                Productos Base
-              </p>
-              <p className="text-3xl font-bold text-cyan-900 mt-2">
-                {stats?.productosBase ?? "-"}
-              </p>
-            </div>
-            <div className="text-4xl">📦</div>
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600">Variantes</p>
-              <p className="text-3xl font-bold text-blue-900 mt-2">
-                {stats?.variantes ?? "-"}
-              </p>
-            </div>
-            <div className="text-4xl">🏷️</div>
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-purple-600">Reposición</p>
-              <p className="text-3xl font-bold text-purple-900 mt-2">
-                {stats?.reposicion ?? "-"}
-              </p>
-            </div>
-            <div className="text-4xl">📋</div>
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-orange-600">
-                Vencimientos
-              </p>
-              <p className="text-3xl font-bold text-orange-900 mt-2">
-                {stats?.vencimientos ?? "-"}
-              </p>
-            </div>
-            <div className="text-4xl">⏰</div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filtro de tiempo */}
-      <Card className="p-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700">
-            Mostrar datos de:
-          </span>
-          <div className="flex gap-2">
-            {[7, 30, 90, 365].map((days) => (
-              <button
-                key={days}
-                onClick={() => {
-                  setFilterDays(days);
-                  fetchStats(days);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filterDays === days
-                    ? "bg-cyan-500 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {days === 365 ? "1 año" : `${days} días`}
-              </button>
-            ))}
-            <button
-              onClick={() => {
-                setFilterDays(0);
-                fetchStats();
-              }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                filterDays === 0
-                  ? "bg-cyan-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Todo
-            </button>
-          </div>
+      {stats ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <MetricCard label="Productos" value={stats.productosBase} icon={Database} color="indigo" />
+          <MetricCard label="Variantes" value={stats.variantes} icon={BarChart3} color="purple" />
+          <MetricCard label="Reposición" value={stats.reposicion} icon={ListChecks} color="amber" />
+          <MetricCard label="Vencimientos" value={stats.vencimientos} icon={AlertTriangle} color="rose" />
         </div>
-      </Card>
+      ) : (
+        <div className="p-8 text-center border-2 border-dashed border-gray-100 rounded-xl">
+          <p className="text-gray-400 text-sm">No hay datos recientes</p>
+
+        </div>
+      )}
 
       {/* Acciones de Sincronización */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="text-3xl">☁️</div>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-800 text-lg">
-                  Subir a la Nube
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Guarda tus datos locales en MongoDB Atlas para acceder desde
-                  otros dispositivos
-                </p>
-              </div>
-            </div>
+        
             <Button
               onClick={syncToCloud}
               disabled={loading}
-              className="w-full bg-cyan-500 hover:bg-cyan-600"
+              className="w-full py-3 bg-cyan-400 text-white rounded-xl shadow-sm hover:bg-cyan-500 hover:shadow-md transition-all flex items-center justify-center gap-2 font-medium active:scale-[0.99]"
             >
-              {loading ? "Sincronizando..." : "⬆️ Subir Datos"}
+              {loading ? (
+                <><Loader2 className="animate-spin" />Sincronizando</>
+              ) : (
+                <><Upload /> Subir Datos </>
+              )}
             </Button>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="text-3xl">📥</div>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-800 text-lg">
-                  Descargar de la Nube
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Descarga los datos guardados en MongoDB a este dispositivo
-                </p>
-              </div>
-            </div>
+          
             <Button
               onClick={syncFromCloud}
               disabled={loading}
               variant="outline"
-              className="w-full border-cyan-500 text-cyan-600 hover:bg-cyan-50"
+              className="w-full py-3 bg-white text-gray-900 rounded-xl shadow-sm hover:bg-gray-200 hover:shadow-md transition-all flex items-center justify-center gap-2 font-medium active:scale-[0.99]"
             >
-              {loading ? "Descargando..." : "⬇️ Descargar Datos"}
+              {loading ? (
+                <><Loader2 className="animate-spin" />Descargando</>
+              ) : (
+                <><Download /> Descargar Datos </>
+              )}
             </Button>
-          </div>
-        </Card>
+         
       </div>
 
       {/* Resultados de sincronización */}
-      {syncResults && (
-        <Card className="p-6 bg-green-50 border-green-200">
-          <h3 className="font-bold text-green-800 text-lg mb-4">
-            ✅ Sincronización Completada
-          </h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="font-medium text-green-700 mb-2">
-                Registros Insertados:
-              </p>
-              <ul className="space-y-1 text-green-600">
-                {Object.entries(syncResults.inserted).map(([key, value]) => (
-                  <li key={key}>
-                    • {key}: {value}
-                  </li>
-                ))}
-              </ul>
+     {syncResults && (
+        <div className="animate-in slide-in-from-bottom-2 duration-300">
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-green-600" />
+              Reporte de Cambios
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-bold text-gray-400 uppercase">Nuevos</span>
+                <ul className="mt-1 space-y-0.5">
+                  {Object.entries(syncResults.inserted).map(([k, v]) => (
+                    v ? <li key={k} className="flex justify-between text-gray-600">
+                      <span>{k}</span> <span className="font-mono font-bold text-green-600">+{v}</span>
+                    </li> : null
+                  ))}
+                  {Object.keys(syncResults.inserted).length === 0 && <li className="text-gray-400 italic">Nada nuevo</li>}
+                </ul>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-gray-400 uppercase">Actualizados</span>
+                <ul className="mt-1 space-y-0.5">
+                  {Object.entries(syncResults.updated).map(([k, v]) => (
+                    v ? <li key={k} className="flex justify-between text-gray-600">
+                      <span>{k}</span> <span className="font-mono font-bold text-blue-600">~{v}</span>
+                    </li> : null
+                  ))}
+                   {Object.keys(syncResults.updated).length === 0 && <li className="text-gray-400 italic">Sin cambios</li>}
+                </ul>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-green-700 mb-2">
-                Registros Actualizados:
-              </p>
-              <ul className="space-y-1 text-green-600">
-                {Object.entries(syncResults.updated).map(([key, value]) => (
-                  <li key={key}>
-                    • {key}: {value}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          {syncResults.errors.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="font-medium text-red-700 mb-2">
-                Errores ({syncResults.errors.length}):
-              </p>
-              <ul className="space-y-1 text-sm text-red-600">
-                {syncResults.errors.slice(0, 5).map((err, idx) => (
-                  <li key={idx}>
-                    • {err.type} - {err.item}: {err.error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </Card>
-      )}
 
-      {/* Última sincronización */}
-      {lastSync && (
-        <p className="text-xs text-gray-500 text-center">
-          Última actualización:{" "}
-          {new Date(lastSync).toLocaleString("es-ES", {
-            dateStyle: "short",
-            timeStyle: "short",
-          })}
-        </p>
+            {syncResults.errors.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <p className="text-red-600 font-bold text-xs uppercase mb-1">Errores ({syncResults.errors.length})</p>
+                <div className="max-h-24 overflow-y-auto space-y-1">
+                  {syncResults.errors.map((err, idx) => (
+                    <p key={idx} className="text-xs text-red-500 truncate">
+                      {err.item}: {err.error}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, icon: Icon, color }: any) {
+  const colorStyles = {
+    indigo: "bg-indigo-50 text-indigo-600",
+    purple: "bg-purple-50 text-purple-600",
+    amber: "bg-amber-50 text-amber-600",
+    rose: "bg-rose-50 text-rose-600",
+  }[color as string] || "bg-gray-50 text-gray-600";
+
+  return (
+    <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
+      <div className={`p-2 rounded-lg mb-2 ${colorStyles}`}>
+        <Icon size={18} />
+      </div>
+      <span className="text-2xl font-bold text-gray-900 leading-none">{value}</span>
+      <span className="text-[10px] uppercase font-bold text-gray-400 mt-1">{label}</span>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAsync } from "@/lib/confirm";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -72,9 +73,15 @@ export function ProductEditor({
       return;
     }
 
-    if (!confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-      return;
-    }
+    const confirmado = await confirmAsync({
+      title: "¿Eliminar producto?",
+      description:
+        "Esta acción eliminará el producto de forma permanente. ¿Estás seguro de que deseas continuar?",
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (!confirmado) return;
 
     setDeleting(true);
     try {

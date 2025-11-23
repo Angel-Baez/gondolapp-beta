@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 type UsePWAResult = {
   isIOS: boolean;
@@ -69,10 +70,18 @@ export function usePWA(): UsePWAResult {
                   newWorker.state === "installed" &&
                   navigator.serviceWorker.controller
                 ) {
-                  // Nueva versión disponible
-                  if (confirm("Nueva versión disponible. ¿Actualizar ahora?")) {
-                    window.location.reload();
-                  }
+                  toast(
+                    "Nueva versión disponible 🚀 Actualiza la página para obtener la última versión.",
+                    {
+                      duration: Infinity,
+                      position: "bottom-center",
+                      style: {
+                        background: "#fff",
+                        color: "#333",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      },
+                    }
+                  );
                 }
               });
             }
