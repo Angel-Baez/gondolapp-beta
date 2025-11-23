@@ -1,45 +1,35 @@
 # Configuración de etiquetas automáticas basadas en archivos modificados
 
-"components":
-  - "src/components/**/*"
-
-"hooks":
-  - "src/hooks/**/*"
-
-"database":
-  - "src/lib/db.ts"
-  - "src/core/**/*"
-
-"ui":
-  - "src/components/ui/**/*"
-  - "src/app/globals.css"
-
-"scanner":
-  - "src/components/BarcodeScanner.tsx"
-
-"reposicion":
-  - "src/app/reposicion/**/*"
-  - "src/components/reposicion/**/*"
-  - "src/store/reposicion.ts"
-
-"vencimiento":
-  - "src/components/vencimiento/**/*"
-  - "src/store/vencimiento.ts"
-
-"api":
-  - "src/app/api/**/*"
-  - "src/services/**/*"
-
-"docs":
-  - "docs/**/*"
+components:
+  - src/components/**/*
+hooks:
+  - src/hooks/**/*
+database:
+  - src/lib/db.ts
+  - src/core/**/*
+ui:
+  - src/components/ui/**/*
+  - src/app/globals.css
+scanner:
+  - src/components/BarcodeScanner.tsx
+reposicion:
+  - src/app/reposicion/**/*
+  - src/components/reposicion/**/*
+  - src/store/reposicion.ts
+vencimiento:
+  - src/components/vencimiento/**/*
+  - src/store/vencimiento.ts
+api:
+  - src/app/api/**/*
+  - src/services/**/*
+docs:
+  - docs/**/*
   - "*.md"
-
-"config":
+config:
   - "*.config.*"
   - "*.json"
-  - ".github/**/*"
-
-"pwa":
-  - "public/manifest.json"
-  - "public/sw.js"
-  - "src/app/PWAProvider.tsx"
+  - .github/**/*
+pwa:
+  - public/manifest.json
+  - public/sw.js
+  - src/app/PWAProvider.tsx
