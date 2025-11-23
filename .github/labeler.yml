@@ -16,9 +16,19 @@ reposicion:
   - src/app/reposicion/**/*
   - src/components/reposicion/**/*
   - src/store/reposicion.ts
+historial:
+  - src/app/reposicion/historial/**/*
+  - src/components/reposicion/HistorialList.tsx
 vencimiento:
   - src/components/vencimiento/**/*
   - src/store/vencimiento.ts
+admin:
+  - src/app/admin/**/*
+  - src/components/AdminPage/**/*
+  - src/components/MongoAdmin/**/*
+mongo:
+  - src/app/admin/mongo/**/*
+  - src/components/MongoAdmin/**/*
 api:
   - src/app/api/**/*
   - src/services/**/*
