@@ -216,30 +216,47 @@ export function ReposicionList() {
 
   if (itemsConProductos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
-        <m.div
-                  animate={{
-                    y: [0, -10, 0],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-        <Archive
-          size={48}
-          className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
-        />
-        </m.div>
-        <p className="text-base sm:text-lg font-semibold text-center">
-          Tu lista está vacía
-        </p>
-        <p className="text-xs sm:text-sm text-center mt-1">
-          Escanea o busca productos para comenzar
-        </p>
-      </div>
+      <>
+        {/* Header con link a historial */}
+        <div className="flex items-center justify-between mb-4 px-4 sm:px-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+            Lista de Reposición
+          </h2>
+          <Link
+            href="/reposicion/historial"
+            className="flex items-center gap-2 text-sm sm:text-base text-cyan-600 hover:text-cyan-700 font-semibold transition-colors bg-cyan-50 px-3 py-2 rounded-lg hover:bg-cyan-100"
+          >
+            <History size={20} />
+            <span className="hidden sm:inline">Ver Historial</span>
+            <span className="sm:hidden">Historial</span>
+          </Link>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+          <m.div
+                    animate={{
+                      y: [0, -10, 0],
+                      rotate: [0, 5, -5, 0],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+          <Archive
+            size={48}
+            className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
+          />
+          </m.div>
+          <p className="text-base sm:text-lg font-semibold text-center">
+            Tu lista está vacía
+          </p>
+          <p className="text-xs sm:text-sm text-center mt-1">
+            Escanea o busca productos para comenzar
+          </p>
+        </div>
+      </>
     );
   }
 
