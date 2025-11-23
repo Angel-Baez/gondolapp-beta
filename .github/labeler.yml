@@ -1,35 +1,64 @@
 # Configuración de etiquetas automáticas basadas en archivos modificados
 
 components:
-  - src/components/**/*
+  - changed-files:
+      - any-glob-to-any-file: src/components/**/*
+
 hooks:
-  - src/hooks/**/*
+  - changed-files:
+      - any-glob-to-any-file: src/hooks/**/*
+
 database:
-  - src/lib/db.ts
-  - src/core/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/lib/db.ts
+          - src/core/**/*
+
 ui:
-  - src/components/ui/**/*
-  - src/app/globals.css
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/ui/**/*
+          - src/app/globals.css
+
 scanner:
-  - src/components/BarcodeScanner.tsx
+  - changed-files:
+      - any-glob-to-any-file: src/components/BarcodeScanner.tsx
+
 reposicion:
-  - src/app/reposicion/**/*
-  - src/components/reposicion/**/*
-  - src/store/reposicion.ts
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/reposicion/**/*
+          - src/components/reposicion/**/*
+          - src/store/reposicion.ts
+
 vencimiento:
-  - src/components/vencimiento/**/*
-  - src/store/vencimiento.ts
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/vencimiento/**/*
+          - src/store/vencimiento.ts
+
 api:
-  - src/app/api/**/*
-  - src/services/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/api/**/*
+          - src/services/**/*
+
 docs:
-  - docs/**/*
-  - "*.md"
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**/*
+          - "*.md"
+
 config:
-  - "*.config.*"
-  - "*.json"
-  - .github/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.config.*"
+          - "*.json"
+          - ".github/**/*"
+
 pwa:
-  - public/manifest.json
-  - public/sw.js
-  - src/app/PWAProvider.tsx
+  - changed-files:
+      - any-glob-to-any-file:
+          - public/manifest.json
+          - public/sw.js
+          - src/app/PWAProvider.tsx
