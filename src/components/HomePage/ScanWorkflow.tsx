@@ -190,7 +190,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       {showScanner && (
         <BarcodeScanner
           isOpen={showScanner}
-          onClose={onClose}
+          onClose={() => setShowScanner(false)}
           onScan={handleScan}
         />
       )}
