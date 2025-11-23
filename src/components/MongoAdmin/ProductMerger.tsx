@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAsync } from "@/lib/confirm";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -33,7 +34,9 @@ export function ProductMerger({
   onMerge,
 }: ProductMergerProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [productos, setProductos] = useState<(ProductoBase & { variantesCount: number })[]>([]);
+  const [productos, setProductos] = useState<
+    (ProductoBase & { variantesCount: number })[]
+  >([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [preview, setPreview] = useState<MergePreview | null>(null);
   const [searching, setSearching] = useState(false);
@@ -121,13 +124,14 @@ export function ProductMerger({
       return;
     }
 
-    if (
-      !confirm(
-        `¿Fusionar ${selectedIds.length} producto(s) en "${targetProduct.nombre}"?\n\nEsto moverá ${preview.totalVariantes} variante(s) y eliminará los productos origen.`
-      )
-    ) {
-      return;
-    }
+    const confirmado = await confirmAsync({
+      title: `¿Fusionar productos?`,
+      description: `¿Fusionar ${selectedIds.length} producto(s) en "${targetProduct.nombre}"? Esto moverá ${preview.totalVariantes} variante(s) y eliminará los productos origen.`,
+      confirmLabel: "Fusionar",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (!confirmado) return;
 
     setMerging(true);
     try {
@@ -203,7 +207,8 @@ export function ProductMerger({
         {productos.length > 0 && (
           <div className="border-t pt-4">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              Selecciona productos para fusionar ({selectedIds.length} seleccionados):
+              Selecciona productos para fusionar ({selectedIds.length}{" "}
+              seleccionados):
             </p>
             <div className="max-h-60 overflow-y-auto space-y-2">
               {productos.map((producto) => {

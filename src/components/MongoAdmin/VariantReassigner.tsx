@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAsync } from "@/lib/confirm";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -27,7 +28,9 @@ export function VariantReassigner({
   onReassign,
 }: VariantReassignerProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [productos, setProductos] = useState<(ProductoBase & { variantesCount: number })[]>([]);
+  const [productos, setProductos] = useState<
+    (ProductoBase & { variantesCount: number })[]
+  >([]);
   const [searching, setSearching] = useState(false);
   const [reassigning, setReassigning] = useState(false);
 
@@ -62,13 +65,14 @@ export function VariantReassigner({
   };
 
   const handleReassign = async (nuevoProducto: ProductoBase) => {
-    if (
-      !confirm(
-        `¿Reasignar "${variante.nombreCompleto}" de "${currentProduct.nombre}" a "${nuevoProducto.nombre}"?`
-      )
-    ) {
-      return;
-    }
+    const confirmado = await confirmAsync({
+      title: "¿Reasignar variante?",
+      description: `¿Reasignar "${variante.nombreCompleto}" de "${currentProduct.nombre}" a "${nuevoProducto.nombre}"?`,
+      confirmLabel: "Reasignar",
+      cancelLabel: "Cancelar",
+      variant: "warning",
+    });
+    if (!confirmado) return;
 
     setReassigning(true);
     try {
@@ -114,10 +118,7 @@ export function VariantReassigner({
               placeholder="Buscar por nombre..."
               className="flex-1"
             />
-            <Button
-              onClick={handleSearch}
-              disabled={searching || reassigning}
-            >
+            <Button onClick={handleSearch} disabled={searching || reassigning}>
               <Search className="w-4 h-4 mr-2" />
               {searching ? "Buscando..." : "Buscar"}
             </Button>

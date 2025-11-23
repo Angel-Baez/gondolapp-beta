@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { CrearProductoDTO } from "@/types";
+import toast from "react-hot-toast";
 
 interface Props {
   eanEscaneado: string;
@@ -73,7 +74,7 @@ export default function FormularioProductoManual({
       !formData.categoria ||
       !formData.tamano
     ) {
-      alert("Por favor completa todos los campos requeridos");
+      toast.error("Por favor completa todos los campos requeridos");
       return;
     }
 
@@ -104,6 +105,7 @@ export default function FormularioProductoManual({
 
       if (data.success) {
         onProductoCreado(data.producto);
+        toast.success("Producto guardado exitosamente");
         // Resetear formulario
         setFormData({
           nombreBase: "",
@@ -115,11 +117,11 @@ export default function FormularioProductoManual({
         });
         onClose();
       } else {
-        alert(data.error || "Error al crear el producto");
+        toast.error(data.error || "Error al crear el producto");
       }
     } catch (error) {
-      console.error("Error al crear producto:", error);
-      alert("Error al crear el producto");
+      console.error(error);
+      toast.error("Error al crear el producto");
     } finally {
       setCargando(false);
     }
@@ -186,7 +188,7 @@ export default function FormularioProductoManual({
             <Input
               type="text"
               list="categorias-list"
-              placeholder="Ej: Leche en Polvo, Refrescos"
+              placeholder="Ej: Lácteos, Bebidas, Snacks"
               value={formData.categoria}
               onChange={(e) =>
                 setFormData({ ...formData, categoria: e.target.value })

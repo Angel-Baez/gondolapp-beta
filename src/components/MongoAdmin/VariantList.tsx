@@ -4,6 +4,7 @@ import { ProductoVariante } from "@/types";
 import { Edit, Trash2, ArrowRightLeft, Barcode } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { confirmAsync } from "@/lib/confirm";
 
 interface VariantListItemProps {
   variante: ProductoVariante;
@@ -21,8 +22,16 @@ function VariantListItem({
   onReassign,
   onDelete,
 }: VariantListItemProps) {
-  const handleDelete = () => {
-    if (confirm("¿Estás seguro de que deseas eliminar esta variante?")) {
+  const handleDelete = async () => {
+    const confirmado = await confirmAsync({
+      title: "¿Eliminar variante?",
+      description:
+        "¿Estás seguro de que deseas eliminar esta variante? Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (confirmado) {
       onDelete();
     }
   };

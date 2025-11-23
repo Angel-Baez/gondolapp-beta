@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { Zap, ChevronRight, Package } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
+import { Button, Input, Modal } from "@/components/ui";
+import toast from "react-hot-toast";
 import {
   PRESETS_PRODUCTOS,
   getPresetById,
@@ -49,7 +48,7 @@ export default function CrearConPreset({
 
   const handleCrear = async () => {
     if (!presetSeleccionado || !ean || !nombreBase || !tamano) {
-      alert("Por favor completa todos los campos requeridos");
+      toast.error("Por favor completa todos los campos requeridos");
       return;
     }
 
@@ -83,11 +82,11 @@ export default function CrearConPreset({
         resetForm();
         onClose();
       } else {
-        alert(data.error || "Error al crear el producto");
+        toast.error(data.error || "Error al crear el producto");
       }
     } catch (error) {
       console.error("Error al crear producto:", error);
-      alert("Error al crear el producto");
+      toast.error("Error al crear el producto");
     } finally {
       setCargando(false);
     }

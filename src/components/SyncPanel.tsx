@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { confirmAsync } from "@/lib/confirm";
 
 interface SyncStats {
   productosBase: number;
@@ -90,11 +92,11 @@ export function SyncPanel() {
         setSyncResults(data.results);
         await fetchStats(); // Actualizar estadísticas
       } else {
-        alert(`Error: ${data.error}`);
+        toast.error(`Error: ${data.error}`);
       }
     } catch (error) {
       console.error("Error al sincronizar:", error);
-      alert("Error al sincronizar datos");
+      toast.error("Error al sincronizar datos");
     } finally {
       setLoading(false);
     }
@@ -111,10 +113,14 @@ export function SyncPanel() {
         const { db } = await import("@/lib/db");
 
         // Limpiar datos locales (opcional)
-        const confirmar = confirm(
-          "¿Deseas reemplazar todos los datos locales con los datos de la nube?"
-        );
-
+        const confirmar = await confirmAsync({
+          title: "¿Reemplazar datos locales?",
+          description:
+            "¿Deseas reemplazar todos los datos locales con los datos de la nube? Esta acción no se puede deshacer.",
+          confirmLabel: "Sí, reemplazar",
+          cancelLabel: "Cancelar",
+          variant: "danger",
+        });
         if (confirmar) {
           await db.transaction(
             "rw",
@@ -145,12 +151,12 @@ export function SyncPanel() {
             }
           );
 
-          alert("✅ Datos descargados correctamente");
+          toast.success("✅ Datos descargados correctamente");
         }
       }
     } catch (error) {
       console.error("Error al descargar:", error);
-      alert("Error al descargar datos");
+      toast.error("Error al descargar datos");
     } finally {
       setLoading(false);
     }
