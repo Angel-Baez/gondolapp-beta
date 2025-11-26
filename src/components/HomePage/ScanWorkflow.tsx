@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Plus, X } from "lucide-react";
 import { motion as m } from "framer-motion";
@@ -55,6 +55,7 @@ interface ScanWorkflowProps {
  * - OCP: Extensible para nuevos modos de escaneo
  */
 export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
+  console.log("ScanWorkflow rendered with scanMode:", scanMode);
   const [showScanner, setShowScanner] = useState(true);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showExpiryModal, setShowExpiryModal] = useState(false);
@@ -71,6 +72,16 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   const { syncProductToIndexedDB } = useProductSync();
   const { agregarItem: agregarReposicion } = useReposicionStore();
   const { agregarItem: agregarVencimiento } = useVencimientoStore();
+
+  useEffect(() => {
+    if (!showManualProductModal && productoSeleccionado) {
+      if (scanMode === "reposicion") {
+        setShowQuantityModal(true);
+      } else {
+        setShowExpiryModal(true);
+      }
+    }
+  }, [showManualProductModal, productoSeleccionado]);
 
   const handleScan = async (codigoBarras: string) => {
     const result = await scanProduct(codigoBarras);
@@ -149,15 +160,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     clearError();
     setCodigoNoEncontrado(null);
 
-    // ⚡ IMPORTANTE: Delay antes de abrir el siguiente modal
-    setTimeout(() => {
-      // Abrir modal según modo de escaneo
-      if (scanMode === "reposicion") {
-        setShowQuantityModal(true);
-      } else {
-        setShowExpiryModal(true);
-      }
-    }, 300); // 300ms de delay
   };
 
   const handleCloseManualModal = () => {
@@ -165,7 +167,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     setPendingEAN(null);
     clearError();
     setCodigoNoEncontrado(null);
-    onClose();
+
   };
 
   const handleCloseQuantityModal = () => {
