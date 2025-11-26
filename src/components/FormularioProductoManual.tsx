@@ -12,7 +12,7 @@ interface Props {
   eanEscaneado: string;
   isOpen: boolean;
   onClose: () => void;
-  onProductoCreado: (producto: CrearProductoDTO) => void;
+  onProductoCreado: (producto: any) => void;
 }
 
 export default function FormularioProductoManual({
