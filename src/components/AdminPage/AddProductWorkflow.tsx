@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import { useProductVerification } from "@/hooks/useProductVerification";
@@ -21,69 +21,80 @@ interface AddProductWorkflowProps {
   onComplete: () => void;
 }
 
-/**
- * AddProductWorkflow component - Maneja el flujo completo de añadir productos
- * 
- * ✅ SOLID Principles:
- * - SRP: Solo responsable del flujo de añadir productos
- * - DIP: Depende de abstracciones (hooks)
- * - OCP: Extensible sin modificar código existente
- */
 export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
   const [showScanner, setShowScanner] = useState(true);
   const [showManualForm, setShowManualForm] = useState(false);
   const [scannedEAN, setScannedEAN] = useState("");
 
+  // ✅ Flags de protección
+  const isProcessingScan = useRef(false);
+  const isSavingProduct = useRef(false); // ← NUEVO
+
   const { checkExists, checking } = useProductVerification();
   const { syncProductToIndexedDB } = useProductSync();
 
-  // Constantes
-  const SCANNER_REOPEN_DELAY = 500; // ms - Tiempo antes de reabrir scanner tras guardar
+  const SCANNER_REOPEN_DELAY = 500;
 
-  // Procesar código escaneado
   const handleScanCode = async (codigoBarras: string) => {
     console.log("🔍 Código escaneado:", codigoBarras);
+    isProcessingScan.current = true;
 
-    const { exists } = await checkExists(codigoBarras);
+    try {
+      const { exists } = await checkExists(codigoBarras);
 
-    if (exists) {
-      // Producto ya registrado
-      toast.success(
-        `✅ El producto con código ${codigoBarras} ya está registrado`,
-        { duration: 4000, position: "top-center" }
-      );
-      // Scanner permanece abierto, no hacer nada más
-    } else {
-      // Producto nuevo - abrir formulario
-      console.log("📝 Abriendo formulario para producto nuevo");
-      setScannedEAN(codigoBarras);
-      setShowScanner(false);
-      setShowManualForm(true);
+      if (exists) {
+        toast.success(
+          `✅ El producto con código ${codigoBarras} ya está registrado`,
+          { duration: 3000, position: "top-center" }
+        );
+        console.log("✅ Producto existente, scanner sigue activo");
+        
+        setTimeout(() => {
+          isProcessingScan.current = false;
+        }, 500);
+      } else {
+        console.log("📝 Producto nuevo detectado, abriendo formulario...");
+        
+        setScannedEAN(codigoBarras);
+        setShowScanner(false);
+        
+        setTimeout(() => {
+          setShowManualForm(true);
+          isProcessingScan.current = false;
+        }, 150);
+      }
+    } catch (error) {
+      console.error("❌ Error al verificar producto:", error);
+      toast.error("Error al verificar el producto. Intenta de nuevo.");
+      
+      setTimeout(() => {
+        isProcessingScan.current = false;
+      }, 500);
     }
   };
 
-  // Manejar producto creado exitosamente
   const handleProductoCreado = async (producto: ProductoCompleto) => {
     console.log("✅ Producto creado en MongoDB:", producto);
+    
+    // ✅ NUEVO: Marcar que estamos guardando
+    isSavingProduct.current = true;
 
     try {
-      // Sincronizar con IndexedDB
       await syncProductToIndexedDB(producto);
 
-      // Mostrar notificación de éxito
       toast.success(
         `✅ "${producto.base.nombre} ${producto.variante.nombreCompleto}" guardado correctamente`,
         { duration: 3000, position: "top-center" }
       );
 
-      // Cerrar formulario
       setShowManualForm(false);
       setScannedEAN("");
 
-      // IMPORTANTE: Reabrir scanner después del delay configurado
       setTimeout(() => {
         console.log("🔄 Reabriendo scanner para continuar...");
         setShowScanner(true);
+        // ✅ Liberar el flag DESPUÉS de reabrir el scanner
+        isSavingProduct.current = false;
       }, SCANNER_REOPEN_DELAY);
     } catch (error) {
       console.error("❌ Error al sincronizar con IndexedDB:", error);
@@ -91,27 +102,38 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
         "Producto guardado en MongoDB, pero hubo un error al sincronizar con el almacenamiento local. Por favor, recarga la página.",
         { duration: 5000 }
       );
+      // ✅ Liberar el flag incluso en caso de error
+      isSavingProduct.current = false;
     }
   };
 
-  // Cerrar scanner y volver al menú
   const handleCloseScanner = () => {
-    console.log("🚪 Cerrando scanner");
-    setShowScanner(false);
-    onComplete();
-  };
+    if (isProcessingScan.current) {
+      console.log("⚠️ Ignorando cierre automático del scanner - procesando escaneo...");
+      return;
+    }
 
-  // Cerrar formulario sin guardar
-  const handleCloseForm = () => {
-    console.log("🚪 Cerrando formulario sin guardar");
-    setShowManualForm(false);
+    console.log("🚪 Usuario cerró el scanner manualmente");
+    setShowScanner(false);
     setScannedEAN("");
     onComplete();
   };
 
+  const handleCloseForm = () => {
+    // ✅ CRÍTICO: Ignorar si estamos guardando
+    if (isSavingProduct.current) {
+      console.log("⚠️ Ignorando cierre automático del formulario - guardando producto...");
+      return;
+    }
+
+    console.log("🚪 Usuario cerró el formulario sin guardar");
+    setShowManualForm(false);
+    setScannedEAN("");
+    
+  };
+
   return (
     <>
-      {/* BarcodeScanner - Solo visible cuando se activa */}
       {showScanner && (
         <BarcodeScanner
           isOpen={showScanner}
@@ -120,7 +142,6 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
         />
       )}
 
-      {/* FormularioProductoManual - Solo visible cuando hay EAN escaneado */}
       {showManualForm && scannedEAN && (
         <FormularioProductoManual
           eanEscaneado={scannedEAN}
@@ -130,7 +151,6 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
         />
       )}
 
-      {/* Loading Overlay - Mientras verifica si producto existe */}
       {checking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">

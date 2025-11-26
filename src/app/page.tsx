@@ -25,7 +25,9 @@ export default function HomePage() {
   const [scanMode, setScanMode] = useState<ScanMode>("reposicion");
 
   const handleOpenScanner = () => {
-    setScanMode(activeView === "reposicion" ? "reposicion" : "vencimiento");
+    const newScanMode = activeView === "reposicion" ? "reposicion" : "vencimiento";
+    console.log("handleOpenScanner called. activeView:", activeView, "newScanMode:", newScanMode);
+    setScanMode(newScanMode);
     setShowScanWorkflow(true);
   };
 
