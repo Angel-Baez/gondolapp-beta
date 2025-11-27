@@ -232,6 +232,9 @@ export interface FeedbackReporte {
   actualizadoEn: Date;
   leidoEn?: Date;
   historial: FeedbackHistorialEntry[];
+  // Integración con GitHub
+  githubIssueUrl?: string;
+  githubIssueNumber?: number;
 }
 
 // DTO para crear un nuevo feedback

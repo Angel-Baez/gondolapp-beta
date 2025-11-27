@@ -13,17 +13,17 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Loader2,
   Trash2,
   MessageSquare,
-  Eye,
   RefreshCw,
   Monitor,
   Smartphone,
   Tablet,
+  Github,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -95,6 +95,7 @@ export default function FeedbackAdminPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReporte, setSelectedReporte] = useState<FeedbackReporte | null>(null);
+  const [isCreatingIssue, setIsCreatingIssue] = useState(false);
 
   // Filtros
   const [filtroEstado, setFiltroEstado] = useState<FeedbackEstado | "">("");
@@ -213,6 +214,42 @@ export default function FeedbackAdminPage() {
     } catch (error) {
       console.error("Error al eliminar reporte:", error);
       toast.error("Error al conectar con el servidor");
+    }
+  };
+
+  // Crear issue en GitHub
+  const crearGitHubIssue = async (id: string) => {
+    setIsCreatingIssue(true);
+    try {
+      const response = await fetch(`/api/admin/feedback/${id}/github-issue`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(
+          <div className="flex items-center gap-2">
+            <Github size={16} />
+            <span>Issue #{data.issueNumber} creado</span>
+          </div>
+        );
+        fetchReportes();
+        if (selectedReporte?._id === id) {
+          setSelectedReporte({
+            ...selectedReporte,
+            githubIssueUrl: data.issueUrl,
+            githubIssueNumber: data.issueNumber,
+          });
+        }
+      } else {
+        toast.error(data.error || "Error al crear issue en GitHub");
+      }
+    } catch (error) {
+      console.error("Error al crear issue en GitHub:", error);
+      toast.error("Error al conectar con el servidor");
+    } finally {
+      setIsCreatingIssue(false);
     }
   };
 
@@ -504,6 +541,34 @@ export default function FeedbackAdminPage() {
                       Volver
                     </Button>
                     <div className="flex items-center gap-2">
+                      {/* Botón para crear issue en GitHub */}
+                      {selectedReporte.githubIssueUrl ? (
+                        <a
+                          href={selectedReporte.githubIssueUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                          title="Ver issue en GitHub"
+                        >
+                          <Github size={16} />
+                          #{selectedReporte.githubIssueNumber}
+                          <ExternalLink size={14} />
+                        </a>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          onClick={() => crearGitHubIssue(selectedReporte._id!)}
+                          disabled={isCreatingIssue}
+                          className="text-gray-700 hover:bg-gray-100"
+                          title="Crear issue en GitHub"
+                        >
+                          {isCreatingIssue ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <Github size={18} />
+                          )}
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         onClick={() => eliminarReporte(selectedReporte._id!)}
@@ -667,6 +732,26 @@ export default function FeedbackAdminPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* GitHub Issue */}
+                  {selectedReporte.githubIssueUrl && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-2">GitHub Issue</label>
+                      <a
+                        href={selectedReporte.githubIssueUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-4 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                      >
+                        <Github size={24} />
+                        <div className="flex-1">
+                          <p className="font-medium">Issue #{selectedReporte.githubIssueNumber}</p>
+                          <p className="text-sm text-gray-400">Clic para ver en GitHub</p>
+                        </div>
+                        <ExternalLink size={18} className="text-gray-400" />
+                      </a>
+                    </div>
+                  )}
 
                   {/* Historial */}
                   {selectedReporte.historial.length > 0 && (
