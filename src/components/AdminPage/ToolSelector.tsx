@@ -6,7 +6,8 @@ import {
   ScanBarcode, 
   Database, 
   ChevronRight,
-  Settings 
+  Settings,
+  MessageSquare
 } from "lucide-react";
 
 type ActiveTool = "import" | "preset" | "sync" | "addProducts" | null;
@@ -88,7 +89,36 @@ export function ToolSelector({ onSelectTool, onOpenPreset }: ToolSelectorProps) 
           );
         })}
 
-        {/* SECCIÓN 2: MongoDB Compass Admin (Diferenciado) */}
+        {/* SECCIÓN 2: Panel de Feedback Beta-Testers */}
+        <Link href="/admin/feedback" className="block mt-2">
+          <div className="group flex items-center gap-4 p-4 bg-gradient-to-r from-amber-50 to-white rounded-xl shadow-sm border border-amber-100 hover:shadow-md hover:border-amber-300 transition-all active:scale-[0.99] cursor-pointer">
+            
+            {/* Ícono de Feedback destacado */}
+            <div className="p-3 bg-amber-500 text-white rounded-lg shadow-sm group-hover:bg-amber-600 transition-colors">
+              <MessageSquare size={24} strokeWidth={2} />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-amber-900 leading-tight">
+                  Panel de Feedback
+                </h3>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-800 border border-amber-200">
+                  BETA
+                </span>
+              </div>
+              <p className="text-sm text-amber-600/80 mt-0.5 truncate font-medium">
+                Gestión de reportes de beta-testers
+              </p>
+            </div>
+
+            <div className="p-2 bg-white rounded-full text-amber-400 group-hover:text-amber-600 transition-colors shadow-sm">
+              <ChevronRight size={18} />
+            </div>
+          </div>
+        </Link>
+
+        {/* SECCIÓN 3: MongoDB Compass Admin (Diferenciado) */}
         <Link href="/admin/mongo" className="block mt-2">
           <div className="group flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-50 to-white rounded-xl shadow-sm border border-indigo-100 hover:shadow-md hover:border-indigo-300 transition-all active:scale-[0.99] cursor-pointer">
             
