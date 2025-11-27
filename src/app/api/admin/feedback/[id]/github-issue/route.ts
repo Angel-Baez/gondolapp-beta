@@ -73,9 +73,19 @@ export async function POST(
       );
     }
 
-    // Configuración del repositorio (puede ser configurado vía env)
-    const repoOwner = process.env.GITHUB_REPO_OWNER || "Angel-Baez";
-    const repoName = process.env.GITHUB_REPO_NAME || "gondolapp-beta";
+    // Configuración del repositorio - requiere variables de entorno
+    const repoOwner = process.env.GITHUB_REPO_OWNER;
+    const repoName = process.env.GITHUB_REPO_NAME;
+
+    if (!repoOwner || !repoName) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "GITHUB_REPO_OWNER y GITHUB_REPO_NAME deben estar configurados en las variables de entorno" 
+        },
+        { status: 500 }
+      );
+    }
 
     // Construir las etiquetas
     const labels: string[] = ["beta-feedback"];
@@ -224,12 +234,17 @@ ${reporte.descripcion}
 ## 📸 Capturas de Pantalla
 
 `;
+    // Umbral de 500 caracteres: las URLs típicas son cortas (<200 chars),
+    // mientras que las imágenes base64 son muy largas (>10KB).
+    // Este umbral permite distinguir URLs válidas de datos base64.
+    const MAX_URL_LENGTH = 500;
+    
     screenshots.forEach((src, index) => {
       // Solo incluir si es una URL válida (no base64 muy largo)
-      if (src.startsWith("http") || src.length < 500) {
+      if (src.startsWith("http") || src.length < MAX_URL_LENGTH) {
         body += `![Screenshot ${index + 1}](${src})\n\n`;
       } else {
-        body += `*Screenshot ${index + 1}: Imagen base64 (no se puede mostrar directamente)*\n\n`;
+        body += `*Screenshot ${index + 1}: Imagen base64 (no se puede mostrar directamente en GitHub)*\n\n`;
       }
     });
   }
