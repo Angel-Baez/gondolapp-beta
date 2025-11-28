@@ -278,7 +278,7 @@ export default function FeedbackAdminPage() {
             <Button
               variant="ghost"
               onClick={fetchReportes}
-              className="text-white hover:bg-white/10"
+              className="bg-white/10 hover:bg-white/20"
               title="Recargar"
             >
               <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
