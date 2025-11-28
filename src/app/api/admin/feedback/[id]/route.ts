@@ -44,7 +44,7 @@ export async function GET(
               fecha: new Date(), 
               mensaje: "Reporte marcado como leído" 
             } 
-          }
+          } as never
         }
       );
     }
