@@ -1,25 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { CrearFeedbackDTO, FeedbackReporte } from "@/types";
-
-// Función para sanitizar texto y prevenir XSS
-function sanitizarTexto(texto: string): string {
-  if (!texto) return "";
-  return texto
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;")
-    .trim();
-}
-
-// Validación básica del email
-function validarEmail(email: string): boolean {
-  if (!email) return true;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+import { sanitizarTexto, validarEmail } from "@/lib/feedbackUtils";
 
 /**
  * POST /api/feedback
