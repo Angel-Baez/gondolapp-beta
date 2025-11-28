@@ -25,8 +25,7 @@ import {
   Github,
   ExternalLink,
 } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button, Header } from "@/components/ui";
 import { FeedbackReporte, FeedbackEstado, FeedbackPrioridad, FeedbackTipo } from "@/types";
 import toast from "react-hot-toast";
 
@@ -269,24 +268,13 @@ export default function FeedbackAdminPage() {
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-6xl mx-auto bg-white min-h-screen shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <header className="bg-gray-900 text-white p-4 sm:p-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin">
-                <Button variant="ghost" className="text-white hover:bg-white/10">
-                  <ArrowLeft size={20} />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
-                  <MessageSquare size={24} className="text-accent-primary" />
-                  Panel de Feedback
-                </h1>
-                <p className="text-sm text-gray-400 mt-1">
-                  Gestión de reportes de beta-testers
-                </p>
-              </div>
-            </div>
+        <Header
+          title="Panel de Feedback"
+          subtitle="Gestión de reportes de beta-testers"
+          icon={MessageSquare}
+          backHref="/admin"
+          backText="Volver a Administración"
+          rightContent={
             <Button
               variant="ghost"
               onClick={fetchReportes}
@@ -295,8 +283,8 @@ export default function FeedbackAdminPage() {
             >
               <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
             </Button>
-          </div>
-        </header>
+          }
+        />
 
         {/* Stats Cards */}
         {stats && (

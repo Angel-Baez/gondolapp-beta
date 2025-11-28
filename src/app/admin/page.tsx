@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Database, ArrowLeft } from "lucide-react";
 import CrearConPreset from "@/components/CrearConPreset";
 import ImportarExcel from "@/components/ImportarExcel";
 import { SyncPanel } from "@/components/SyncPanel";
-import { Button } from "@/components/ui/Button";
-import { ArrowLeft } from "lucide-react";
-import { Header } from "@/components/AdminPage/Header";
+import { Button, Header } from "@/components/ui";
 import { ToolSelector } from "@/components/AdminPage/ToolSelector";
 import { AddProductWorkflow } from "@/components/AdminPage/AddProductWorkflow";
 import { useProductSync } from "@/hooks/useProductSync";
+import { ProductoCompleto } from "@/services/productos";
 import toast from "react-hot-toast";
 
 type ActiveTool = "import" | "preset" | "sync" | "addProducts" | null;
@@ -29,16 +29,17 @@ export default function AdminPage() {
 
   const { syncProductToIndexedDB } = useProductSync();
 
-  const handleProductoCreado = async (producto: any) => {
+  const handleProductoCreado = async (producto: unknown) => {
+    const prod = producto as ProductoCompleto;
     console.log("✅ Producto creado en MongoDB:", producto);
 
     try {
       // Sincronizar con IndexedDB
-      await syncProductToIndexedDB(producto);
+      await syncProductToIndexedDB(prod);
 
       // Mostrar notificación de éxito
       toast.success(
-        `✅ "${producto.base.nombre} ${producto.variante.nombreCompleto}" guardado correctamente`,
+        `✅ "${prod.base.nombre} ${prod.variante.nombreCompleto}" guardado correctamente`,
         { duration: 3000, position: "top-center" }
       );
     } catch (error) {
@@ -53,7 +54,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
-        <Header />
+        <Header
+          title="Administración"
+          subtitle="Gestiona tu catálogo de productos"
+          icon={Database}
+          backHref="/"
+          backText="Volver al Inventario"
+        />
 
         {/* MAIN CONTENT */}
         <main className="flex-1 overflow-y-auto p-4 bg-gray-50">

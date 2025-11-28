@@ -1,8 +1,8 @@
 "use client";
 
 import { HistorialList } from "@/components/reposicion/HistorialList";
-import { Calendar } from "lucide-react";
-import { Header } from "@/components/HistorialPage/Header";
+import { Calendar, History } from "lucide-react";
+import { Header } from "@/components/ui";
 import { useState } from "react";
 
 export default function HistorialPage() {
@@ -33,7 +33,13 @@ export default function HistorialPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
-        <Header />
+        <Header
+          title="Historial de Listas"
+          subtitle="Revisa todas tus listas guardadas"
+          icon={History}
+          backHref="/"
+          backText="Volver al Inventario"
+        />
 
         {/* Filtros */}
         <div className="p-4 bg-gray-50">

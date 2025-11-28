@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Header } from "@/components/HomePage/Header";
+import Link from "next/link";
+import { Archive, Settings } from "lucide-react";
+import { motion as m } from "framer-motion";
+import { Header } from "@/components/ui";
 import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
 import { ScanButton } from "@/components/HomePage/ScanButton";
 import { MainContent } from "@/components/HomePage/MainContent";
@@ -38,7 +41,24 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
-        <Header />
+        <Header
+          variant="main"
+          title="GondolApp"
+          subtitle="Gestor de Inventario Inteligente"
+          icon={Archive}
+          animateIcon
+          rightContent={
+            <Link
+              href="/admin"
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              <m.div whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }}>
+                <Settings size={20} />
+              </m.div>
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          }
+        />
         <NavigationTabs activeView={activeView} onViewChange={setActiveView} />
         <ScanButton activeView={activeView} onScanClick={handleOpenScanner} />
         <MainContent activeView={activeView} />
