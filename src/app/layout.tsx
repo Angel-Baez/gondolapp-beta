@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import PWAProvider from "./PWAProvider";
+import { FeedbackProvider } from "@/components/feedback";
 
 export const metadata: Metadata = {
   title: "GondolApp - Gestor de Inventario",
@@ -55,6 +56,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <FeedbackProvider />
       </body>
     </html>
   );

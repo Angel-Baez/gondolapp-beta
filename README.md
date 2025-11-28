@@ -13,6 +13,27 @@ Aplicación web progresiva (PWA) para la gestión de inventario de supermercado 
 - 📱 **Instalable**: Funciona como app nativa en dispositivos móviles
 - 🎨 **UI Moderna**: Diseño con Tailwind CSS y animaciones con Framer Motion
 - 🛡️ **Seguridad**: Rate limiting con Redis + Security headers completos
+- 📝 **Sistema de Feedback**: Reporta bugs, sugerencias y mejoras con integración automática a GitHub Issues
+
+### Sistema de Feedback para Beta-Testers 🐛
+
+GondolApp incluye un sistema integral de feedback que permite a los beta-testers:
+
+- **Reportar problemas**: Bugs, sugerencias de mejora, dudas y consultas
+- **Adjuntar capturas de pantalla**: Evidencia visual del problema
+- **Captura automática de metadata**: Navegador, dispositivo, SO, URL
+- **Integración con GitHub**: Creación automática de issues desde el panel de admin
+
+**Arquitectura SOLID**: El panel de administración sigue principios SOLID con componentes modulares:
+- `useFeedbackApi` hook para operaciones de API (SRP, DIP)
+- Componentes especializados: `FeedbackStatsCards`, `FeedbackSearchAndFilters`, `FeedbackReporteDetail`
+- Configuración centralizada en `constants.tsx` (OCP)
+
+**Acceso:**
+- **Usuarios**: Botón flotante (FAB) en la esquina inferior derecha
+- **Administradores**: Panel en `/admin/feedback`
+
+📖 **Documentación completa**: [`docs/FEEDBACK-SYSTEM.md`](docs/FEEDBACK-SYSTEM.md)
 
 ### Arquitectura Técnica
 
@@ -116,9 +137,34 @@ gondolapp-beta/
 │   │   ├── layout.tsx         # Layout principal
 │   │   ├── page.tsx           # Página principal
 │   │   ├── globals.css        # Estilos globales
+│   │   ├── admin/             # Páginas de administración
+│   │   │   ├── page.tsx       # Panel principal admin
+│   │   │   ├── feedback/      # Panel de feedback
+│   │   │   └── mongo/         # MongoDB Compass
+│   │   ├── api/               # API Routes
+│   │   │   ├── feedback/      # API de feedback público
+│   │   │   └── admin/         # APIs de administración
+│   │   │       └── feedback/  # CRUD feedback + GitHub Issues
 │   │   └── PWAProvider.tsx    # Proveedor de PWA
 │   ├── components/            # Componentes React
-│   │   ├── ui/                # Componentes base (Button, Card, Badge, Input, Modal)
+│   │   ├── ui/                # Componentes reutilizables
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   └── Header.tsx     # Header reutilizable para toda la PWA
+│   │   ├── feedback/          # Sistema de feedback
+│   │   │   ├── FeedbackFAB.tsx    # Botón flotante
+│   │   │   ├── FeedbackForm.tsx   # Modal de formulario
+│   │   │   ├── FeedbackProvider.tsx
+│   │   │   └── admin/             # Panel de administración (SOLID)
+│   │   │       ├── constants.tsx      # Configuración UI
+│   │   │       ├── utils.ts           # Utilidades
+│   │   │       ├── FeedbackStatsCards.tsx
+│   │   │       ├── FeedbackSearchAndFilters.tsx
+│   │   │       ├── FeedbackReporteListItem.tsx
+│   │   │       └── FeedbackReporteDetail.tsx
 │   │   ├── reposicion/        # Módulo de reposición
 │   │   ├── vencimiento/       # Módulo de vencimientos
 │   │   └── BarcodeScanner.tsx # Escáner de códigos
@@ -134,16 +180,19 @@ gondolapp-beta/
 │   ├── store/                 # Zustand stores
 │   │   ├── producto.ts
 │   │   ├── reposicion.ts
-│   │   └── vencimiento.ts
+│   │   ├── vencimiento.ts
+│   │   └── feedback.ts        # Estado UI del feedback
 │   ├── lib/                   # Utilidades y configuración
 │   │   ├── db.ts             # Configuración de Dexie
+│   │   ├── feedbackUtils.ts  # Utilidades de feedback
 │   │   └── utils.ts          # Funciones auxiliares
 │   ├── services/              # Capa de compatibilidad (Facade)
 │   │   └── productos.ts      # Interfaz legacy → ProductService
 │   ├── types/                 # Definiciones de tipos
-│   │   └── index.ts
+│   │   └── index.ts          # Incluye tipos de Feedback
 │   └── hooks/                 # Custom hooks
-│       └── usePWA.ts         # Hook para PWA
+│       ├── usePWA.ts         # Hook para PWA
+│       └── useFeedbackApi.tsx # Hook para operaciones de feedback (SOLID)
 ├── public/                    # Archivos estáticos
 │   ├── manifest.json         # Manifest de PWA
 │   └── sw.js                 # Service Worker
@@ -151,7 +200,8 @@ gondolapp-beta/
 │   ├── ARQUITECTURA-IA-FIRST.md
 │   ├── SOLID-PRINCIPLES.md
 │   ├── DEPLOY-VERCEL.md
-│   └── SEGURIDAD.md
+│   ├── SEGURIDAD.md
+│   └── FEEDBACK-SYSTEM.md    # Documentación del sistema de feedback
 ├── next.config.js            # Configuración de Next.js
 ├── tailwind.config.ts        # Configuración de Tailwind
 ├── tsconfig.json            # Configuración de TypeScript
