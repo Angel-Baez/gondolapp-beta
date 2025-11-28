@@ -31,6 +31,9 @@ export default function BarcodeScanner({
   const isStoppingRef = useRef(false);
   const isStartingRef = useRef(false);
 
+  // Tiempo para limpiar el código escaneado y permitir re-escanear el mismo código
+  const SCAN_CODE_CLEAR_DELAY = 2000;
+
   const stopScanning = useCallback(async () => {
     // Evitar llamadas múltiples simultáneas
     if (isStoppingRef.current) {
@@ -128,10 +131,10 @@ export default function BarcodeScanner({
             navigator.vibrate(100);
           }
 
+          // Limpiar el código escaneado después de un tiempo para permitir re-escaneo
           setTimeout(() => {
-            stopScanning();
-            onClose();
-          }, 500);
+            setLastScannedCode(null);
+          }, SCAN_CODE_CLEAR_DELAY);
         }
       };
 
@@ -235,7 +238,8 @@ export default function BarcodeScanner({
     e.preventDefault();
     if (manualCode.trim()) {
       onScan(manualCode.trim());
-      onClose();
+      setManualCode(""); // Limpiar el campo para el próximo escaneo
+      // NO llamar onClose() - el padre controla el flujo
     }
   };
 
