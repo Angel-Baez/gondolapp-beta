@@ -83,9 +83,11 @@ export function FeedbackForm() {
 
   // Resetear formulario cuando se cierra
   useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    
     if (!isModalOpen) {
       // Resetear después de un delay para la animación
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setTipos([]);
         setCategorias([]);
         setPrioridad("Media");
@@ -96,9 +98,12 @@ export function FeedbackForm() {
         setErrores({});
         resetState();
       }, 300);
-      return () => clearTimeout(timer);
     }
-  }, [isModalOpen, resetState]);
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isModalOpen]); // Removed resetState from dependencies as it's stable from Zustand
 
   // Toggle tipo de feedback
   const toggleTipo = (tipo: FeedbackTipo) => {
@@ -312,6 +317,8 @@ export function FeedbackForm() {
                           key={tipo.id}
                           type="button"
                           onClick={() => toggleTipo(tipo.id)}
+                          aria-pressed={tipos.includes(tipo.id)}
+                          aria-label={`${tipo.label} ${tipos.includes(tipo.id) ? "seleccionado" : ""}`}
                           className={`
                             flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all
                             ${tipos.includes(tipo.id) 
@@ -343,6 +350,8 @@ export function FeedbackForm() {
                           key={cat.id}
                           type="button"
                           onClick={() => toggleCategoria(cat.id)}
+                          aria-pressed={categorias.includes(cat.id)}
+                          aria-label={`${cat.label} ${categorias.includes(cat.id) ? "seleccionado" : ""}`}
                           className={`
                             px-3 py-1 rounded-full border text-sm font-medium transition-all
                             ${categorias.includes(cat.id)

@@ -136,12 +136,13 @@ export async function POST(
     if (!githubResponse.ok) {
       const errorData = await githubResponse.json();
       console.error("❌ Error de GitHub API:", errorData);
+      // Sanitize error message: do not expose GitHub error details to client
       return NextResponse.json(
         { 
           success: false, 
-          error: `Error al crear issue en GitHub: ${errorData.message || "Error desconocido"}` 
+          error: `Error al crear issue en GitHub. Código: ${githubResponse.status}` 
         },
-        { status: githubResponse.status }
+        { status: 500 }
       );
     }
 
