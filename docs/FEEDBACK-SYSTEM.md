@@ -24,7 +24,7 @@ El sistema de feedback permite a los usuarios reportar bugs, sugerencias y probl
 
 ## 🛠️ Componentes del Sistema
 
-### Frontend
+### Frontend - Componentes Públicos
 
 ```
 src/components/feedback/
@@ -32,6 +32,26 @@ src/components/feedback/
 ├── FeedbackForm.tsx     # Modal del formulario de feedback
 ├── FeedbackProvider.tsx # Wrapper cliente para el layout
 └── index.ts             # Exports
+```
+
+### Frontend - Panel de Administración (Arquitectura SOLID)
+
+```
+src/components/feedback/admin/
+├── constants.tsx              # Configuración de UI (iconos, colores, opciones)
+├── utils.ts                   # Funciones auxiliares (formateo de fechas)
+├── FeedbackStatsCards.tsx     # Tarjetas de estadísticas (SRP)
+├── FeedbackSearchAndFilters.tsx # Búsqueda y filtros (SRP, OCP)
+├── FeedbackReporteListItem.tsx  # Item de lista individual (SRP)
+├── FeedbackReporteDetail.tsx    # Vista detallada del reporte (SRP, OCP)
+└── index.ts                     # Exports
+```
+
+### Hooks Personalizados
+
+```
+src/hooks/
+└── useFeedbackApi.tsx   # Operaciones de API para feedback (SRP, DIP)
 ```
 
 ### API Routes
@@ -205,6 +225,64 @@ import { Header } from "@/components/ui";
 - **Validación**: Campos obligatorios y límites de longitud
 - **Límite de archivos**: Capturas de pantalla máximo 5MB
 - **MongoDB**: Datos almacenados de forma segura en Atlas
+
+## 🏗️ Arquitectura SOLID del Panel de Administración
+
+El panel de administración de feedback sigue los principios SOLID para garantizar código limpio, mantenible y extensible:
+
+### Principios Aplicados
+
+**SRP (Single Responsibility Principle)**:
+- Cada componente tiene una única responsabilidad bien definida
+- `FeedbackStatsCards`: Solo renderiza estadísticas
+- `FeedbackSearchAndFilters`: Solo maneja búsqueda y filtros
+- `FeedbackReporteListItem`: Solo renderiza un item de lista
+- `FeedbackReporteDetail`: Solo muestra el detalle de un reporte
+- `useFeedbackApi`: Solo operaciones de API
+
+**OCP (Open/Closed Principle)**:
+- Componentes extensibles sin modificar código existente
+- Configuración de colores/iconos en `constants.tsx`
+- Nuevos estados/tipos se agregan sin cambiar componentes
+
+**LSP (Liskov Substitution Principle)**:
+- Componentes intercambiables con interfaces consistentes
+- Todos los componentes admin exportan tipos bien definidos
+
+**ISP (Interface Segregation Principle)**:
+- Interfaces específicas por componente
+- Props mínimas y necesarias, sin interfaces monolíticas
+
+**DIP (Dependency Inversion Principle)**:
+- Página principal depende de abstracciones (hooks y componentes)
+- `useFeedbackApi` abstrae todas las llamadas al servidor
+- Facilita testing y cambios de implementación
+
+### Estructura del Custom Hook
+
+```typescript
+// useFeedbackApi.tsx
+interface UseFeedbackApiResult {
+  reportes: FeedbackReporte[];
+  stats: FeedbackStats | null;
+  pagination: FeedbackPagination | null;
+  isLoading: boolean;
+  isCreatingIssue: boolean;
+  fetchReportes: () => Promise<void>;
+  actualizarEstado: (id: string, nuevoEstado: FeedbackEstado) => Promise<boolean>;
+  actualizarPrioridad: (id: string, nuevaPrioridad: FeedbackPrioridad) => Promise<boolean>;
+  eliminarReporte: (id: string) => Promise<boolean>;
+  crearGitHubIssue: (id: string) => Promise<{ issueUrl?: string; issueNumber?: number } | null>;
+}
+```
+
+### Beneficios de la Arquitectura
+
+1. **Mantenibilidad**: Cambios localizados sin efectos secundarios
+2. **Testabilidad**: Componentes y hooks fáciles de testear en aislamiento
+3. **Reutilización**: Componentes usables en otros contextos
+4. **Escalabilidad**: Fácil agregar nuevas funcionalidades
+5. **Legibilidad**: Código organizado y auto-documentado
 
 ## 📈 Estadísticas
 

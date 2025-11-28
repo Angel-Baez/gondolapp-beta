@@ -24,6 +24,11 @@ GondolApp incluye un sistema integral de feedback que permite a los beta-testers
 - **Captura automática de metadata**: Navegador, dispositivo, SO, URL
 - **Integración con GitHub**: Creación automática de issues desde el panel de admin
 
+**Arquitectura SOLID**: El panel de administración sigue principios SOLID con componentes modulares:
+- `useFeedbackApi` hook para operaciones de API (SRP, DIP)
+- Componentes especializados: `FeedbackStatsCards`, `FeedbackSearchAndFilters`, `FeedbackReporteDetail`
+- Configuración centralizada en `constants.tsx` (OCP)
+
 **Acceso:**
 - **Usuarios**: Botón flotante (FAB) en la esquina inferior derecha
 - **Administradores**: Panel en `/admin/feedback`
@@ -152,7 +157,14 @@ gondolapp-beta/
 │   │   ├── feedback/          # Sistema de feedback
 │   │   │   ├── FeedbackFAB.tsx    # Botón flotante
 │   │   │   ├── FeedbackForm.tsx   # Modal de formulario
-│   │   │   └── FeedbackProvider.tsx
+│   │   │   ├── FeedbackProvider.tsx
+│   │   │   └── admin/             # Panel de administración (SOLID)
+│   │   │       ├── constants.tsx      # Configuración UI
+│   │   │       ├── utils.ts           # Utilidades
+│   │   │       ├── FeedbackStatsCards.tsx
+│   │   │       ├── FeedbackSearchAndFilters.tsx
+│   │   │       ├── FeedbackReporteListItem.tsx
+│   │   │       └── FeedbackReporteDetail.tsx
 │   │   ├── reposicion/        # Módulo de reposición
 │   │   ├── vencimiento/       # Módulo de vencimientos
 │   │   └── BarcodeScanner.tsx # Escáner de códigos
@@ -179,7 +191,8 @@ gondolapp-beta/
 │   ├── types/                 # Definiciones de tipos
 │   │   └── index.ts          # Incluye tipos de Feedback
 │   └── hooks/                 # Custom hooks
-│       └── usePWA.ts         # Hook para PWA
+│       ├── usePWA.ts         # Hook para PWA
+│       └── useFeedbackApi.tsx # Hook para operaciones de feedback (SOLID)
 ├── public/                    # Archivos estáticos
 │   ├── manifest.json         # Manifest de PWA
 │   └── sw.js                 # Service Worker
