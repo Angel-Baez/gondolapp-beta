@@ -96,6 +96,21 @@ export async function POST(request: NextRequest) {
 
     const db = await getDatabase();
     const collection = db.collection("feedback_reportes");
+
+    // After line 98 in route.ts
+    if (body.screenshots && Array.isArray(body.screenshots)) {
+      for (const screenshot of body.screenshots) {
+        // Base64 string length roughly equals 4/3 of original byte size
+        const estimatedBytes = (screenshot.length * 3) / 4;
+        const maxBytes = 5 * 1024 * 1024; // 5MB
+        if (estimatedBytes > maxBytes) {
+          return NextResponse.json(
+          { success: false, error: "Screenshot exceeds 5MB limit" },
+          { status: 400 }
+        );
+      }
+    }
+  }
     
     const result = await collection.insertOne(nuevoFeedback);
 
