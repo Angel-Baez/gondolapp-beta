@@ -129,7 +129,7 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
     console.log("🚪 Usuario cerró el formulario sin guardar");
     setShowManualForm(false);
     setScannedEAN("");
-    
+    onComplete();
   };
 
   return (

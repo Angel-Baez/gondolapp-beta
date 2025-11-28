@@ -115,7 +115,7 @@ export default function FormularioProductoManual({
           tamano: "",
           sabor: "",
         });
-        onClose();
+        // NO llamar onClose() aquí - el padre (AddProductWorkflow) controla el flujo
       } else {
         toast.error(data.error || "Error al crear el producto");
       }
