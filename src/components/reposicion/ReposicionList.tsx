@@ -12,7 +12,7 @@ import {
   Save,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReposicionCard } from "./ReposicionCard";
 import { ReposicionHeader } from "./ReposicionHeader";
 import { SkeletonCard } from "./SkeletonCard";
@@ -41,6 +41,10 @@ export function ReposicionList() {
   const [isPendientesExpanded, setIsPendientesExpanded] = useState(false);
   const [isRepuestosExpanded, setIsRepuestosExpanded] = useState(false);
   const [isSinStockExpanded, setIsSinStockExpanded] = useState(false);
+  
+  // ✅ Estado para controlar la expansión de cada card individual
+  // Guardamos por productoBase.id para que persista cuando las cards cambian de sección
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   // Constantes para secciones colapsables
   const MIN_ITEMS_FOR_COLLAPSE = 10;
@@ -54,6 +58,19 @@ export function ReposicionList() {
   
   // ✅ Ref para rastrear si ya se completó la primera carga (evita parpadeo)
   const initialLoadComplete = useRef(false);
+  
+  // ✅ Función memoizada para toggle de expansión de cards
+  const toggleCardExpanded = useCallback((productoBaseId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productoBaseId)) {
+        newSet.delete(productoBaseId);
+      } else {
+        newSet.add(productoBaseId);
+      }
+      return newSet;
+    });
+  }, []);
 
   useEffect(() => {
     cargarItems();
@@ -164,9 +181,10 @@ export function ReposicionList() {
       await guardarListaActual();
       toast.success("Lista guardada correctamente");
       setShowSaveModal(false);
-      // ✅ Resetear el estado de carga y cache para la siguiente sesión
+      // ✅ Resetear el estado de carga, cache y expansión de cards para la siguiente sesión
       initialLoadComplete.current = false;
       productosCache.current.clear();
+      setExpandedCards(new Set());
       // Recargar items (la lista ahora debería estar vacía)
       await cargarItems();
     } catch (error) {
@@ -339,6 +357,8 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="pendiente"
+                isExpanded={expandedCards.has(productoBase.id)}
+                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>
@@ -368,6 +388,8 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="repuesto"
+                isExpanded={expandedCards.has(productoBase.id)}
+                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>
@@ -397,6 +419,8 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="sinStock"
+                isExpanded={expandedCards.has(productoBase.id)}
+                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>

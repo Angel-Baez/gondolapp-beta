@@ -13,7 +13,6 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
 
@@ -24,14 +23,18 @@ interface ReposicionCardProps {
     variante: ProductoVariante;
   }>;
   seccion: "pendiente" | "repuesto" | "sinStock";
+  // ✅ Estado de expansión controlado desde el padre para evitar colapsos
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 export function ReposicionCard({
   productoBase,
   variantes,
   seccion,
+  isExpanded,
+  onToggleExpand,
 }: ReposicionCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
   const { haptic } = useHaptics();
@@ -65,7 +68,7 @@ export function ReposicionCard({
     >
       {/* Header */}
       <div
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggleExpand}
         className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
