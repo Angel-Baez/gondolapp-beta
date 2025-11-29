@@ -111,6 +111,7 @@ export function ReposicionList() {
       cargarProductos();
     } else {
       setItemsConProductos([]);
+      setLoading(false);
       // ✅ NO cambiar loading aquí para evitar parpadeos si ya está en false
     }
   }, [items]);
