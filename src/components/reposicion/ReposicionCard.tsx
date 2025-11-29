@@ -13,7 +13,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
 
@@ -24,6 +24,9 @@ interface ReposicionCardProps {
     variante: ProductoVariante;
   }>;
   seccion: "pendiente" | "repuesto" | "sinStock";
+  // ✅ Estado de expansión controlado desde el padre
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 // ✅ Usar React.memo para evitar re-renders innecesarios cuando los props no cambian significativamente
@@ -31,8 +34,9 @@ export const ReposicionCard = memo(function ReposicionCard({
   productoBase,
   variantes,
   seccion,
+  isExpanded,
+  onToggleExpand,
 }: ReposicionCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
   const { haptic } = useHaptics();
@@ -66,7 +70,7 @@ export const ReposicionCard = memo(function ReposicionCard({
     >
       {/* Header */}
       <div
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggleExpand}
         className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -410,6 +414,7 @@ export const ReposicionCard = memo(function ReposicionCard({
   // Solo re-renderizar si hay cambios reales en los datos
   if (prevProps.productoBase.id !== nextProps.productoBase.id) return false;
   if (prevProps.seccion !== nextProps.seccion) return false;
+  if (prevProps.isExpanded !== nextProps.isExpanded) return false;
   if (prevProps.variantes.length !== nextProps.variantes.length) return false;
 
   // Crear mapas por item.id para comparación independiente del orden
