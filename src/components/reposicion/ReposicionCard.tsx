@@ -411,28 +411,38 @@ export const ReposicionCard = memo(function ReposicionCard({
   if (prevProps.productoBase.id !== nextProps.productoBase.id) return false;
   if (prevProps.seccion !== nextProps.seccion) return false;
   if (prevProps.variantes.length !== nextProps.variantes.length) return false;
-  
-  // Verificar que cada variante sea igual
-  return prevProps.variantes.every((v, i) => {
-    const nextV = nextProps.variantes[i];
+
+  // Crear mapas por item.id para comparación independiente del orden
+  const prevMap = new Map(prevProps.variantes.map(v => [v.item.id, v]));
+  const nextMap = new Map(nextProps.variantes.map(v => [v.item.id, v]));
+
+  // Verificar que todos los ids estén presentes y sean iguales
+  for (const [id, prevV] of prevMap.entries()) {
+    const nextV = nextMap.get(id);
     if (!nextV) return false;
-    
+
     // Comparar propiedades del item
     const itemEqual = (
-      v.item.id === nextV.item.id &&
-      v.item.cantidad === nextV.item.cantidad &&
-      v.item.repuesto === nextV.item.repuesto &&
-      v.item.sinStock === nextV.item.sinStock
+      prevV.item.cantidad === nextV.item.cantidad &&
+      prevV.item.repuesto === nextV.item.repuesto &&
+      prevV.item.sinStock === nextV.item.sinStock
     );
-    
+
     // Comparar propiedades de la variante que afectan el renderizado
     const varianteEqual = (
-      v.variante.id === nextV.variante.id &&
-      v.variante.nombreCompleto === nextV.variante.nombreCompleto &&
-      v.variante.imagen === nextV.variante.imagen &&
-      v.variante.tamano === nextV.variante.tamano
+      prevV.variante.id === nextV.variante.id &&
+      prevV.variante.nombreCompleto === nextV.variante.nombreCompleto &&
+      prevV.variante.imagen === nextV.variante.imagen &&
+      prevV.variante.tamano === nextV.variante.tamano
     );
-    
-    return itemEqual && varianteEqual;
-  });
+
+    if (!itemEqual || !varianteEqual) return false;
+  }
+
+  // Verificar que no haya ids extra en nextMap
+  for (const id of nextMap.keys()) {
+    if (!prevMap.has(id)) return false;
+  }
+
+  return true;
 });
