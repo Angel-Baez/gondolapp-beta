@@ -51,6 +51,9 @@ export function ReposicionList() {
   const productosCache = useRef<
     Map<string, { variante: ProductoVariante; base: ProductoBase }>
   >(new Map());
+  
+  // ✅ Ref para rastrear si ya se hizo la primera carga
+  const hasInitiallyLoaded = useRef(false);
 
   useEffect(() => {
     cargarItems();
@@ -59,13 +62,9 @@ export function ReposicionList() {
   // Cargar datos de productos para cada item (con cache)
   useEffect(() => {
     const cargarProductos = async () => {
-      // ✅ Solo mostrar loading si:
-      // 1. No hay cache (primera carga)
-      // 2. No hay items cargados previamente (itemsConProductos vacío)
-      // 3. Hay items por cargar
-      const isFirstLoad = productosCache.current.size === 0 && 
-                         itemsConProductos.length === 0 && 
-                         items.length > 0;
+      // ✅ Solo mostrar loading en la PRIMERA carga real
+      // Usamos un ref para rastrear si ya cargamos datos previamente
+      const isFirstLoad = !hasInitiallyLoaded.current && items.length > 0;
       
       if (isFirstLoad) {
         setLoading(true);
@@ -101,8 +100,9 @@ export function ReposicionList() {
         itemsCompletos.filter((item) => item !== null) as ItemConProducto[]
       );
       
-      // ✅ Solo setLoading(false) si estaba en true (primera carga)
+      // ✅ Marcar que ya se hizo la primera carga y ocultar loading
       if (isFirstLoad) {
+        hasInitiallyLoaded.current = true;
         setLoading(false);
       }
     };
@@ -111,8 +111,12 @@ export function ReposicionList() {
       cargarProductos();
     } else {
       setItemsConProductos([]);
-      setLoading(false);
-      // ✅ NO cambiar loading aquí para evitar parpadeos si ya está en false
+      // ✅ Si ya cargamos previamente y ahora no hay items, solo limpiar
+      // Si nunca cargamos, quitar el loading para mostrar estado vacío
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        setLoading(false);
+      }
     }
   }, [items]);
 
@@ -162,6 +166,9 @@ export function ReposicionList() {
       await guardarListaActual();
       toast.success("Lista guardada correctamente");
       setShowSaveModal(false);
+      // ✅ Resetear el ref para permitir mostrar loading en la próxima carga
+      hasInitiallyLoaded.current = false;
+      productosCache.current.clear();
       // Recargar items (la lista ahora debería estar vacía)
       await cargarItems();
     } catch (error) {
