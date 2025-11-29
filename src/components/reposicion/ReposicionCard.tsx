@@ -13,7 +13,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { memo } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
 
@@ -24,19 +24,14 @@ interface ReposicionCardProps {
     variante: ProductoVariante;
   }>;
   seccion: "pendiente" | "repuesto" | "sinStock";
-  // ✅ Estado de expansión controlado desde el padre
-  isExpanded: boolean;
-  onToggleExpand: () => void;
 }
 
-// ✅ Usar React.memo para evitar re-renders innecesarios cuando los props no cambian significativamente
-export const ReposicionCard = memo(function ReposicionCard({
+export function ReposicionCard({
   productoBase,
   variantes,
   seccion,
-  isExpanded,
-  onToggleExpand,
 }: ReposicionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
   const { haptic } = useHaptics();
@@ -70,7 +65,7 @@ export const ReposicionCard = memo(function ReposicionCard({
     >
       {/* Header */}
       <div
-        onClick={onToggleExpand}
+        onClick={() => setIsExpanded(!isExpanded)}
         className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -409,45 +404,4 @@ export const ReposicionCard = memo(function ReposicionCard({
       </AnimatePresence>
     </div>
   );
-}, (prevProps, nextProps) => {
-  // ✅ Custom comparison para evitar re-renders innecesarios
-  // Solo re-renderizar si hay cambios reales en los datos
-  if (prevProps.productoBase.id !== nextProps.productoBase.id) return false;
-  if (prevProps.seccion !== nextProps.seccion) return false;
-  if (prevProps.isExpanded !== nextProps.isExpanded) return false;
-  if (prevProps.variantes.length !== nextProps.variantes.length) return false;
-
-  // Crear mapas por item.id para comparación independiente del orden
-  const prevMap = new Map(prevProps.variantes.map(v => [v.item.id, v]));
-  const nextMap = new Map(nextProps.variantes.map(v => [v.item.id, v]));
-
-  // Verificar que todos los ids estén presentes y sean iguales
-  for (const [id, prevV] of prevMap.entries()) {
-    const nextV = nextMap.get(id);
-    if (!nextV) return false;
-
-    // Comparar propiedades del item
-    const itemEqual = (
-      prevV.item.cantidad === nextV.item.cantidad &&
-      prevV.item.repuesto === nextV.item.repuesto &&
-      prevV.item.sinStock === nextV.item.sinStock
-    );
-
-    // Comparar propiedades de la variante que afectan el renderizado
-    const varianteEqual = (
-      prevV.variante.id === nextV.variante.id &&
-      prevV.variante.nombreCompleto === nextV.variante.nombreCompleto &&
-      prevV.variante.imagen === nextV.variante.imagen &&
-      prevV.variante.tamano === nextV.variante.tamano
-    );
-
-    if (!itemEqual || !varianteEqual) return false;
-  }
-
-  // Verificar que no haya ids extra en nextMap
-  for (const id of nextMap.keys()) {
-    if (!prevMap.has(id)) return false;
-  }
-
-  return true;
-});
+}

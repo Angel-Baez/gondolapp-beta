@@ -12,7 +12,7 @@ import {
   Save,
   XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ReposicionCard } from "./ReposicionCard";
 import { ReposicionHeader } from "./ReposicionHeader";
 import { SkeletonCard } from "./SkeletonCard";
@@ -30,16 +30,10 @@ type SeccionType = "pendiente" | "repuesto" | "sinStock";
 
 export function ReposicionList() {
   const { items, cargarItems, guardarListaActual } = useReposicionStore();
-  
-  // ✅ Cache de productos (variante + base) - persiste entre renders
-  const productosCache = useRef<
-    Map<string, { variante: ProductoVariante; base: ProductoBase }>
-  >(new Map());
-  
-  // ✅ Estado para la primera carga solamente
+  const [itemsConProductos, setItemsConProductos] = useState<ItemConProducto[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
-  const [productosLoaded, setProductosLoaded] = useState(false);
-  
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -47,97 +41,82 @@ export function ReposicionList() {
   const [isPendientesExpanded, setIsPendientesExpanded] = useState(false);
   const [isRepuestosExpanded, setIsRepuestosExpanded] = useState(false);
   const [isSinStockExpanded, setIsSinStockExpanded] = useState(false);
-  
-  // ✅ Estado para controlar expansión de cards individuales (persiste entre secciones)
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   // Constantes para secciones colapsables
   const MIN_ITEMS_FOR_COLLAPSE = 10;
   const EXPANDED_HEIGHT = "600px";
   const COLLAPSED_HEIGHT = "300px";
 
-  // ✅ Función para toggle de cards (memoizada)
-  const toggleCardExpanded = useCallback((productoBaseId: string) => {
-    setExpandedCards(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productoBaseId)) {
-        newSet.delete(productoBaseId);
-      } else {
-        newSet.add(productoBaseId);
-      }
-      return newSet;
-    });
-  }, []);
+  // Cache de productos para evitar recargas innecesarias
+  const productosCache = useRef<
+    Map<string, { variante: ProductoVariante; base: ProductoBase }>
+  >(new Map());
+  
+  // ✅ Ref para rastrear si ya se completó la primera carga (evita parpadeo)
+  const initialLoadComplete = useRef(false);
 
   useEffect(() => {
     cargarItems();
   }, []);
 
-  // ✅ Cargar productos solo en la primera carga o cuando hay nuevos varianteIds
+  // Cargar datos de productos para cada item (con cache)
+  // ✅ FIX: Solo mostrar skeletons en la primera carga, nunca después
   useEffect(() => {
-    const cargarProductosFaltantes = async () => {
-      if (items.length === 0) {
-        if (!productosLoaded) {
-          setLoading(false);
-          setProductosLoaded(true);
-        }
-        return;
-      }
-
-      // Encontrar varianteIds que no están en cache
-      const varianteIdsFaltantes = items
-        .map(item => item.varianteId)
-        .filter(id => !productosCache.current.has(id));
-
-      // Si no hay productos faltantes y ya cargamos, no hacer nada
-      if (varianteIdsFaltantes.length === 0 && productosLoaded) {
-        return;
-      }
-
-      // Solo mostrar loading en la primera carga
-      if (!productosLoaded) {
+    const cargarProductos = async () => {
+      // ✅ Solo mostrar loading si es la primera carga Y no hay items previos
+      // Esto evita el parpadeo cuando se actualiza un item existente
+      const shouldShowLoading = !initialLoadComplete.current && items.length > 0;
+      
+      if (shouldShowLoading) {
         setLoading(true);
       }
 
-      // Cargar productos faltantes
-      await Promise.all(
-        varianteIdsFaltantes.map(async (varianteId) => {
-          const variante = await db.productosVariantes.get(varianteId);
-          if (!variante) return;
+      const itemsCompletos = await Promise.all(
+        items.map(async (item) => {
+          // Buscar en cache primero
+          let productoData = productosCache.current.get(item.varianteId);
 
-          const base = await db.productosBase.get(variante.productoBaseId);
-          if (!base) return;
+          if (!productoData) {
+            // Si no está en cache, cargar desde DB
+            const variante = await db.productosVariantes.get(item.varianteId);
+            if (!variante) return null;
 
-          productosCache.current.set(varianteId, { variante, base });
+            const base = await db.productosBase.get(variante.productoBaseId);
+            if (!base) return null;
+
+            productoData = { variante, base };
+            // Guardar en cache
+            productosCache.current.set(item.varianteId, productoData);
+          }
+
+          return {
+            item,
+            variante: productoData.variante,
+            base: productoData.base,
+          };
         })
       );
 
-      if (!productosLoaded) {
-        setLoading(false);
-        setProductosLoaded(true);
+      setItemsConProductos(
+        itemsCompletos.filter((item) => item !== null) as ItemConProducto[]
+      );
+      
+      // ✅ Marcar que la carga inicial se completó
+      if (!initialLoadComplete.current) {
+        initialLoadComplete.current = true;
       }
+      setLoading(false);
     };
 
-    cargarProductosFaltantes();
-  }, [items, productosLoaded]);
-
-  // ✅ Computar itemsConProductos usando useMemo - no causa re-renders innecesarios
-  const itemsConProductos = useMemo(() => {
-    if (!productosLoaded) return [];
-    
-    return items
-      .map(item => {
-        const productoData = productosCache.current.get(item.varianteId);
-        if (!productoData) return null;
-        
-        return {
-          item,
-          variante: productoData.variante,
-          base: productoData.base,
-        };
-      })
-      .filter((item): item is ItemConProducto => item !== null);
-  }, [items, productosLoaded]);
+    if (items.length > 0) {
+      cargarProductos();
+    } else {
+      setItemsConProductos([]);
+      // ✅ Siempre ocultar loading y marcar como cargado cuando la lista está vacía
+      initialLoadComplete.current = true;
+      setLoading(false);
+    }
+  }, [items]);
 
   // Agrupar items por sección y producto base
   const groupedBySections = useMemo(() => {
@@ -185,10 +164,9 @@ export function ReposicionList() {
       await guardarListaActual();
       toast.success("Lista guardada correctamente");
       setShowSaveModal(false);
-      // ✅ Resetear estado para permitir mostrar loading en la próxima carga
-      setProductosLoaded(false);
+      // ✅ Resetear el estado de carga y cache para la siguiente sesión
+      initialLoadComplete.current = false;
       productosCache.current.clear();
-      setExpandedCards(new Set());
       // Recargar items (la lista ahora debería estar vacía)
       await cargarItems();
     } catch (error) {
@@ -361,8 +339,6 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="pendiente"
-                isExpanded={expandedCards.has(productoBase.id)}
-                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>
@@ -392,8 +368,6 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="repuesto"
-                isExpanded={expandedCards.has(productoBase.id)}
-                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>
@@ -423,8 +397,6 @@ export function ReposicionList() {
                 productoBase={productoBase}
                 variantes={items}
                 seccion="sinStock"
-                isExpanded={expandedCards.has(productoBase.id)}
-                onToggleExpand={() => toggleCardExpanded(productoBase.id)}
               />
             ))}
           </CollapsibleSection>
