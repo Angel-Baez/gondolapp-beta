@@ -415,11 +415,24 @@ export const ReposicionCard = memo(function ReposicionCard({
   // Verificar que cada variante sea igual
   return prevProps.variantes.every((v, i) => {
     const nextV = nextProps.variantes[i];
-    return (
-      v.item.id === nextV?.item.id &&
-      v.item.cantidad === nextV?.item.cantidad &&
-      v.item.repuesto === nextV?.item.repuesto &&
-      v.item.sinStock === nextV?.item.sinStock
+    if (!nextV) return false;
+    
+    // Comparar propiedades del item
+    const itemEqual = (
+      v.item.id === nextV.item.id &&
+      v.item.cantidad === nextV.item.cantidad &&
+      v.item.repuesto === nextV.item.repuesto &&
+      v.item.sinStock === nextV.item.sinStock
     );
+    
+    // Comparar propiedades de la variante que afectan el renderizado
+    const varianteEqual = (
+      v.variante.id === nextV.variante.id &&
+      v.variante.nombreCompleto === nextV.variante.nombreCompleto &&
+      v.variante.imagen === nextV.variante.imagen &&
+      v.variante.tamano === nextV.variante.tamano
+    );
+    
+    return itemEqual && varianteEqual;
   });
 });
