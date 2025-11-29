@@ -59,8 +59,15 @@ export function ReposicionList() {
   // Cargar datos de productos para cada item (con cache)
   useEffect(() => {
     const cargarProductos = async () => {
-      // Solo mostrar loading en la primera carga
-      if (productosCache.current.size === 0 && items.length > 0) {
+      // ✅ Solo mostrar loading si:
+      // 1. No hay cache (primera carga)
+      // 2. No hay items cargados previamente (itemsConProductos vacío)
+      // 3. Hay items por cargar
+      const isFirstLoad = productosCache.current.size === 0 && 
+                         itemsConProductos.length === 0 && 
+                         items.length > 0;
+      
+      if (isFirstLoad) {
         setLoading(true);
       }
 
@@ -93,14 +100,18 @@ export function ReposicionList() {
       setItemsConProductos(
         itemsCompletos.filter((item) => item !== null) as ItemConProducto[]
       );
-      setLoading(false);
+      
+      // ✅ Solo setLoading(false) si estaba en true (primera carga)
+      if (isFirstLoad) {
+        setLoading(false);
+      }
     };
 
     if (items.length > 0) {
       cargarProductos();
     } else {
       setItemsConProductos([]);
-      setLoading(false);
+      // ✅ NO cambiar loading aquí para evitar parpadeos si ya está en false
     }
   }, [items]);
 

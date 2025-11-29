@@ -13,7 +13,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
 
@@ -26,7 +26,8 @@ interface ReposicionCardProps {
   seccion: "pendiente" | "repuesto" | "sinStock";
 }
 
-export function ReposicionCard({
+// ✅ Usar React.memo para evitar re-renders innecesarios cuando los props no cambian significativamente
+export const ReposicionCard = memo(function ReposicionCard({
   productoBase,
   variantes,
   seccion,
@@ -404,4 +405,21 @@ export function ReposicionCard({
       </AnimatePresence>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // ✅ Custom comparison para evitar re-renders innecesarios
+  // Solo re-renderizar si hay cambios reales en los datos
+  if (prevProps.productoBase.id !== nextProps.productoBase.id) return false;
+  if (prevProps.seccion !== nextProps.seccion) return false;
+  if (prevProps.variantes.length !== nextProps.variantes.length) return false;
+  
+  // Verificar que cada variante sea igual
+  return prevProps.variantes.every((v, i) => {
+    const nextV = nextProps.variantes[i];
+    return (
+      v.item.id === nextV?.item.id &&
+      v.item.cantidad === nextV?.item.cantidad &&
+      v.item.repuesto === nextV?.item.repuesto &&
+      v.item.sinStock === nextV?.item.sinStock
+    );
+  });
+});
