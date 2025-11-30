@@ -28,8 +28,12 @@ export function Modal({
   useBottomSheetOnMobile = true,
 }: ModalProps) {
   const isMobile = useIsMobile();
+  const useBottomSheet = isMobile && useBottomSheetOnMobile;
 
+  // Solo bloquear scroll para modal desktop (BottomSheet maneja su propio scroll lock)
   useEffect(() => {
+    if (useBottomSheet) return; // BottomSheet maneja su propio scroll lock
+    
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -39,7 +43,7 @@ export function Modal({
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [isOpen, useBottomSheet]);
 
   const sizeClasses = {
     sm: "max-w-sm",
@@ -48,7 +52,7 @@ export function Modal({
   };
 
   // En móviles, usar BottomSheet para mejor ergonomía
-  if (isMobile && useBottomSheetOnMobile) {
+  if (useBottomSheet) {
     return (
       <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
         {children}

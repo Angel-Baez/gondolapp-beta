@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { X } from "lucide-react";
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useId } from "react";
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -19,6 +19,7 @@ interface BottomSheetProps {
  * - Soporta gesto de arrastre para cerrar (drag-to-close)
  * - Máximo 85vh de altura con scroll interno
  * - Handle visual para indicar que es arrastrable
+ * - Accesibilidad: role="dialog", aria-modal, aria-labelledby
  */
 export function BottomSheet({
   isOpen,
@@ -26,6 +27,8 @@ export function BottomSheet({
   title,
   children,
 }: BottomSheetProps) {
+  const titleId = useId();
+  
   // Bloquear scroll del body cuando está abierto
   useEffect(() => {
     if (isOpen) {
@@ -62,10 +65,14 @@ export function BottomSheet({
             transition={{ duration: 0.2 }}
             onClick={onClose}
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            aria-hidden="true"
           />
 
           {/* Bottom Sheet */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -89,7 +96,7 @@ export function BottomSheet({
             {/* Header */}
             {title && (
               <div className="px-4 pb-3 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                <h3 id={titleId} className="text-xl font-bold text-gray-900">{title}</h3>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition active:bg-gray-200"
