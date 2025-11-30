@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import React, { useEffect } from "react";
+import { BottomSheet } from "./BottomSheet";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,6 +12,11 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  /**
+   * Forzar el uso de BottomSheet en móviles (default: true)
+   * Si es false, siempre usará el modal centrado tradicional
+   */
+  useBottomSheetOnMobile?: boolean;
 }
 
 export function Modal({
@@ -18,8 +25,15 @@ export function Modal({
   title,
   children,
   size = "md",
+  useBottomSheetOnMobile = true,
 }: ModalProps) {
+  const isMobile = useIsMobile();
+  const useBottomSheet = isMobile && useBottomSheetOnMobile;
+
+  // Solo bloquear scroll para modal desktop (BottomSheet maneja su propio scroll lock)
   useEffect(() => {
+    if (useBottomSheet) return; // BottomSheet maneja su propio scroll lock
+    
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -29,7 +43,7 @@ export function Modal({
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [isOpen, useBottomSheet]);
 
   const sizeClasses = {
     sm: "max-w-sm",
@@ -37,6 +51,16 @@ export function Modal({
     lg: "max-w-2xl",
   };
 
+  // En móviles, usar BottomSheet para mejor ergonomía
+  if (useBottomSheet) {
+    return (
+      <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
+        {children}
+      </BottomSheet>
+    );
+  }
+
+  // En desktop, usar modal centrado tradicional
   return (
     <AnimatePresence>
       {isOpen && (
