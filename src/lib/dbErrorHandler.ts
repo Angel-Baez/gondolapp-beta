@@ -94,10 +94,9 @@ export async function handleQuotaExceeded(): Promise<boolean> {
     // Clean old reposicion items that have been marked as repuesto (restocked)
     // Dexie handles boolean comparison transparently
     const oldReposicionItems = await db.itemsReposicion
-      .filter((item) => 
-        item.repuesto === true && 
-        new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
-      )
+      .where('repuesto')
+      .equals(true)
+      .and((item) => new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate)
       .toArray();
     
     for (const item of oldReposicionItems) {
