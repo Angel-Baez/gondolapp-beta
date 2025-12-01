@@ -7,8 +7,11 @@ interface ThemeStore {
   theme: Theme;
   resolvedTheme: "light" | "dark";
   setTheme: (theme: Theme) => void;
-  initializeTheme: () => void;
+  initializeTheme: () => () => void;
 }
+
+// Store the media query listener cleanup function
+let mediaQueryCleanup: (() => void) | null = null;
 
 export const useThemeStore = create<ThemeStore>()(
   persist(
@@ -28,18 +31,40 @@ export const useThemeStore = create<ThemeStore>()(
         set({ resolvedTheme });
         applyTheme(resolvedTheme);
 
+        // Clean up any existing listener
+        if (mediaQueryCleanup) {
+          mediaQueryCleanup();
+        }
+
         // Listen for system theme changes
         if (typeof window !== "undefined") {
           const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-          mediaQuery.addEventListener("change", (e) => {
+          const handleChange = (e: MediaQueryListEvent) => {
             const { theme } = get();
             if (theme === "system") {
               const newResolvedTheme = e.matches ? "dark" : "light";
               set({ resolvedTheme: newResolvedTheme });
               applyTheme(newResolvedTheme);
             }
-          });
+          };
+          
+          mediaQuery.addEventListener("change", handleChange);
+          
+          // Store cleanup function
+          mediaQueryCleanup = () => {
+            mediaQuery.removeEventListener("change", handleChange);
+          };
+          
+          // Return cleanup function for component unmount
+          return () => {
+            if (mediaQueryCleanup) {
+              mediaQueryCleanup();
+              mediaQueryCleanup = null;
+            }
+          };
         }
+        
+        return () => {}; // Return no-op if window is undefined
       },
     }),
     {

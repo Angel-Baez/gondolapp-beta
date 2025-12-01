@@ -11,7 +11,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const initializeTheme = useThemeStore((state) => state.initializeTheme);
 
   useEffect(() => {
-    initializeTheme();
+    const cleanup = initializeTheme();
+    return cleanup;
   }, [initializeTheme]);
 
   return <>{children}</>;
