@@ -1,5 +1,6 @@
 import { getDatabase } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
+import { generarUUID } from "@/lib/utils";
 
 /**
  * GET /api/sync
@@ -61,8 +62,30 @@ export async function GET(request: NextRequest) {
           db.collection("productos_variantes").countDocuments(variantesQuery),
         ]);
 
-      data.productosBase = productosBase;
-      data.variantes = variantes;
+      // Mapear _id (ObjectId) → id (UUID string) para compatibilidad con Dexie
+      data.productosBase = productosBase.map((p) => ({
+        id: p._id?.toString() || generarUUID(),
+        nombre: p.nombre,
+        marca: p.marca,
+        categoria: p.categoria,
+        imagen: p.imagen,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt || new Date(),
+      }));
+
+      data.variantes = variantes.map((v) => ({
+        id: v._id?.toString() || generarUUID(),
+        productoBaseId: v.productoBaseId,
+        codigoBarras: v.ean || v.codigoBarras, // MongoDB usa 'ean', Dexie usa 'codigoBarras'
+        nombreCompleto: v.nombreCompleto,
+        tipo: v.tipo,
+        tamano: v.tamano,
+        sabor: v.sabor,
+        unidadMedida: v.unidad || v.unidadMedida, // MongoDB usa 'unidad', Dexie usa 'unidadMedida'
+        imagen: v.imagen,
+        createdAt: v.createdAt,
+      }));
+
       total.productosBase = countBase;
       total.variantes = countVariantes;
     }
@@ -85,7 +108,16 @@ export async function GET(request: NextRequest) {
         db.collection("items_reposicion").countDocuments(repoQuery),
       ]);
 
-      data.reposicion = reposicion;
+      // Mapear _id → id para items de reposición
+      data.reposicion = reposicion.map((r) => ({
+        id: r._id?.toString() || generarUUID(),
+        varianteId: r.varianteId,
+        cantidad: r.cantidad,
+        repuesto: r.repuesto ?? false,
+        sinStock: r.sinStock ?? false,
+        agregadoAt: r.agregadoAt || new Date(),
+        actualizadoAt: r.actualizadoAt || new Date(),
+      }));
       total.reposicion = countRepo;
     }
 
@@ -105,7 +137,16 @@ export async function GET(request: NextRequest) {
         db.collection("items_vencimiento").countDocuments(vencQuery),
       ]);
 
-      data.vencimientos = vencimientos;
+      // Mapear _id → id para items de vencimiento
+      data.vencimientos = vencimientos.map((v) => ({
+        id: v._id?.toString() || generarUUID(),
+        varianteId: v.varianteId,
+        fechaVencimiento: v.fechaVencimiento,
+        cantidad: v.cantidad,
+        lote: v.lote,
+        agregadoAt: v.agregadoAt || new Date(),
+        alertaNivel: v.alertaNivel || "normal",
+      }));
       total.vencimientos = countVenc;
     }
 
@@ -161,15 +202,19 @@ export async function POST(request: NextRequest) {
         updated = 0;
       for (const producto of productosBase) {
         try {
+          // Excluir createdAt e id de $set para evitar conflicto con $setOnInsert
           const result = await db.collection("productos_base").updateOne(
             { nombre: producto.nombre, marca: producto.marca },
             {
               $set: {
-                ...producto,
+                nombre: producto.nombre,
+                marca: producto.marca,
+                categoria: producto.categoria,
+                imagen: producto.imagen,
                 updatedAt: new Date(),
               },
               $setOnInsert: {
-                createdAt: producto.createdAt || new Date(),
+                createdAt: new Date(), // Solo si es nuevo documento
               },
             },
             { upsert: true }
@@ -194,15 +239,24 @@ export async function POST(request: NextRequest) {
         updated = 0;
       for (const variante of variantes) {
         try {
+          // Usar codigoBarras o ean para la clave de búsqueda
+          const eanValue = variante.ean || variante.codigoBarras;
           const result = await db.collection("productos_variantes").updateOne(
-            { ean: variante.ean },
+            { ean: eanValue },
             {
               $set: {
-                ...variante,
+                ean: eanValue,
+                productoBaseId: variante.productoBaseId,
+                nombreCompleto: variante.nombreCompleto,
+                tipo: variante.tipo,
+                tamano: variante.tamano,
+                sabor: variante.sabor,
+                unidad: variante.unidadMedida || variante.unidad, // Mapear unidadMedida → unidad
+                imagen: variante.imagen,
                 updatedAt: new Date(),
               },
               $setOnInsert: {
-                createdAt: variante.createdAt || new Date(),
+                createdAt: new Date(), // Solo si es nuevo documento
               },
             },
             { upsert: true }
@@ -212,7 +266,7 @@ export async function POST(request: NextRequest) {
         } catch (err) {
           results.errors.push({
             type: "variante",
-            item: variante.ean,
+            item: variante.ean || variante.codigoBarras,
             error: err instanceof Error ? err.message : "Error desconocido",
           });
         }
@@ -234,11 +288,14 @@ export async function POST(request: NextRequest) {
             },
             {
               $set: {
-                ...item,
+                varianteId: item.varianteId,
+                cantidad: item.cantidad,
+                repuesto: item.repuesto ?? false,
+                sinStock: item.sinStock ?? false,
                 actualizadoAt: new Date(),
               },
               $setOnInsert: {
-                agregadoAt: item.agregadoAt || new Date(),
+                agregadoAt: new Date(), // Solo si es nuevo documento
               },
             },
             { upsert: true }
@@ -263,18 +320,24 @@ export async function POST(request: NextRequest) {
         updated = 0;
       for (const item of vencimientos) {
         try {
+          const fechaVenc = item.fechaVencimiento
+            ? new Date(item.fechaVencimiento)
+            : new Date();
           const result = await db.collection("items_vencimiento").updateOne(
             {
               varianteId: item.varianteId,
-              fechaVencimiento: item.fechaVencimiento,
+              fechaVencimiento: fechaVenc, // Normalizar fecha
             },
             {
               $set: {
-                ...item,
-                actualizadoAt: new Date(),
+                varianteId: item.varianteId,
+                fechaVencimiento: fechaVenc,
+                cantidad: item.cantidad,
+                lote: item.lote,
+                alertaNivel: item.alertaNivel || "normal",
               },
               $setOnInsert: {
-                agregadoAt: item.agregadoAt || new Date(),
+                agregadoAt: new Date(), // Solo si es nuevo documento
               },
             },
             { upsert: true }

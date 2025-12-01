@@ -148,17 +148,18 @@ export function SyncPanel() {
               await db.itemsReposicion.clear();
               await db.itemsVencimiento.clear();
 
+              // Usar bulkPut en vez de bulkAdd para manejar correctamente los IDs
               if (data.data.productosBase?.length) {
-                await db.productosBase.bulkAdd(data.data.productosBase);
+                await db.productosBase.bulkPut(data.data.productosBase);
               }
               if (data.data.variantes?.length) {
-                await db.productosVariantes.bulkAdd(data.data.variantes);
+                await db.productosVariantes.bulkPut(data.data.variantes);
               }
               if (data.data.reposicion?.length) {
-                await db.itemsReposicion.bulkAdd(data.data.reposicion);
+                await db.itemsReposicion.bulkPut(data.data.reposicion);
               }
               if (data.data.vencimientos?.length) {
-                await db.itemsVencimiento.bulkAdd(data.data.vencimientos);
+                await db.itemsVencimiento.bulkPut(data.data.vencimientos);
               }
             }
           );
