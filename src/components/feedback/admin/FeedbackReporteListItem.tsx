@@ -26,8 +26,8 @@ export function FeedbackReporteListItem({ reporte, isSelected, onClick }: Feedba
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-        isSelected ? "bg-accent-primary/5" : ""
+      className={`p-4 hover:bg-gray-50 dark:hover:bg-dark-card cursor-pointer transition-colors ${
+        isSelected ? "bg-accent-primary/5 dark:bg-accent-primary/10" : ""
       } ${!reporte.leidoEn ? "border-l-4 border-l-accent-primary" : ""}`}
       onClick={onClick}
     >
@@ -38,7 +38,7 @@ export function FeedbackReporteListItem({ reporte, isSelected, onClick }: Feedba
             {reporte.tipo.map((t) => (
               <span
                 key={t}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-dark-card text-gray-700 dark:text-gray-300"
               >
                 {TIPO_ICONS[t]}
                 {t}
@@ -46,13 +46,13 @@ export function FeedbackReporteListItem({ reporte, isSelected, onClick }: Feedba
             ))}
           </div>
           {/* Título */}
-          <h3 className="font-semibold text-gray-900 truncate">{reporte.titulo}</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{reporte.titulo}</h3>
           {/* Descripción truncada */}
-          <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
             {reporte.descripcion}
           </p>
           {/* Meta info */}
-          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400 dark:text-gray-500">
             <span>{formatearFecha(reporte.creadoAt)}</span>
             {reporte.userEmail && (
               <>

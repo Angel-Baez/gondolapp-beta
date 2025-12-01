@@ -124,8 +124,8 @@ export default function FeedbackAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-6xl mx-auto bg-white min-h-screen shadow-2xl overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
+      <div className="max-w-6xl mx-auto bg-white dark:bg-dark-surface min-h-screen shadow-2xl overflow-hidden flex flex-col transition-colors">
         {/* Header */}
         <Header
           title="Panel de Feedback"
@@ -218,7 +218,7 @@ function ReportesList({
   onPageChange,
 }: ReportesListProps) {
   return (
-    <div className={`flex-1 overflow-y-auto ${selectedReporte ? "hidden lg:block lg:w-1/2 lg:border-r" : "w-full"}`}>
+    <div className={`flex-1 overflow-y-auto ${selectedReporte ? "hidden lg:block lg:w-1/2 lg:border-r lg:border-gray-200 lg:dark:border-dark-border" : "w-full"}`}>
       {isLoading ? (
         <div className="flex items-center justify-center p-8">
           <Loader2 size={32} className="animate-spin text-accent-primary" />
@@ -226,7 +226,7 @@ function ReportesList({
       ) : reportes.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 dark:divide-dark-border">
           {reportes.map((reporte) => (
             <FeedbackReporteListItem
               key={reporte._id}
@@ -240,7 +240,7 @@ function ReportesList({
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+        <div className="p-4 border-t border-gray-200 dark:border-dark-border flex items-center justify-between transition-colors">
           <Button
             variant="outline"
             onClick={() => onPageChange(Math.max(1, page - 1))}
@@ -248,7 +248,7 @@ function ReportesList({
           >
             Anterior
           </Button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             Página {pagination.page} de {pagination.totalPages}
           </span>
           <Button
@@ -269,7 +269,7 @@ function ReportesList({
  */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+    <div className="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
       <MessageSquare size={48} className="mb-4 opacity-50" />
       <p className="text-lg font-medium">No hay reportes</p>
       <p className="text-sm">Los reportes de feedback aparecerán aquí</p>

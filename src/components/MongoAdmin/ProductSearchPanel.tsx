@@ -71,9 +71,9 @@ export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
 
       {/* Panel de filtros expandible */}
       {showFilters && (
-        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+        <div className="bg-gray-50 dark:bg-dark-card rounded-lg p-4 space-y-3 transition-colors">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Marca
             </label>
             <Input
@@ -84,7 +84,7 @@ export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Categoría
             </label>
             <Input
