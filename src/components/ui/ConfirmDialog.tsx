@@ -27,11 +27,11 @@ export default function ConfirmDialog({
   return (
     <Modal isOpen={isOpen} onClose={onCancel} title={title}>
       <div className="space-y-6">
-        <p className="text-black dark:text-gray-300">{description}</p>
+        <p className="text-gray-700 dark:text-gray-300">{description}</p>
         <div className="flex justify-end gap-3">
           <Button
             onClick={onCancel}
-            className="bg-cyan-400 text-white hover:bg-gray-200 font-semibold py-2 px-4 rounded-xl transition-colors"
+            className="bg-cyan-400 text-white hover:bg-gray-200 dark:hover:bg-dark-border font-semibold py-2 px-4 rounded-xl transition-colors"
           >
             {cancelLabel}
           </Button>

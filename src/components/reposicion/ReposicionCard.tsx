@@ -44,19 +44,19 @@ export function ReposicionCard({
   // Colores según sección
   const sectionColors = {
     pendiente: {
-      border: "border-cyan-200",
+      border: "border-cyan-200 dark:border-cyan-800",
       badge: "bg-cyan-500",
-      hover: "hover:bg-cyan-50",
+      hover: "hover:bg-cyan-50 dark:hover:bg-cyan-900/30",
     },
     repuesto: {
-      border: "border-emerald-200",
+      border: "border-emerald-200 dark:border-emerald-800",
       badge: "bg-emerald-500",
-      hover: "hover:bg-emerald-50",
+      hover: "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
     },
     sinStock: {
-      border: "border-red-200",
+      border: "border-red-200 dark:border-red-800",
       badge: "bg-red-500",
-      hover: "hover:bg-red-50",
+      hover: "hover:bg-red-50 dark:hover:bg-red-900/30",
     },
   };
 
@@ -64,7 +64,7 @@ export function ReposicionCard({
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-md overflow-hidden border-2 ${colors.border}`}
+      className={`bg-white dark:bg-dark-surface rounded-xl shadow-md overflow-hidden border-2 ${colors.border} transition-colors`}
     >
       {/* Header */}
       <div
@@ -80,12 +80,12 @@ export function ReposicionCard({
             />
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-tight truncate">
+            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg leading-tight truncate">
               {productoBase.nombre}
             </h3>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               {productoBase.marca && (
-                <span className="text-xs text-gray-500 truncate">
+                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {productoBase.marca}
                 </span>
               )}
@@ -105,12 +105,12 @@ export function ReposicionCard({
           {isExpanded ? (
             <ChevronUp
               size={20}
-              className="sm:w-6 sm:h-6 text-gray-600 flex-shrink-0"
+              className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0"
             />
           ) : (
             <ChevronDown
               size={20}
-              className="sm:w-6 sm:h-6 text-gray-600 flex-shrink-0"
+              className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0"
             />
           )}
         </div>
@@ -124,9 +124,9 @@ export function ReposicionCard({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-gray-100"
+            className="border-t border-gray-100 dark:border-dark-border"
           >
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-dark-border">
               {variantes.map(({ item, variante }) => (
                 <div key={item.id} className="p-3 sm:p-4">
                   <div className="space-y-3">
@@ -140,12 +140,12 @@ export function ReposicionCard({
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight">
                           {variante.nombreCompleto}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {variante.tamano && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {variante.tamano}
                             </span>
                           )}
@@ -163,11 +163,11 @@ export function ReposicionCard({
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-dark-border">
                       {/* Quantity Control */}
                       <div className="flex items-center gap-3">
                         {!item.repuesto && !item.sinStock && (
-                          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                          <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-card rounded-lg p-1">
                             {/* ✨ Botón MENOS animado */}
                             <m.button
                               whileTap={{ scale: 0.85 }}
@@ -175,11 +175,11 @@ export function ReposicionCard({
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad - 1)
                               }
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
+                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
                             >
                               -
                             </m.button>
-                            <span className="w-12 text-center font-bold text-base">
+                            <span className="w-12 text-center font-bold text-base text-gray-900 dark:text-gray-100">
                               {item.cantidad}
                             </span>
                             {/* ✨ Botón MÁS animado */}
@@ -189,7 +189,7 @@ export function ReposicionCard({
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad + 1)
                               }
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 active:bg-gray-300 font-bold text-lg transition-colors"
+                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
                             >
                               +
                             </m.button>
@@ -197,7 +197,7 @@ export function ReposicionCard({
                         )}
 
                         {(item.repuesto || item.sinStock) && (
-                          <span className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">
+                          <span className="px-3 py-1.5 bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-200 rounded-lg font-bold text-sm">
                             x{item.cantidad}
                           </span>
                         )}

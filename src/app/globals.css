@@ -22,6 +22,27 @@ body {
   overscroll-behavior: none;
 }
 
+/* ======================================
+   Dark Mode Base Styles
+   ====================================== */
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Dark mode body background */
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Dark mode selection */
+.dark ::selection {
+  background-color: rgba(0, 188, 212, 0.3);
+  color: #f1f5f9;
+}
+
 /* Touch target sizes for mobile accessibility (Lighthouse AA) */
 /* Asegura que todos los elementos interactivos cumplan con el estándar de 44x44px */
 button,
@@ -83,6 +104,18 @@ html {
     #edeef1 20%,
     #f6f7f8 40%,
     #f6f7f8 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Dark mode shimmer */
+.dark .animate-shimmer {
+  background: linear-gradient(
+    to right,
+    #334155 0%,
+    #475569 20%,
+    #334155 40%,
+    #334155 100%
   );
   background-size: 1000px 100%;
 }

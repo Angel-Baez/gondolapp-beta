@@ -97,7 +97,7 @@ export function Header({
   // Variante principal (HomePage)
   if (variant === "main") {
     return (
-      <header className="bg-gray-900 text-white p-6 shadow-lg">
+      <header className="bg-gray-900 dark:bg-dark-surface text-white p-6 shadow-lg transition-colors">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-extrabold flex items-center gap-2">
@@ -116,7 +116,7 @@ export function Header({
 
   // Variante por defecto (páginas internas)
   return (
-    <header className="bg-gray-900 text-white p-6 shadow-lg">
+    <header className="bg-gray-900 dark:bg-dark-surface text-white p-6 shadow-lg transition-colors">
       {backHref && (
         <Link
           href={backHref}

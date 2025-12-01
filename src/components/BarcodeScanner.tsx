@@ -345,11 +345,11 @@ export default function BarcodeScanner({
       <div className="flex items-center justify-center h-full p-4 pt-20">
         {showManualInput ? (
           <div className="w-full max-w-md">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-2xl transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 Ingresar Código Manualmente
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Ingresa el código de barras del producto:
               </p>
               <form onSubmit={handleManualSubmit}>
@@ -358,18 +358,18 @@ export default function BarcodeScanner({
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Ej: 7501234567890"
-                  className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-accent-primary outline-none text-lg text-center font-mono"
+                  className="w-full p-4 border-2 border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 rounded-xl focus:border-accent-primary outline-none text-lg text-center font-mono transition-colors"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={!manualCode.trim()}
-                  className="w-full mt-4 py-3 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
+                  className="w-full mt-4 py-3 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-gray-300 dark:disabled:bg-dark-border disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
                 >
                   Buscar Producto
                 </button>
               </form>
-              <p className="text-xs text-gray-500 mt-4 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
                 💡 Tip: Puedes encontrar el código en el paquete del producto
               </p>
             </div>

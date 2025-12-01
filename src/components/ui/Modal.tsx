@@ -87,15 +87,15 @@ export function Modal({
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white rounded-2xl shadow-2xl w-full ${sizeClasses[size]} overflow-hidden`}
+              className={`bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full ${sizeClasses[size]} overflow-hidden transition-colors`}
             >
               {/* Header */}
               {title && (
-                <div className={`p-4 border-b border-gray-100 flex items-center justify-between ${headerClassName || ""}`}>
-                  <h3 className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900"}`}>{title}</h3>
+                <div className={`p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between ${headerClassName || ""}`}>
+                  <h3 className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900 dark:text-gray-100"}`}>{title}</h3>
                   <button
                     onClick={onClose}
-                    className={`p-1 rounded-full transition ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 text-gray-500"}`}
+                    className={`p-1 rounded-full transition ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 dark:hover:bg-dark-card text-gray-500 dark:text-gray-400"}`}
                   >
                     <X size={24} />
                   </button>

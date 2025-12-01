@@ -32,12 +32,12 @@ export function Button({
     primary:
       "bg-accent-primary text-white hover:bg-accent-primary/90 shadow-md",
     secondary:
-      "border-2 border-accent-primary text-accent-primary hover:bg-accent-primary/10",
+      "border-2 border-accent-primary text-accent-primary hover:bg-accent-primary/10 dark:hover:bg-accent-primary/20",
     destructive:
       "bg-alert-critico text-white hover:bg-alert-critico/90 shadow-md",
-    ghost: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+    ghost: "bg-gray-100 dark:bg-dark-card text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-dark-border",
     outline:
-      "border-2 border-gray-300 text-gray-700 hover:bg-gray-50",
+      "border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-card",
   };
 
   const sizeClasses = {
@@ -86,7 +86,7 @@ export function IconButton({
     primary: "bg-accent-primary text-white hover:bg-accent-primary/90",
     secondary: "bg-accent-secondary text-white hover:bg-accent-secondary/90",
     destructive: "bg-alert-critico text-white hover:bg-alert-critico/90",
-    ghost: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+    ghost: "bg-gray-100 dark:bg-dark-card text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border",
   };
 
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";

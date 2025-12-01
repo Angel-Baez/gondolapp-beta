@@ -6,6 +6,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -23,6 +24,13 @@ const config: Config = {
           advertencia: "#FBBF24",
           precaucion: "#F97316",
           normal: "#6B7280",
+        },
+        // Dark mode specific colors
+        dark: {
+          bg: "#0f172a",
+          surface: "#1e293b",
+          card: "#334155",
+          border: "#475569",
         },
       },
     },

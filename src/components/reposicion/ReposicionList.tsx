@@ -231,7 +231,7 @@ export function ReposicionList() {
         
         {/* Gradiente fade-out cuando está colapsado */}
         {!isExpanded && (
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white dark:from-dark-surface to-transparent pointer-events-none" />
         )}
       </div>
     );
@@ -252,7 +252,7 @@ export function ReposicionList() {
     return (
       <>
         <ReposicionHeader />
-        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
           <m.div
                     animate={{
                       y: [0, -10, 0],
@@ -336,7 +336,7 @@ export function ReposicionList() {
       <div className="space-y-6 sm:space-y-8 pb-24">
       {/* Sección: PENDIENTES */}
       {groupedBySections.pendientes.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors">
           <SeccionHeader
             title="Pendientes"
             count={groupedBySections.pendientes.length}
@@ -349,7 +349,7 @@ export function ReposicionList() {
           <CollapsibleSection
             isExpanded={isPendientesExpanded}
             itemCount={groupedBySections.pendientes.length}
-            bgColor="bg-cyan-50/30"
+            bgColor="bg-cyan-50/30 dark:bg-cyan-900/20"
           >
             {groupedBySections.pendientes.map(({ productoBase, items }) => (
               <ReposicionCard
@@ -367,7 +367,7 @@ export function ReposicionList() {
 
       {/* Sección: REPUESTOS */}
       {groupedBySections.repuestos.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors">
           <SeccionHeader
             title="Repuestos"
             count={groupedBySections.repuestos.length}
@@ -380,7 +380,7 @@ export function ReposicionList() {
           <CollapsibleSection
             isExpanded={isRepuestosExpanded}
             itemCount={groupedBySections.repuestos.length}
-            bgColor="bg-emerald-50/30"
+            bgColor="bg-emerald-50/30 dark:bg-emerald-900/20"
           >
             {groupedBySections.repuestos.map(({ productoBase, items }) => (
               <ReposicionCard
@@ -398,7 +398,7 @@ export function ReposicionList() {
 
       {/* Sección: SIN STOCK */}
       {groupedBySections.sinStock.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors">
           <SeccionHeader
             title="Sin Stock"
             count={groupedBySections.sinStock.length}
@@ -411,7 +411,7 @@ export function ReposicionList() {
           <CollapsibleSection
             isExpanded={isSinStockExpanded}
             itemCount={groupedBySections.sinStock.length}
-            bgColor="bg-red-50/30"
+            bgColor="bg-red-50/30 dark:bg-red-900/20"
           >
             {groupedBySections.sinStock.map(({ productoBase, items }) => (
               <ReposicionCard

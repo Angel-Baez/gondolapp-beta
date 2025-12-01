@@ -9,6 +9,7 @@ import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
 import { ScanButton } from "@/components/HomePage/ScanButton";
 import { MainContent } from "@/components/HomePage/MainContent";
 import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ScanMode } from "@/types";
 
 type ActiveView = "reposicion" | "vencimiento";
@@ -39,8 +40,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
         <Header
           variant="main"
           title="GondolApp"
@@ -48,15 +49,18 @@ export default function HomePage() {
           icon={Archive}
           animateIcon
           rightContent={
-            <Link
-              href="/admin"
-              className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-            >
-              <m.div whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }}>
-                <Settings size={20} />
-              </m.div>
-              <span className="hidden sm:inline">Admin</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Link
+                href="/admin"
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <m.div whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }}>
+                  <Settings size={20} />
+                </m.div>
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            </div>
           }
         />
         <NavigationTabs activeView={activeView} onViewChange={setActiveView} />
