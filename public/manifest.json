@@ -50,8 +50,8 @@
       "url": "/?action=scan",
       "icons": [
         {
-          "src": "/icon-scan-96x96.png",
-          "sizes": "96x96",
+          "src": "/icon-scan-192x192.png",
+          "sizes": "192x192",
           "type": "image/png"
         },
         {
@@ -68,8 +68,8 @@
       "url": "/?view=reposicion",
       "icons": [
         {
-          "src": "/icon-list-96x96.png",
-          "sizes": "96x96",
+          "src": "/icon-list-192x192.png",
+          "sizes": "192x192",
           "type": "image/png"
         },
         {
@@ -86,8 +86,8 @@
       "url": "/?view=vencimiento",
       "icons": [
         {
-          "src": "/icon-calendar-96x96.png",
-          "sizes": "96x96",
+          "src": "/icon-calendar-192x192.png",
+          "sizes": "192x192",
           "type": "image/png"
         },
         {
