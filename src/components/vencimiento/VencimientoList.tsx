@@ -108,7 +108,7 @@ export function VencimientoList() {
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
         {/* ✨ Icono con animación flotante */}
         <m.div
           animate={{
@@ -141,7 +141,7 @@ export function VencimientoList() {
       {/* Header */}
       <div className="mb-3 sm:mb-4">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             Control de Vencimientos
           </h2>
           <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
@@ -150,7 +150,7 @@ export function VencimientoList() {
         </div>
 
         {itemsCriticos > 0 && (
-          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 border-2 border-alert-critico rounded-xl">
+          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
             {/* ✨ Icono con pulso constante */}
             <m.div
               animate={{
@@ -304,10 +304,10 @@ export function VencimientoList() {
               >
                 <CheckCircle2
                   size={18}
-                  className="text-gray-600 flex-shrink-0 sm:w-5 sm:h-5"
+                  className="text-gray-600 dark:text-gray-400 flex-shrink-0 sm:w-5 sm:h-5"
                 />
               </m.div>
-              <h3 className="text-xs sm:text-sm font-bold text-gray-600 uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                 Normales (+60 días)
               </h3>
             </div>
@@ -331,7 +331,7 @@ export function VencimientoList() {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Actualiza la fecha de vencimiento para este producto.
           </p>
 
