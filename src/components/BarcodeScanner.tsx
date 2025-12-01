@@ -3,6 +3,7 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Camera, Keyboard, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -444,9 +445,53 @@ export default function BarcodeScanner({
             </p>
           )}
           {error.includes("denegado") && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs opacity-90">
+                💡 Para habilitar el permiso de cámara:
+              </p>
+              <ul className="text-xs opacity-80 list-disc list-inside space-y-1">
+                <li>Toca el icono de candado/info en la barra de direcciones</li>
+                <li>Busca "Cámara" o "Permisos del sitio"</li>
+                <li>Cambia el permiso a "Permitir"</li>
+                <li>Recarga la página</li>
+              </ul>
+              <button
+                onClick={() => {
+                  // Try to open site settings (works on some browsers)
+                  if ("permissions" in navigator) {
+                    navigator.permissions
+                      .query({ name: "camera" as PermissionName })
+                      .then((result) => {
+                        if (result.state === "denied") {
+                          toast.error(
+                            "Debes cambiar el permiso en la configuración del navegador",
+                            { duration: 4000 }
+                          );
+                        } else {
+                          startScanning();
+                        }
+                      })
+                      .catch(() => startScanning());
+                  } else {
+                    startScanning();
+                  }
+                }}
+                className="mt-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium w-full transition"
+              >
+                Verificar Permisos
+              </button>
+            </div>
+          )}
+          {error.includes("usada por otra") && (
             <p className="text-xs opacity-90 mt-2">
-              💡 Ve a la configuración de tu navegador y permite el acceso a la
-              cámara.
+              💡 Cierra otras aplicaciones que puedan estar usando la cámara
+              (WhatsApp, Instagram, etc.) y vuelve a intentar.
+            </p>
+          )}
+          {error.includes("No se encontró") && (
+            <p className="text-xs opacity-90 mt-2">
+              💡 Asegúrate de que tu dispositivo tenga una cámara conectada y
+              funcionando correctamente.
             </p>
           )}
           <button

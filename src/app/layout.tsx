@@ -15,15 +15,26 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "GondolApp",
   },
+  applicationName: "GondolApp",
+  keywords: ["inventario", "supermercado", "escaneo", "vencimientos", "PWA"],
+  authors: [{ name: "GondolApp Team" }],
+  creator: "GondolApp",
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#06B6D4",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#06B6D4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E7490" },
+  ],
   width: "device-width",
   initialScale: 1,
   // ✅ Permitir zoom para mejor accesibilidad (Lighthouse)
   maximumScale: 5,
   userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -34,12 +45,38 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        {/* Favicon and App Icons */}
         <link rel="icon" href="/icon-192x192.png" type="image/png" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        
+        {/* Apple Touch Icons for iOS */}
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icon-192x192.png" />
+        
+        {/* iOS Safari specific */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="GondolApp" />
+        
+        {/* Safari pinned tab */}
+        <link rel="mask-icon" href="/favicon.svg" color="#06B6D4" />
+        
+        {/* Microsoft Tile */}
+        <meta name="msapplication-TileColor" content="#06B6D4" />
+        <meta name="msapplication-TileImage" content="/icon-192x192.png" />
+        
+        {/* Permissions Policy */}
         <meta
           name="permissions-policy"
           content="vibrate=*, camera=*, microphone=*"
         />
+        
+        {/* Mobile optimization */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="HandheldFriendly" content="true" />
+        
         {/* Prevent flash on page load by setting initial theme */}
         <script
           dangerouslySetInnerHTML={{

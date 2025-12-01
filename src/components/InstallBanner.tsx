@@ -6,7 +6,6 @@ import { useState } from "react";
 export default function InstallBanner() {
   const {
     isIOS,
-    isAndroid,
     isSamsungInternet,
     browserName,
     isInstallable,

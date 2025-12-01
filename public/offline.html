@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06B6D4">
+  <title>Sin Conexión - GondolApp</title>
+  <link rel="icon" href="/icon-192x192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #f1f5f9;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .icon-container {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 32px;
+      background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 40px rgba(6, 182, 212, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .wifi-icon {
+      width: 64px;
+      height: 64px;
+      stroke: white;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #f1f5f9;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #94a3b8;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .features {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .features h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #06B6D4;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .feature-list {
+      list-style: none;
+      text-align: left;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      color: #22c55e;
+      font-weight: bold;
+    }
+
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 280px;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+    }
+
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+
+    .retry-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      transition: transform 0.3s ease;
+    }
+
+    .retry-btn:hover .retry-icon {
+      transform: rotate(180deg);
+    }
+
+    .footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .brand-logo {
+      width: 24px;
+      height: 24px;
+    }
+
+    .brand-name {
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    @media (prefers-color-scheme: light) {
+      body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        color: #1e293b;
+      }
+
+      h1 {
+        color: #0f172a;
+      }
+
+      .subtitle {
+        color: #64748b;
+      }
+
+      .features {
+        background: white;
+        border-color: #e2e8f0;
+      }
+
+      .feature-list li {
+        color: #475569;
+      }
+
+      .footer {
+        color: #94a3b8;
+      }
+
+      .brand-name {
+        color: #475569;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-container">
+      <svg class="wifi-icon" viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="20" r="1" fill="currentColor"/>
+      </svg>
+    </div>
+
+    <h1>Sin Conexión</h1>
+    <p class="subtitle">
+      No hay conexión a Internet en este momento. 
+      Pero no te preocupes, GondolApp sigue funcionando.
+    </p>
+
+    <div class="features">
+      <h2>Funciones Disponibles Offline</h2>
+      <ul class="feature-list">
+        <li>Ver tu lista de reposición</li>
+        <li>Consultar productos escaneados</li>
+        <li>Revisar control de vencimientos</li>
+        <li>Los cambios se sincronizarán automáticamente</li>
+      </ul>
+    </div>
+
+    <button class="retry-btn" onclick="window.location.reload()">
+      <svg class="retry-icon" viewBox="0 0 24 24">
+        <polyline points="23 4 23 10 17 10"/>
+        <polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Reintentar Conexión
+    </button>
+
+    <div class="footer">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span class="brand-name">GondolApp</span>
+      </div>
+      <p>Gestión de Inventario PWA</p>
+    </div>
+  </div>
+
+  <script>
+    // Auto-retry when connection is restored with a brief delay
+    window.addEventListener('online', function() {
+      // Show feedback before reloading
+      var container = document.querySelector('.container h1');
+      if (container) {
+        container.textContent = 'Conexión detectada...';
+      }
+      var subtitle = document.querySelector('.subtitle');
+      if (subtitle) {
+        subtitle.textContent = 'Recargando la página automáticamente.';
+      }
+      // Small delay to allow user to see the feedback
+      setTimeout(function() {
+        window.location.reload();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
