@@ -259,21 +259,23 @@
   </div>
 
   <script>
-    // Auto-retry when connection is restored with a brief delay
+    // Show notification when connection is restored, let user control reload
     window.addEventListener('online', function() {
-      // Show feedback before reloading
+      // Show feedback with user control
       var container = document.querySelector('.container h1');
       if (container) {
-        container.textContent = 'Conexión detectada...';
+        container.textContent = '¡Conexión restaurada!';
       }
       var subtitle = document.querySelector('.subtitle');
       if (subtitle) {
-        subtitle.textContent = 'Recargando la página automáticamente.';
+        subtitle.textContent = 'Haz clic en el botón para recargar la página.';
       }
-      // Small delay to allow user to see the feedback
-      setTimeout(function() {
-        window.location.reload();
-      }, 1000);
+      // Update button to be more prominent
+      var btn = document.querySelector('.retry-btn');
+      if (btn) {
+        btn.textContent = 'Recargar ahora';
+        btn.style.animation = 'pulse 1s infinite';
+      }
     });
   </script>
 </body>

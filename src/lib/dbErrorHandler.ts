@@ -92,7 +92,7 @@ export async function handleQuotaExceeded(): Promise<boolean> {
     let deletedCount = 0;
     
     // Clean old reposicion items that have been marked as repuesto (restocked)
-    // Note: Dexie stores boolean as 0/1 in IndexedDB for indexing purposes
+    // Dexie handles boolean comparison transparently
     const oldReposicionItems = await db.itemsReposicion
       .filter((item) => 
         item.repuesto === true && 
