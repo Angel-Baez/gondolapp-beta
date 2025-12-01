@@ -3,66 +3,104 @@
   "short_name": "GondolApp",
   "description": "Aplicación PWA para gestión de inventario de supermercado con escaneo de códigos y control de vencimientos",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#6366F1",
+  "theme_color": "#06B6D4",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icon-192x192.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512x512.svg",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "540x720",
       "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "categories": ["productivity", "utilities", "business"],
   "shortcuts": [
     {
       "name": "Escanear Producto",
       "short_name": "Escanear",
       "description": "Escanear código de barras",
       "url": "/?action=scan",
-      "icons": [{ "src": "/icon-scan.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icon-scan-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "/icon-scan.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
       "name": "Reposición",
       "short_name": "Reposición",
       "description": "Ver lista de reposición",
       "url": "/?view=reposicion",
-      "icons": [{ "src": "/icon-list.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icon-list-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "/icon-list.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     },
     {
       "name": "Vencimientos",
       "short_name": "Vencimientos",
       "description": "Ver control de vencimientos",
       "url": "/?view=vencimiento",
-      "icons": [{ "src": "/icon-calendar.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icon-calendar-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "/icon-calendar.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
-  ]
+  ],
+  "related_applications": [],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
