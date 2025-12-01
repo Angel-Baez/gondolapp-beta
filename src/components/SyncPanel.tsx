@@ -36,18 +36,13 @@ export function SyncPanel() {
   const [stats, setStats] = useState<SyncStats | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncResults, setSyncResults] = useState<SyncResults | null>(null);
-  const [filterDays, setFilterDays] = useState<number>(7);
 
-  // Obtener estadísticas
-  const fetchStats = async (days?: number) => {
+  // Obtener estadísticas (sin filtro de fecha para mostrar totales reales)
+  const fetchStats = async () => {
     try {
       setLoading(true);
-      const desde = days
-        ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
-        : undefined;
-
+      // Solo usar limit=1 para obtener conteos sin descargar todos los datos
       const params = new URLSearchParams();
-      if (desde) params.append("desde", desde);
       params.append("limit", "1");
 
       const response = await fetch(`/api/sync?${params}`);
@@ -191,7 +186,7 @@ export function SyncPanel() {
           </p>
         </div>
         <button 
-          onClick={() => fetchStats(filterDays)}
+          onClick={() => fetchStats()}
           disabled={loading}
           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           title="Refrescar Estadísticas"
