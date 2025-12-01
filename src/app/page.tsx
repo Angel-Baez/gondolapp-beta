@@ -1,36 +1,70 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Archive, Settings } from "lucide-react";
-import { motion as m } from "framer-motion";
-import { Header } from "@/components/ui";
+import { MainContent } from "@/components/HomePage/MainContent";
 import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
 import { ScanButton } from "@/components/HomePage/ScanButton";
-import { MainContent } from "@/components/HomePage/MainContent";
 import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Header } from "@/components/ui";
 import { ScanMode } from "@/types";
+import { motion as m } from "framer-motion";
+import { Archive, Settings } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type ActiveView = "reposicion" | "vencimiento";
 
 /**
  * HomePage - Refactorizada siguiendo principios SOLID
- * 
+ *
  * ✅ SOLID Principles aplicados:
  * - SRP: Solo responsable de composición de componentes
  * - OCP: Extensible sin modificar código existente
  * - LSP: Componentes intercambiables
  * - DIP: Depende de abstracciones (componentes reutilizables)
+ *
+ * ✅ PWA Shortcuts Support:
+ * - ?action=scan → Abre el escáner automáticamente
+ * - ?view=reposicion → Muestra vista de reposición
+ * - ?view=vencimiento → Muestra vista de vencimientos
  */
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const [activeView, setActiveView] = useState<ActiveView>("reposicion");
   const [showScanWorkflow, setShowScanWorkflow] = useState(false);
   const [scanMode, setScanMode] = useState<ScanMode>("reposicion");
 
+  // Manejar URL params de shortcuts PWA
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const view = searchParams.get("view");
+
+    // Cambiar vista según el parámetro
+    if (view === "reposicion" || view === "vencimiento") {
+      setActiveView(view);
+      setScanMode(view);
+    }
+
+    // Abrir escáner si action=scan
+    if (action === "scan") {
+      // Pequeño delay para asegurar que la UI está lista
+      const timer = setTimeout(() => {
+        setShowScanWorkflow(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
+
   const handleOpenScanner = () => {
-    const newScanMode = activeView === "reposicion" ? "reposicion" : "vencimiento";
-    console.log("handleOpenScanner called. activeView:", activeView, "newScanMode:", newScanMode);
+    const newScanMode =
+      activeView === "reposicion" ? "reposicion" : "vencimiento";
+    console.log(
+      "handleOpenScanner called. activeView:",
+      activeView,
+      "newScanMode:",
+      newScanMode
+    );
     setScanMode(newScanMode);
     setShowScanWorkflow(true);
   };
@@ -55,7 +89,10 @@ export default function HomePage() {
                 href="/admin"
                 className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
               >
-                <m.div whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }}>
+                <m.div
+                  whileHover={{ rotate: 180 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <Settings size={20} />
                 </m.div>
                 <span className="hidden sm:inline">Admin</span>
@@ -70,10 +107,7 @@ export default function HomePage() {
 
       {/* Scan Workflow - Maneja todo el flujo de escaneo y modales */}
       {showScanWorkflow && (
-        <ScanWorkflow
-          scanMode={scanMode}
-          onClose={handleCloseScanWorkflow}
-        />
+        <ScanWorkflow scanMode={scanMode} onClose={handleCloseScanWorkflow} />
       )}
     </div>
   );

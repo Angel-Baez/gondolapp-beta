@@ -50,8 +50,13 @@
       "url": "/?action=scan",
       "icons": [
         {
-          "src": "/icon-scan.svg",
+          "src": "/icon-scan-96x96.png",
           "sizes": "96x96",
+          "type": "image/png"
+        },
+        {
+          "src": "/icon-scan.svg",
+          "sizes": "any",
           "type": "image/svg+xml"
         }
       ]
@@ -62,6 +67,11 @@
       "description": "Ver lista de reposición",
       "url": "/?view=reposicion",
       "icons": [
+        {
+          "src": "/icon-list-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        },
         {
           "src": "/icon-list.svg",
           "sizes": "96x96",
@@ -75,6 +85,11 @@
       "description": "Ver control de vencimientos",
       "url": "/?view=vencimiento",
       "icons": [
+        {
+          "src": "/icon-calendar-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        },
         {
           "src": "/icon-calendar.svg",
           "sizes": "96x96",
