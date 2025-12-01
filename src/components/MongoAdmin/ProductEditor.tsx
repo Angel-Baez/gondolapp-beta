@@ -100,7 +100,7 @@ export function ProductEditor({
       <div className="space-y-4">
         {/* Formulario de edición */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Nombre del Producto *
           </label>
           <Input
@@ -112,7 +112,7 @@ export function ProductEditor({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Marca
           </label>
           <Input
@@ -124,7 +124,7 @@ export function ProductEditor({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Categoría
           </label>
           <Input
@@ -136,7 +136,7 @@ export function ProductEditor({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             URL de Imagen
           </label>
           <Input
@@ -148,8 +148,8 @@ export function ProductEditor({
         </div>
 
         {/* Lista de variantes */}
-        <div className="border-t pt-4">
-          <h3 className="font-medium text-gray-900 mb-3">
+        <div className="border-t dark:border-dark-border pt-4">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
             Variantes ({variantes.length})
           </h3>
           {variantes.length > 0 ? (
@@ -160,14 +160,14 @@ export function ProductEditor({
               onDelete={onDeleteVariant}
             />
           ) : (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
               No hay variantes asociadas
             </p>
           )}
         </div>
 
         {/* Acciones */}
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2 pt-4 border-t dark:border-dark-border">
           <Button
             onClick={handleSave}
             disabled={saving || deleting}

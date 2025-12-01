@@ -10,6 +10,7 @@ import { ToolSelector } from "@/components/AdminPage/ToolSelector";
 import { AddProductWorkflow } from "@/components/AdminPage/AddProductWorkflow";
 import { useProductSync } from "@/hooks/useProductSync";
 import { ProductoCompleto } from "@/services/productos";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import toast from "react-hot-toast";
 
 type ActiveTool = "import" | "preset" | "sync" | "addProducts" | null;
@@ -52,18 +53,19 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
         <Header
           title="Administración"
           subtitle="Gestiona tu catálogo de productos"
           icon={Database}
           backHref="/"
           backText="Volver al Inventario"
+          rightContent={<ThemeToggle />}
         />
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        <main className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
           {activeTool === null ? (
             <ToolSelector
               onSelectTool={setActiveTool}

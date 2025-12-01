@@ -17,7 +17,7 @@ export function Card({ children, className = "", onClick }: CardProps) {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
       onClick={onClick}
-      className={`bg-white rounded-xl shadow-lg overflow-hidden ${className}`}
+      className={`bg-white dark:bg-dark-surface rounded-xl shadow-lg dark:shadow-dark-card/20 overflow-hidden transition-colors ${className}`}
     >
       {children}
     </motion.div>
@@ -31,7 +31,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
   return (
-    <div className={`p-4 border-b border-gray-100 ${className}`}>
+    <div className={`p-4 border-b border-gray-100 dark:border-dark-border ${className}`}>
       {children}
     </div>
   );

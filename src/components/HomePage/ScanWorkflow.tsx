@@ -19,9 +19,9 @@ const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="bg-white rounded-2xl p-6">
+      <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 transition-colors">
         <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-accent-primary mx-auto" />
-        <p className="mt-4 text-sm text-gray-600">Cargando escáner...</p>
+        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">Cargando escáner...</p>
       </div>
     </div>
   ),
@@ -206,12 +206,12 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       >
         <div className="space-y-4">
           {productoSeleccionado && (
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="font-bold text-gray-900">
+            <div className="p-3 bg-gray-50 dark:bg-dark-card rounded-lg transition-colors">
+              <p className="font-bold text-gray-900 dark:text-gray-100">
                 {productoSeleccionado.nombreCompleto}
               </p>
               {productoSeleccionado.tamano && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {productoSeleccionado.tamano}
                 </p>
               )}
@@ -223,7 +223,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setCantidad(Math.max(1, cantidad - 1))}
-              className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 text-2xl font-bold"
+              className="w-12 h-12 rounded-full bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-dark-border text-2xl font-bold transition-colors"
             >
               -
             </m.button>
@@ -231,7 +231,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
               type="number"
               value={cantidad}
               onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
-              className="w-20 text-center text-4xl font-extrabold border-b-4 border-accent-primary focus:outline-none"
+              className="w-20 text-center text-4xl font-extrabold border-b-4 border-accent-primary bg-transparent text-gray-900 dark:text-gray-100 focus:outline-none"
             />
             <m.button
               whileHover={{ scale: 1.1 }}
@@ -259,12 +259,12 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       >
         <div className="space-y-4">
           {productoSeleccionado && (
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="font-bold text-gray-900">
+            <div className="p-3 bg-gray-50 dark:bg-dark-card rounded-lg transition-colors">
+              <p className="font-bold text-gray-900 dark:text-gray-100">
                 {productoSeleccionado.nombreCompleto}
               </p>
               {productoSeleccionado.tamano && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {productoSeleccionado.tamano}
                 </p>
               )}
@@ -369,15 +369,15 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       {/* Loading Modal */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 max-w-sm w-full mx-4 transition-colors">
             <div className="flex flex-col items-center">
               <div className="relative">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-primary mb-4" />
               </div>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Buscando producto...
               </p>
-              <p className="text-sm text-gray-500 mt-2 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
                 Consultando la base de datos
               </p>
             </div>

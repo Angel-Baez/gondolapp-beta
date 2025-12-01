@@ -17,7 +17,7 @@ interface FeedbackStatsCardsProps {
  */
 export function FeedbackStatsCards({ stats }: FeedbackStatsCardsProps) {
   return (
-    <div className="p-4 border-b border-gray-200 bg-gray-50">
+    <div className="p-4 border-b border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg transition-colors">
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-4">
         <StatCard label="Total" value={stats.total} variant="default" />
         <StatCard label="Pendientes" value={stats.pendientes} variant="yellow" />
@@ -34,25 +34,25 @@ export function FeedbackStatsCards({ stats }: FeedbackStatsCardsProps) {
 // Tipos de variantes de color
 type StatVariant = "default" | "yellow" | "blue" | "green" | "gray" | "red" | "orange";
 
-// Estilos por variante
+// Estilos por variante (light mode)
 const VARIANT_STYLES: Record<StatVariant, { bg: string; text: string; border: string }> = {
-  default: { bg: "bg-white", text: "text-gray-900", border: "border-gray-100" },
-  yellow: { bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-100" },
-  blue: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" },
-  green: { bg: "bg-green-50", text: "text-green-700", border: "border-green-100" },
-  gray: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
-  red: { bg: "bg-red-50", text: "text-red-700", border: "border-red-100" },
-  orange: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-100" },
+  default: { bg: "bg-white dark:bg-dark-surface", text: "text-gray-900 dark:text-gray-100", border: "border-gray-100 dark:border-dark-border" },
+  yellow: { bg: "bg-yellow-50 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-300", border: "border-yellow-100 dark:border-yellow-800" },
+  blue: { bg: "bg-blue-50 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", border: "border-blue-100 dark:border-blue-800" },
+  green: { bg: "bg-green-50 dark:bg-green-900/30", text: "text-green-700 dark:text-green-300", border: "border-green-100 dark:border-green-800" },
+  gray: { bg: "bg-gray-50 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300", border: "border-gray-200 dark:border-gray-700" },
+  red: { bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", border: "border-red-100 dark:border-red-800" },
+  orange: { bg: "bg-orange-50 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300", border: "border-orange-100 dark:border-orange-800" },
 };
 
 const LABEL_COLORS: Record<StatVariant, string> = {
-  default: "text-gray-500",
-  yellow: "text-yellow-600",
-  blue: "text-blue-600",
-  green: "text-green-600",
-  gray: "text-gray-500",
-  red: "text-red-600",
-  orange: "text-orange-600",
+  default: "text-gray-500 dark:text-gray-400",
+  yellow: "text-yellow-600 dark:text-yellow-400",
+  blue: "text-blue-600 dark:text-blue-400",
+  green: "text-green-600 dark:text-green-400",
+  gray: "text-gray-500 dark:text-gray-400",
+  red: "text-red-600 dark:text-red-400",
+  orange: "text-orange-600 dark:text-orange-400",
 };
 
 interface StatCardProps {

@@ -60,23 +60,23 @@ export function VariantEditor({
       <div className="space-y-4">
         {/* Código de barras (solo lectura) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Código de Barras (EAN)
           </label>
           <Input
             type="text"
             value={variante.codigoBarras}
             disabled
-            className="bg-gray-50"
+            className="bg-gray-50 dark:bg-dark-card"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             El código de barras no se puede modificar
           </p>
         </div>
 
         {/* Nombre completo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Nombre Completo *
           </label>
           <Input
@@ -89,7 +89,7 @@ export function VariantEditor({
 
         {/* Tipo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Tipo
           </label>
           <Input
@@ -102,7 +102,7 @@ export function VariantEditor({
 
         {/* Tamaño */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Tamaño
           </label>
           <Input
@@ -115,7 +115,7 @@ export function VariantEditor({
 
         {/* Sabor */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Sabor
           </label>
           <Input
@@ -128,7 +128,7 @@ export function VariantEditor({
 
         {/* URL de imagen */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             URL de Imagen
           </label>
           <Input
@@ -140,7 +140,7 @@ export function VariantEditor({
         </div>
 
         {/* Acciones */}
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2 pt-4 border-t dark:border-dark-border">
           <Button
             onClick={handleSave}
             disabled={saving}

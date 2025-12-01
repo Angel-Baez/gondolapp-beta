@@ -131,22 +131,22 @@ export default function FormularioProductoManual({
     <Modal isOpen={isOpen} onClose={onClose} title="Crear Nuevo Producto">
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* EAN Escaneado */}
-        <div className="bg-cyan-50 p-3 rounded-lg">
-          <p className="text-sm text-gray-600">Código de Barras:</p>
-          <p className="text-lg font-mono font-bold text-cyan-900">
+        <div className="bg-cyan-50 dark:bg-cyan-900/20 p-3 rounded-lg transition-colors">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Código de Barras:</p>
+          <p className="text-lg font-mono font-bold text-cyan-900 dark:text-cyan-400">
             {eanEscaneado}
           </p>
         </div>
 
         {/* Producto Base */}
-        <div className="space-y-3 border-b pb-4">
-          <h3 className="font-bold text-gray-800 flex items-center">
-            <Package className="w-5 h-5 mr-2 text-cyan-600" />
+        <div className="space-y-3 border-b dark:border-dark-border pb-4">
+          <h3 className="font-bold text-gray-800 dark:text-gray-200 flex items-center">
+            <Package className="w-5 h-5 mr-2 text-cyan-600 dark:text-cyan-400" />
             Producto Base
           </h3>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Nombre <span className="text-red-500">*</span>
             </label>
             <Input
@@ -161,7 +161,7 @@ export default function FormularioProductoManual({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Marca <span className="text-red-500">*</span>
             </label>
             <Input
@@ -182,7 +182,7 @@ export default function FormularioProductoManual({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Categoría <span className="text-red-500">*</span>
             </label>
             <Input
@@ -205,10 +205,10 @@ export default function FormularioProductoManual({
 
         {/* Variante */}
         <div className="space-y-3">
-          <h3 className="font-bold text-gray-800">Variante Específica</h3>
+          <h3 className="font-bold text-gray-800 dark:text-gray-200">Variante Específica</h3>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Tipo
             </label>
             <Input
@@ -222,7 +222,7 @@ export default function FormularioProductoManual({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Tamaño <span className="text-red-500">*</span>
             </label>
             <Input
@@ -234,13 +234,13 @@ export default function FormularioProductoManual({
               }
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Incluye la unidad: g, kg, ml, L, unidad
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Sabor
             </label>
             <Input
@@ -256,11 +256,11 @@ export default function FormularioProductoManual({
 
         {/* Preview del Nombre Completo */}
         {nombreCompletoPreview && (
-          <div className="bg-green-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">
+          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg transition-colors">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               Vista previa del nombre:
             </p>
-            <p className="font-bold text-green-900">
+            <p className="font-bold text-green-900 dark:text-green-400">
               {formData.nombreBase} {nombreCompletoPreview}
             </p>
           </div>

@@ -34,7 +34,7 @@ export function Badge({
     variantClasses = alertClasses[alert];
   } else {
     const variants = {
-      default: "bg-gray-200 text-gray-700",
+      default: "bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-200",
       primary: "bg-accent-primary text-white",
       secondary: "bg-accent-secondary text-white",
       success: "bg-accent-tertiary text-white",

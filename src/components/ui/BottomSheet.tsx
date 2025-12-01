@@ -103,23 +103,23 @@ export function BottomSheet({
             dragElastic={{ top: 0, bottom: 0.4 }}
             onDragEnd={handleDragEnd}
             onClick={(e) => e.stopPropagation()}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col touch-none select-none safe-area-bottom"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-surface rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col touch-none select-none safe-area-bottom transition-colors"
             style={{ willChange: "transform" }}
           >
             {/* Handle para arrastrar - visible and accessible */}
             <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-dark-border rounded-full" />
             </div>
 
             {/* Header */}
             {title && (
-              <div className={`px-4 pb-3 border-b border-gray-100 flex items-center justify-between ${headerClassName || ""}`}>
-                <h3 id={titleId} className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900"}`}>{title}</h3>
+              <div className={`px-4 pb-3 border-b border-gray-100 dark:border-dark-border flex items-center justify-between ${headerClassName || ""}`}>
+                <h3 id={titleId} className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900 dark:text-gray-100"}`}>{title}</h3>
                 <motion.button
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: "tween", duration: 0.1 }}
                   onClick={onClose}
-                  className={`p-2 rounded-full transition-colors touch-manipulation ${headerClassName ? "hover:bg-white/20 active:bg-white/30 text-current" : "hover:bg-gray-100 active:bg-gray-200 text-gray-500"}`}
+                  className={`p-2 rounded-full transition-colors touch-manipulation ${headerClassName ? "hover:bg-white/20 active:bg-white/30 text-current" : "hover:bg-gray-100 dark:hover:bg-dark-card active:bg-gray-200 dark:active:bg-dark-border text-gray-500 dark:text-gray-400"}`}
                   aria-label="Cerrar"
                 >
                   <X size={24} />

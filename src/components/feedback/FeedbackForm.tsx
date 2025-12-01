@@ -269,10 +269,10 @@ export function FeedbackForm() {
           >
             <CheckCircle size={80} className="text-green-500 mb-4" />
           </motion.div>
-          <h4 className="text-2xl font-bold text-gray-900 mb-2">
+          <h4 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             ¡Feedback Enviado!
           </h4>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Gracias por ayudarnos a mejorar GondolApp.
           </p>
         </motion.div>
@@ -281,7 +281,7 @@ export function FeedbackForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Tipo de Feedback - Chips */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Tipo de Reporte *
             </label>
             <div className="flex flex-wrap gap-2">
@@ -296,7 +296,7 @@ export function FeedbackForm() {
                     flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all
                     ${tipos.includes(tipo.id) 
                       ? tipo.color + " border-current" 
-                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}
+                      : "bg-white dark:bg-dark-card text-gray-500 dark:text-gray-400 border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600"}
                   `}
                 >
                   {tipo.icon}
@@ -314,7 +314,7 @@ export function FeedbackForm() {
 
           {/* Categorías - Chips */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Área/Módulo Afectado *
             </label>
             <div className="flex flex-wrap gap-2">
@@ -329,7 +329,7 @@ export function FeedbackForm() {
                     px-3 py-1 rounded-full border text-sm font-medium transition-all
                     ${categorias.includes(cat.id)
                       ? "bg-accent-primary text-white border-accent-primary"
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300"}
+                      : "bg-gray-50 dark:bg-dark-card text-gray-600 dark:text-gray-400 border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600"}
                   `}
                 >
                   {cat.label}
@@ -346,7 +346,7 @@ export function FeedbackForm() {
 
           {/* Prioridad */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Prioridad
             </label>
             <div className="flex gap-2">
@@ -358,8 +358,8 @@ export function FeedbackForm() {
                   className={`
                     px-4 py-1.5 rounded-lg text-sm font-medium transition-all
                     ${prioridad === p.id
-                      ? p.color + " ring-2 ring-offset-1 ring-current"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"}
+                      ? p.color + " ring-2 ring-offset-1 ring-current dark:ring-offset-dark-surface"
+                      : "bg-gray-100 dark:bg-dark-card text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border"}
                   `}
                 >
                   {p.label}
@@ -370,7 +370,7 @@ export function FeedbackForm() {
 
           {/* Título */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               Título *
             </label>
             <input
@@ -384,7 +384,9 @@ export function FeedbackForm() {
               maxLength={100}
               className={`
                 w-full px-4 py-2.5 border-2 rounded-xl transition-all
-                ${errores.titulo ? "border-red-400" : "border-gray-300 focus:border-accent-primary"}
+                bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100
+                placeholder:text-gray-400 dark:placeholder:text-gray-500
+                ${errores.titulo ? "border-red-400" : "border-gray-300 dark:border-dark-border focus:border-accent-primary"}
                 focus:outline-none focus:ring-2 focus:ring-accent-primary/20
               `}
             />
@@ -397,13 +399,13 @@ export function FeedbackForm() {
               ) : (
                 <span />
               )}
-              <span className="text-xs text-gray-400">{titulo.length}/100</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{titulo.length}/100</span>
             </div>
           </div>
 
           {/* Descripción */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               Descripción *
             </label>
             <textarea
@@ -416,7 +418,9 @@ export function FeedbackForm() {
               rows={4}
               className={`
                 w-full px-4 py-2.5 border-2 rounded-xl transition-all resize-none
-                ${errores.descripcion ? "border-red-400" : "border-gray-300 focus:border-accent-primary"}
+                bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100
+                placeholder:text-gray-400 dark:placeholder:text-gray-500
+                ${errores.descripcion ? "border-red-400" : "border-gray-300 dark:border-dark-border focus:border-accent-primary"}
                 focus:outline-none focus:ring-2 focus:ring-accent-primary/20
               `}
             />
@@ -430,7 +434,7 @@ export function FeedbackForm() {
 
           {/* Screenshots */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
               Capturas de Pantalla (opcional)
             </label>
             
@@ -442,7 +446,7 @@ export function FeedbackForm() {
                     <img 
                       src={src} 
                       alt={`Screenshot ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                      className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-dark-border"
                     />
                     <button
                       type="button"
@@ -456,9 +460,9 @@ export function FeedbackForm() {
               </div>
             )}
 
-            <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-accent-primary hover:bg-accent-primary/5 transition-all">
-              <ImageIcon size={20} className="text-gray-500" />
-              <span className="text-sm text-gray-600">Añadir imagen</span>
+            <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-dark-border rounded-xl cursor-pointer hover:border-accent-primary hover:bg-accent-primary/5 dark:hover:bg-accent-primary/10 transition-all">
+              <ImageIcon size={20} className="text-gray-500 dark:text-gray-400" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Añadir imagen</span>
               <input
                 type="file"
                 accept="image/*"
@@ -470,7 +474,7 @@ export function FeedbackForm() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               Email (opcional)
             </label>
             <input
@@ -483,7 +487,9 @@ export function FeedbackForm() {
               placeholder="Para recibir actualizaciones sobre tu reporte"
               className={`
                 w-full px-4 py-2.5 border-2 rounded-xl transition-all
-                ${errores.email ? "border-red-400" : "border-gray-300 focus:border-accent-primary"}
+                bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100
+                placeholder:text-gray-400 dark:placeholder:text-gray-500
+                ${errores.email ? "border-red-400" : "border-gray-300 dark:border-dark-border focus:border-accent-primary"}
                 focus:outline-none focus:ring-2 focus:ring-accent-primary/20
               `}
             />
@@ -502,7 +508,7 @@ export function FeedbackForm() {
             className={`
               w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all
               ${isSubmitting 
-                ? "bg-gray-400 cursor-not-allowed" 
+                ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed" 
                 : "bg-accent-primary hover:bg-accent-primary/90 active:scale-[0.98]"}
             `}
           >

@@ -25,8 +25,8 @@ const TAB_INDICATOR_OFFSET = "4px";
  */
 export function NavigationTabs({ activeView, onViewChange }: NavigationTabsProps) {
   return (
-    <nav className="p-4 bg-white border-b border-gray-100">
-      <div className="relative flex justify-around bg-gray-100 p-1 rounded-full shadow-inner">
+    <nav className="p-4 bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-dark-border transition-colors">
+      <div className="relative flex justify-around bg-gray-100 dark:bg-dark-card p-1 rounded-full shadow-inner">
         {/* Animated background indicator */}
         <m.div
           layoutId="tab-indicator"
@@ -52,7 +52,7 @@ export function NavigationTabs({ activeView, onViewChange }: NavigationTabsProps
           className={`relative flex-1 py-2 rounded-full font-bold flex items-center justify-center z-10 transition-colors duration-150 select-none touch-manipulation ${
             activeView === "reposicion"
               ? "text-white"
-              : "text-gray-600"
+              : "text-gray-600 dark:text-gray-400"
           }`}
         >
           <ListChecks size={20} className="mr-2" />
@@ -67,7 +67,7 @@ export function NavigationTabs({ activeView, onViewChange }: NavigationTabsProps
           className={`relative flex-1 py-2 rounded-full font-bold flex items-center justify-center z-10 transition-colors duration-150 select-none touch-manipulation ${
             activeView === "vencimiento"
               ? "text-white"
-              : "text-gray-600"
+              : "text-gray-600 dark:text-gray-400"
           }`}
         >
           <Clock size={20} className="mr-2" />

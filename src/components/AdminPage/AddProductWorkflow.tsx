@@ -153,13 +153,13 @@ export function AddProductWorkflow({ onComplete }: AddProductWorkflowProps) {
 
       {checking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl transition-colors">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mb-4" />
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Verificando producto...
               </p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 Consultando base de datos
               </p>
             </div>

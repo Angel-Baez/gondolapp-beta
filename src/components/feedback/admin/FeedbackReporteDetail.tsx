@@ -53,7 +53,7 @@ export function FeedbackReporteDetail({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
-      className="w-full lg:w-1/2 overflow-y-auto bg-white"
+      className="w-full lg:w-1/2 overflow-y-auto bg-white dark:bg-dark-surface transition-colors"
     >
       {/* Header fijo */}
       <DetailHeader
@@ -107,7 +107,7 @@ interface DetailHeaderProps {
 
 function DetailHeader({ reporte, isCreatingIssue, onClose, onEliminar, onCrearGitHubIssue }: DetailHeaderProps) {
   return (
-    <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+    <div className="sticky top-0 bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border p-4 z-10 transition-colors">
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
@@ -136,7 +136,7 @@ function DetailHeader({ reporte, isCreatingIssue, onClose, onEliminar, onCrearGi
               variant="ghost"
               onClick={onCrearGitHubIssue}
               disabled={isCreatingIssue}
-              className="text-gray-700 hover:bg-gray-100"
+              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-card"
               title="Crear issue en GitHub"
             >
               {isCreatingIssue ? (
@@ -149,7 +149,7 @@ function DetailHeader({ reporte, isCreatingIssue, onClose, onEliminar, onCrearGi
           <Button
             variant="ghost"
             onClick={onEliminar}
-            className="text-red-500 hover:bg-red-50"
+            className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
             title="Eliminar"
           >
             <Trash2 size={18} />
@@ -166,7 +166,7 @@ function TiposSection({ tipos }: { tipos: FeedbackReporte["tipo"] }) {
       {tipos.map((t) => (
         <span
           key={t}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-dark-card text-gray-700 dark:text-gray-300"
         >
           {TIPO_ICONS[t]}
           {t}
@@ -177,7 +177,7 @@ function TiposSection({ tipos }: { tipos: FeedbackReporte["tipo"] }) {
 }
 
 function TituloSection({ titulo }: { titulo: string }) {
-  return <h2 className="text-xl font-bold text-gray-900">{titulo}</h2>;
+  return <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{titulo}</h2>;
 }
 
 interface EstadoPrioridadSectionProps {
@@ -196,7 +196,7 @@ function EstadoPrioridadSection({
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">Estado</label>
+        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Estado</label>
         <select
           value={estado}
           onChange={(e) => onEstadoChange(e.target.value as FeedbackEstado)}
@@ -208,7 +208,7 @@ function EstadoPrioridadSection({
         </select>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">Prioridad</label>
+        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Prioridad</label>
         <select
           value={prioridad}
           onChange={(e) => onPrioridadChange(e.target.value as FeedbackPrioridad)}
@@ -226,7 +226,7 @@ function EstadoPrioridadSection({
 function CategoriasSection({ categorias }: { categorias: string[] }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Categorías</label>
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Categorías</label>
       <div className="flex flex-wrap gap-2">
         {categorias.map((cat) => (
           <span
@@ -244,8 +244,8 @@ function CategoriasSection({ categorias }: { categorias: string[] }) {
 function DescripcionSection({ descripcion }: { descripcion: string }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Descripción</label>
-      <div className="bg-gray-50 p-4 rounded-xl text-gray-700 whitespace-pre-wrap">
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Descripción</label>
+      <div className="bg-gray-50 dark:bg-dark-card p-4 rounded-xl text-gray-700 dark:text-gray-300 whitespace-pre-wrap transition-colors">
         {descripcion}
       </div>
     </div>
@@ -255,7 +255,7 @@ function DescripcionSection({ descripcion }: { descripcion: string }) {
 function ScreenshotsSection({ screenshots }: { screenshots: string[] }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Capturas de Pantalla</label>
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Capturas de Pantalla</label>
       <div className="grid grid-cols-2 gap-2">
         {screenshots.map((src, index) => (
           <a
@@ -268,7 +268,7 @@ function ScreenshotsSection({ screenshots }: { screenshots: string[] }) {
             <img
               src={src}
               alt={`Screenshot ${index + 1}`}
-              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-accent-primary transition-colors"
+              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 dark:border-dark-border hover:border-accent-primary transition-colors"
             />
           </a>
         ))}
@@ -282,8 +282,8 @@ function MetadataSection({ metadata }: { metadata?: FeedbackReporte["metadata"] 
 
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Información Técnica</label>
-      <div className="bg-gray-50 p-4 rounded-xl space-y-2 text-sm">
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Información Técnica</label>
+      <div className="bg-gray-50 dark:bg-dark-card p-4 rounded-xl space-y-2 text-sm transition-colors">
         <MetadataRow label="Navegador" value={metadata.navegador} />
         <MetadataRow label="Dispositivo" value={metadata.dispositivo} />
         <MetadataRow label="Sistema Operativo" value={metadata.sistemaOperativo || "N/A"} />
@@ -297,8 +297,8 @@ function MetadataSection({ metadata }: { metadata?: FeedbackReporte["metadata"] 
 function MetadataRow({ label, value, truncate }: { label: string; value: string; truncate?: boolean }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-500">{label}:</span>
-      <span className={`font-medium ${truncate ? "truncate max-w-[200px]" : ""}`}>{value}</span>
+      <span className="text-gray-500 dark:text-gray-400">{label}:</span>
+      <span className={`font-medium text-gray-900 dark:text-gray-100 ${truncate ? "truncate max-w-[200px]" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -306,8 +306,8 @@ function MetadataRow({ label, value, truncate }: { label: string; value: string;
 function UsuarioSection({ reporte }: { reporte: FeedbackReporte }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Usuario</label>
-      <div className="bg-gray-50 p-4 rounded-xl space-y-2 text-sm">
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Usuario</label>
+      <div className="bg-gray-50 dark:bg-dark-card p-4 rounded-xl space-y-2 text-sm transition-colors">
         <MetadataRow label="Email" value={reporte.userEmail || "No proporcionado"} />
         <MetadataRow label="Enviado" value={formatearFecha(reporte.creadoAt)} />
         {reporte.leidoEn && (
@@ -324,7 +324,7 @@ function UsuarioSection({ reporte }: { reporte: FeedbackReporte }) {
 function GitHubIssueSection({ issueUrl, issueNumber }: { issueUrl: string; issueNumber?: number }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">GitHub Issue</label>
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">GitHub Issue</label>
       <a
         href={issueUrl}
         target="_blank"
@@ -345,14 +345,14 @@ function GitHubIssueSection({ issueUrl, issueNumber }: { issueUrl: string; issue
 function HistorialSection({ historial }: { historial: FeedbackReporte["historial"] }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-2">Historial</label>
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Historial</label>
       <div className="space-y-2">
         {historial.map((entry, index) => (
           <div key={index} className="flex items-start gap-3 text-sm">
             <div className="w-2 h-2 mt-1.5 rounded-full bg-accent-primary" />
             <div className="flex-1">
-              <p className="text-gray-700">{entry.mensaje}</p>
-              <p className="text-xs text-gray-400">{formatearFecha(entry.fecha)}</p>
+              <p className="text-gray-700 dark:text-gray-300">{entry.mensaje}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{formatearFecha(entry.fecha)}</p>
             </div>
           </div>
         ))}

@@ -221,8 +221,8 @@ export default function MongoAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-lg mx-auto bg-white min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
         <Header
           title="MongoDB Compass"
           subtitle="Administra productos y variantes"
@@ -232,16 +232,16 @@ export default function MongoAdminPage() {
         />
 
         {/* Panel de búsqueda */}
-        <div className="p-4 bg-gray-50 border-b">
+        <div className="p-4 bg-gray-50 dark:bg-dark-bg border-b dark:border-dark-border transition-colors">
           <ProductSearchPanel
             onSearch={(searchFilters) => searchProducts(searchFilters, 1)}
           />
         </div>
 
         {/* Contenido principal */}
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        <main className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
           {loading && productos.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <div className="animate-spin w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full mx-auto mb-3"></div>
               <p>Cargando productos...</p>
             </div>
@@ -249,7 +249,7 @@ export default function MongoAdminPage() {
             <>
               {/* Contador y acciones */}
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Mostrando {productos.length} de {total} productos
                 </p>
                 {selectedProduct && (
@@ -278,7 +278,7 @@ export default function MongoAdminPage() {
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-sm text-gray-600 px-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 px-4">
                     Página {page} de {totalPages}
                   </span>
                   <Button
@@ -292,8 +292,8 @@ export default function MongoAdminPage() {
               )}
             </>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <Database className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <Database className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
               <p className="font-medium">Busca productos para comenzar</p>
               <p className="text-sm mt-1">
                 Usa el panel de búsqueda para encontrar y administrar productos

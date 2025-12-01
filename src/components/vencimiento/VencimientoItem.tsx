@@ -37,7 +37,7 @@ export function VencimientoItem({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 mb-3">
+    <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-3 sm:p-4 mb-3 transition-colors">
       <div className="space-y-3">
         {/* Info Section */}
         <div className="flex items-start gap-3">
@@ -49,11 +49,11 @@ export function VencimientoItem({
             />
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+            <p className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight">
               {variante.nombreCompleto}
             </p>
             {variante.tamano && (
-              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                 {variante.tamano}
               </p>
             )}
@@ -66,7 +66,7 @@ export function VencimientoItem({
             {getMensajeVencimiento()}
           </Badge>
 
-          <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs sm:text-sm text-gray-600">
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Calendar size={14} className="flex-shrink-0" />
               <span>{formatearFecha(item.fechaVencimiento)}</span>
@@ -77,13 +77,13 @@ export function VencimientoItem({
             )}
 
             {item.lote && (
-              <span className="text-gray-500">Lote: {item.lote}</span>
+              <span className="text-gray-500 dark:text-gray-400">Lote: {item.lote}</span>
             )}
           </div>
         </div>
 
         {/* Actions - En fila completa */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-dark-border">
           <IconButton
             onClick={() => {
               haptic(50);
