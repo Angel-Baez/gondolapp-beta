@@ -241,6 +241,15 @@ export async function POST(request: NextRequest) {
         try {
           // Usar codigoBarras o ean para la clave de búsqueda
           const eanValue = variante.ean || variante.codigoBarras;
+          // Skip variantes sin EAN válido
+          if (!eanValue) {
+            results.errors.push({
+              type: "variante",
+              item: variante.nombreCompleto || "desconocido",
+              error: "Código de barras (EAN) requerido",
+            });
+            continue;
+          }
           const result = await db.collection("productos_variantes").updateOne(
             { ean: eanValue },
             {
@@ -320,9 +329,16 @@ export async function POST(request: NextRequest) {
         updated = 0;
       for (const item of vencimientos) {
         try {
-          const fechaVenc = item.fechaVencimiento
-            ? new Date(item.fechaVencimiento)
-            : new Date();
+          // Skip items sin fecha de vencimiento válida
+          if (!item.fechaVencimiento) {
+            results.errors.push({
+              type: "vencimiento",
+              item: item.varianteId,
+              error: "Fecha de vencimiento requerida",
+            });
+            continue;
+          }
+          const fechaVenc = new Date(item.fechaVencimiento);
           const result = await db.collection("items_vencimiento").updateOne(
             {
               varianteId: item.varianteId,
