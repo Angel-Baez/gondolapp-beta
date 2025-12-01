@@ -8,73 +8,69 @@ interface NavigationTabsProps {
   onViewChange: (view: ActiveView) => void;
 }
 
+// Tab indicator positioning - matches container padding
+const TAB_INDICATOR_OFFSET = "4px";
+
 /**
  * NavigationTabs component para HomePage
  * 
  * ✅ SOLID Principles:
  * - SRP: Solo responsable de mostrar y manejar tabs de navegación
  * - ISP: Interface específica con props claras
+ * 
+ * ✨ Native-like Features:
+ * - Animated indicator with layoutId (iOS segment control feel)
+ * - Smooth transitions with spring physics
+ * - Touch optimized with manipulation
  */
 export function NavigationTabs({ activeView, onViewChange }: NavigationTabsProps) {
   return (
     <nav className="p-4 bg-white border-b border-gray-100">
-      <div className="flex justify-around bg-gray-100 p-1 rounded-full shadow-inner">
+      <div className="relative flex justify-around bg-gray-100 p-1 rounded-full shadow-inner">
+        {/* Animated background indicator */}
+        <m.div
+          layoutId="tab-indicator"
+          className={`absolute inset-y-1 rounded-full shadow-md ${
+            activeView === "reposicion" ? "bg-accent-primary" : "bg-accent-secondary"
+          }`}
+          style={{
+            left: activeView === "reposicion" ? TAB_INDICATOR_OFFSET : "50%",
+            right: activeView === "reposicion" ? "50%" : TAB_INDICATOR_OFFSET,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 30,
+          }}
+        />
+        
+        {/* Reposición Tab */}
         <m.button
-          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          transition={{ type: "tween", duration: 0.1 }}
           onClick={() => onViewChange("reposicion")}
-          className={`flex-1 py-2 rounded-full font-bold transition-all flex items-center justify-center ${
+          className={`relative flex-1 py-2 rounded-full font-bold flex items-center justify-center z-10 transition-colors duration-150 select-none touch-manipulation ${
             activeView === "reposicion"
-              ? "bg-accent-primary text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-200"
+              ? "text-white"
+              : "text-gray-600"
           }`}
         >
-          {/* ✨ Icono con animación cuando está activo */}
-          <m.div
-            animate={
-              activeView === "reposicion"
-                ? {
-                    y: [0, -3, 0],
-                    rotate: [0, -5, 5, 0],
-                  }
-                : { y: 0, rotate: 0 }
-            }
-            transition={{
-              duration: 1.5,
-              ease: "easeInOut",
-            }}
-          >
-            <ListChecks size={20} className="mr-2" />
-          </m.div>
+          <ListChecks size={20} className="mr-2" />
           Reposición
         </m.button>
+        
+        {/* Vencimientos Tab */}
         <m.button
-          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          transition={{ type: "tween", duration: 0.1 }}
           onClick={() => onViewChange("vencimiento")}
-          className={`flex-1 py-2 rounded-full font-bold transition-all flex items-center justify-center ${
+          className={`relative flex-1 py-2 rounded-full font-bold flex items-center justify-center z-10 transition-colors duration-150 select-none touch-manipulation ${
             activeView === "vencimiento"
-              ? "bg-accent-secondary text-white shadow-md"
-              : "text-gray-600 hover:bg-gray-200"
+              ? "text-white"
+              : "text-gray-600"
           }`}
         >
-          {/* ✨ Icono con animación de reloj cuando está activo */}
-          <m.div
-            animate={
-              activeView === "vencimiento"
-                ? {
-                    rotate: [0, 15, -15, 0],
-                    scale: [1, 1.1, 1],
-                  }
-                : { rotate: 0, scale: 1 }
-            }
-            transition={{
-              duration: 2,
-              ease: "easeInOut",
-            }}
-          >
-            <Clock size={20} className="mr-2" />
-          </m.div>
+          <Clock size={20} className="mr-2" />
           Vencimientos
         </m.button>
       </div>
