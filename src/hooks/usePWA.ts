@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { CircleCheck, Rocket, Wifi, WifiOff } from "lucide-react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 type UsePWAResult = {
@@ -31,7 +32,9 @@ export function usePWA(): UsePWAResult {
 
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
   const waitingWorker = useRef<ServiceWorker | null>(null);
-  const updateCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const updateCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   // Persist dismissal to avoid nagging the user
   const DISMISS_KEY = "gondolapp_pwa_install_dismissed";
@@ -62,10 +65,11 @@ export function usePWA(): UsePWAResult {
   // Show update toast with action instructions
   const showUpdateToast = useCallback(() => {
     toast.success(
-      "🚀 Nueva versión disponible. Recarga la página para actualizar.",
+      "Nueva versión disponible. Recarga la página para actualizar.",
       {
         duration: 10000,
         position: "bottom-center",
+        icon: createElement(Rocket, { size: 20 }),
         style: {
           background: "#06B6D4",
           color: "#fff",
@@ -79,11 +83,11 @@ export function usePWA(): UsePWAResult {
   useEffect(() => {
     // Device / browser detection
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    const navStandalone = typeof navigator !== "undefined" 
-      ? (navigator as Navigator & { standalone?: boolean }).standalone 
-      : undefined;
-    const iOS =
-      /iphone|ipad|ipod/i.test(ua) || navStandalone === true;
+    const navStandalone =
+      typeof navigator !== "undefined"
+        ? (navigator as Navigator & { standalone?: boolean }).standalone
+        : undefined;
+    const iOS = /iphone|ipad|ipod/i.test(ua) || navStandalone === true;
     const android = /android/i.test(ua);
     const samsungInternet = /samsungbrowser/i.test(ua);
     const browser = detectBrowser(ua);
@@ -99,7 +103,7 @@ export function usePWA(): UsePWAResult {
       setIsOnline(true);
       toast.success("Conexión restaurada", {
         duration: 2000,
-        icon: "🌐",
+        icon: createElement(Wifi, { size: 20, className: "text-green-500" }),
       });
     };
 
@@ -107,7 +111,7 @@ export function usePWA(): UsePWAResult {
       setIsOnline(false);
       toast("Sin conexión - Modo offline activo", {
         duration: 3000,
-        icon: "📴",
+        icon: createElement(WifiOff, { size: 20, className: "text-amber-600" }),
         style: {
           background: "#FEF3C7",
           color: "#92400E",
@@ -177,10 +181,7 @@ export function usePWA(): UsePWAResult {
       if (!dismissed) setIsInstallable(true);
     };
 
-    window.addEventListener(
-      "beforeinstallprompt",
-      onBeforeInstallPrompt
-    );
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
 
     // appinstalled event
     const onAppInstalled = () => {
@@ -190,14 +191,18 @@ export function usePWA(): UsePWAResult {
       setShowIOSInstall(false);
       toast.success("¡App instalada correctamente!", {
         duration: 3000,
-        icon: "✅",
+        icon: createElement(CircleCheck, {
+          size: 20,
+          className: "text-green-500",
+        }),
       });
     };
     window.addEventListener("appinstalled", onAppInstalled);
 
     // iOS detection: show manual install instructions if not in standalone
     const isInStandalone = () =>
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+      true;
     const dismissed = localStorage.getItem(DISMISS_KEY) === "1";
     if (iOS && !isInStandalone() && !dismissed) {
       // show iOS install instructions
@@ -213,10 +218,7 @@ export function usePWA(): UsePWAResult {
     }
 
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        onBeforeInstallPrompt
-      );
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
       window.removeEventListener("appinstalled", onAppInstalled);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
