@@ -253,6 +253,7 @@ export function FeedbackForm() {
       title="📝 Reportar Feedback"
       size="lg"
       useBottomSheetOnMobile={true}
+      headerClassName="bg-gradient-to-r from-accent-primary to-cyan-600 text-white"
     >
       {/* Success State */}
       {submitSuccess ? (
