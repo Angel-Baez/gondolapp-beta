@@ -17,6 +17,10 @@ interface ModalProps {
    * Si es false, siempre usará el modal centrado tradicional
    */
   useBottomSheetOnMobile?: boolean;
+  /**
+   * Clases CSS adicionales para el header
+   */
+  headerClassName?: string;
 }
 
 export function Modal({
@@ -26,6 +30,7 @@ export function Modal({
   children,
   size = "md",
   useBottomSheetOnMobile = true,
+  headerClassName,
 }: ModalProps) {
   const isMobile = useIsMobile();
   const useBottomSheet = isMobile && useBottomSheetOnMobile;
@@ -54,7 +59,7 @@ export function Modal({
   // En móviles, usar BottomSheet para mejor ergonomía
   if (useBottomSheet) {
     return (
-      <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
+      <BottomSheet isOpen={isOpen} onClose={onClose} title={title} headerClassName={headerClassName}>
         {children}
       </BottomSheet>
     );
@@ -86,11 +91,11 @@ export function Modal({
             >
               {/* Header */}
               {title && (
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                <div className={`p-4 border-b border-gray-100 flex items-center justify-between ${headerClassName || ""}`}>
+                  <h3 className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900"}`}>{title}</h3>
                   <button
                     onClick={onClose}
-                    className="p-1 rounded-full hover:bg-gray-100 text-gray-500 transition"
+                    className={`p-1 rounded-full transition ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 text-gray-500"}`}
                   >
                     <X size={24} />
                   </button>

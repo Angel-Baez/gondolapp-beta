@@ -9,6 +9,10 @@ interface BottomSheetProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  /**
+   * Clases CSS adicionales para el header
+   */
+  headerClassName?: string;
 }
 
 /**
@@ -26,6 +30,7 @@ export function BottomSheet({
   onClose,
   title,
   children,
+  headerClassName,
 }: BottomSheetProps) {
   const titleId = useId();
   
@@ -95,11 +100,11 @@ export function BottomSheet({
 
             {/* Header */}
             {title && (
-              <div className="px-4 pb-3 border-b border-gray-100 flex items-center justify-between">
-                <h3 id={titleId} className="text-xl font-bold text-gray-900">{title}</h3>
+              <div className={`px-4 pb-3 border-b border-gray-100 flex items-center justify-between ${headerClassName || ""}`}>
+                <h3 id={titleId} className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900"}`}>{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition active:bg-gray-200"
+                  className={`p-2 rounded-full transition active:bg-gray-200 ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 text-gray-500"}`}
                   aria-label="Cerrar"
                 >
                   <X size={24} />
