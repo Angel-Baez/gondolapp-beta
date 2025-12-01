@@ -77,7 +77,7 @@ export function VencimientoItem({
             )}
 
             {item.lote && (
-              <span className="text-gray-500 dark:text-gray-500">Lote: {item.lote}</span>
+              <span className="text-gray-500 dark:text-gray-400">Lote: {item.lote}</span>
             )}
           </div>
         </div>

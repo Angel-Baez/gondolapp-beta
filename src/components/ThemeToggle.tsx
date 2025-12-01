@@ -19,10 +19,11 @@ export function ThemeToggle() {
   const { theme, setTheme } = useThemeStore();
 
   const currentIndex = themeOptions.findIndex((opt) => opt.value === theme);
-  const CurrentIcon = themeOptions[currentIndex]?.icon || Sun;
+  const safeIndex = currentIndex === -1 ? 0 : currentIndex;
+  const CurrentIcon = themeOptions[safeIndex].icon;
 
   const cycleTheme = () => {
-    const nextIndex = (currentIndex + 1) % themeOptions.length;
+    const nextIndex = (safeIndex + 1) % themeOptions.length;
     setTheme(themeOptions[nextIndex].value);
   };
 
@@ -31,8 +32,8 @@ export function ThemeToggle() {
       whileTap={{ scale: 0.95 }}
       onClick={cycleTheme}
       className="p-3 bg-white/10 hover:bg-white/20 dark:bg-gray-700/50 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2"
-      aria-label={`Tema actual: ${themeOptions[currentIndex]?.label}. Click para cambiar.`}
-      title={`Tema: ${themeOptions[currentIndex]?.label}`}
+      aria-label={`Tema actual: ${themeOptions[safeIndex].label}. Click para cambiar.`}
+      title={`Tema: ${themeOptions[safeIndex].label}`}
     >
       <motion.div
         key={theme}
