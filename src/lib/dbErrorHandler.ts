@@ -92,11 +92,11 @@ export async function handleQuotaExceeded(): Promise<boolean> {
     let deletedCount = 0;
     
     // Clean old reposicion items that have been marked as repuesto (restocked)
-    // Dexie handles boolean comparison transparently
     const oldReposicionItems = await db.itemsReposicion
-      .where('repuesto')
-      .equals(true)
-      .and((item) => new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate)
+      .filter((item) => 
+        item.repuesto === true && 
+        new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
+      )
       .toArray();
     
     for (const item of oldReposicionItems) {
@@ -162,8 +162,9 @@ export async function withDBErrorHandling<T>(
       // QuotaExceededError
       if (
         errorName === "QuotaExceededError" ||
-        error.message.includes("quota") ||
-        error.message.includes("storage")
+        (typeof error.message === "string" &&
+          (error.message.toLowerCase().includes("quota exceeded") ||
+            error.message.toLowerCase().includes("storage full")))
       ) {
         toast.error("Almacenamiento lleno. Limpiando datos antiguos...", {
           duration: 3000,
@@ -258,7 +259,12 @@ export async function isStoragePersisted(): Promise<boolean> {
 
 /**
  * Initialize storage management (call on app startup)
- * Returns a cleanup function to clear intervals
+ * @returns A cleanup function to clear intervals - MUST be called in useEffect cleanup
+ * @example
+ * useEffect(() => {
+ *   const cleanup = initializeStorageManagement();
+ *   return () => { cleanup.then(fn => fn()); };
+ * }, []);
  */
 export async function initializeStorageManagement(): Promise<() => void> {
   // Request persistent storage

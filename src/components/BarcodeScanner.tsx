@@ -471,7 +471,17 @@ export default function BarcodeScanner({
                           startScanning();
                         }
                       })
-                      .catch(() => startScanning());
+                      .catch((err) => {
+                        console.warn(
+                          "[BarcodeScanner] Permission query failed:",
+                          err
+                        );
+                        toast(
+                          "No se puede verificar permisos. Intentando acceder a la cámara...",
+                          { duration: 2000 }
+                        );
+                        startScanning();
+                      });
                   } else {
                     startScanning();
                   }

@@ -53,6 +53,8 @@ function HomePageContent() {
     if (view === "reposicion" || view === "vencimiento") {
       setActiveView(view);
       setScanMode(view);
+      // Clean up URL after handling
+      window.history.replaceState({}, "", window.location.pathname);
     }
 
     // Abrir escáner si action=scan
@@ -60,6 +62,8 @@ function HomePageContent() {
       // Pequeño delay para asegurar que la UI está lista
       const timer = setTimeout(() => {
         setShowScanWorkflow(true);
+        // Clean up URL after handling
+        window.history.replaceState({}, "", window.location.pathname);
       }, 100);
       return () => clearTimeout(timer);
     }

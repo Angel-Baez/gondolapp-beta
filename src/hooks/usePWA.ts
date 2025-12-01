@@ -59,14 +59,34 @@ export function usePWA(): UsePWAResult {
     }
   }, []);
 
-  // Show update toast with action instructions
+  // Show update toast with interactive action button
   const showUpdateToast = useCallback(() => {
-    toast.success(
-      "Nueva versión disponible. Recarga la página para actualizar.",
+    toast(
+      (t) =>
+        createElement(
+          "div",
+          { className: "flex items-center gap-3" },
+          createElement(Rocket, { size: 20 }),
+          createElement("span", null, "Nueva versión disponible"),
+          createElement(
+            "button",
+            {
+              onClick: () => {
+                if (waitingWorker.current) {
+                  waitingWorker.current.postMessage({ type: "SKIP_WAITING" });
+                  setHasUpdate(false);
+                }
+                toast.dismiss(t.id);
+              },
+              className:
+                "px-3 py-1 bg-white text-cyan-600 rounded font-semibold text-sm hover:bg-gray-100 transition",
+            },
+            "Actualizar ahora"
+          )
+        ),
       {
-        duration: 10000,
+        duration: Infinity,
         position: "bottom-center",
-        icon: createElement(Rocket, { size: 20 }),
         style: {
           background: "#06B6D4",
           color: "#fff",
@@ -225,7 +245,8 @@ export function usePWA(): UsePWAResult {
         updateCheckIntervalRef.current = null;
       }
     };
-  }, [showUpdateToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const promptInstall = async () => {
     if (deferredPrompt.current) {

@@ -74,7 +74,7 @@
         },
         {
           "src": "/icon-list.svg",
-          "sizes": "96x96",
+          "sizes": "any",
           "type": "image/svg+xml"
         }
       ]
@@ -92,7 +92,7 @@
         },
         {
           "src": "/icon-calendar.svg",
-          "sizes": "96x96",
+          "sizes": "any",
           "type": "image/svg+xml"
         }
       ]

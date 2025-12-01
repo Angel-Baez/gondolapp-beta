@@ -22,12 +22,20 @@ const STATIC_ASSETS = [
 self.addEventListener("install", (event) => {
   console.log("[SW] Installing Service Worker...", CACHE_VERSION);
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log("[SW] Precaching App Shell");
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches
+      .open(STATIC_CACHE)
+      .then((cache) => {
+        console.log("[SW] Precaching App Shell");
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .then(() => {
+        // Skip waiting on first install when there's no active service worker
+        // For updates, wait for the SKIP_WAITING message
+        if (!self.registration.active) {
+          return self.skipWaiting();
+        }
+      })
   );
-  // No skip waiting automatically - wait for message
 });
 
 // Activación del Service Worker
@@ -200,6 +208,7 @@ async function staleWhileRevalidate(request, cacheName) {
 }
 
 // Navigation handler con offline fallback
+// Fallback chain: cached page → cached offline.html → hardcoded HTML
 async function navigationHandler(request) {
   try {
     const response = await fetch(request);
