@@ -8,12 +8,21 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Header } from "@/components/ui";
 import { ScanMode } from "@/types";
 import { motion as m } from "framer-motion";
-import { Archive, Settings } from "lucide-react";
+import { Archive, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 type ActiveView = "reposicion" | "vencimiento";
+
+// Loading fallback para Suspense
+function HomePageLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+    </div>
+  );
+}
 
 /**
  * HomePage - Refactorizada siguiendo principios SOLID
@@ -29,7 +38,7 @@ type ActiveView = "reposicion" | "vencimiento";
  * - ?view=reposicion → Muestra vista de reposición
  * - ?view=vencimiento → Muestra vista de vencimientos
  */
-export default function HomePage() {
+function HomePageContent() {
   const searchParams = useSearchParams();
   const [activeView, setActiveView] = useState<ActiveView>("reposicion");
   const [showScanWorkflow, setShowScanWorkflow] = useState(false);
@@ -110,5 +119,14 @@ export default function HomePage() {
         <ScanWorkflow scanMode={scanMode} onClose={handleCloseScanWorkflow} />
       )}
     </div>
+  );
+}
+
+// Componente principal con Suspense boundary para useSearchParams
+export default function HomePage() {
+  return (
+    <Suspense fallback={<HomePageLoading />}>
+      <HomePageContent />
+    </Suspense>
   );
 }
