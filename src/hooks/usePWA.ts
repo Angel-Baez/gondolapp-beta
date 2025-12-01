@@ -55,10 +55,7 @@ export function usePWA(): UsePWAResult {
     if (waitingWorker.current) {
       waitingWorker.current.postMessage({ type: "SKIP_WAITING" });
       setHasUpdate(false);
-      // Reload the page after a short delay to ensure SW is activated
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Reload will be handled by controllerchange event listener
     }
   }, []);
 
