@@ -6,6 +6,8 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Remove blue tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -16,6 +18,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior: none;
 }
 
 /* Touch target sizes for mobile accessibility (Lighthouse AA) */
@@ -29,6 +33,8 @@ input[type="submit"],
   min-height: 44px;
   min-width: 44px;
   padding: 12px;
+  /* Improve touch responsiveness */
+  touch-action: manipulation;
 }
 
 /* Asegurar que iconos dentro de botones no rompan el tamaño mínimo */
@@ -79,4 +85,74 @@ html {
     #f6f7f8 100%
   );
   background-size: 1000px 100%;
+}
+
+/* ======================================
+   Native Mobile Feel Optimizations
+   ====================================== */
+
+/* Prevent text selection on interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Native-like active state utility */
+.native-active {
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+.native-active:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* GPU acceleration for animated elements */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Smooth container scroll with native momentum */
+.native-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* iOS-like spring animation for modals/sheets */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Subtle press feedback for buttons */
+.press-feedback {
+  transition: transform 100ms ease-out;
+}
+
+.press-feedback:active {
+  transform: scale(0.97);
+}
+
+/* Safe area utilities for fixed elements */
+.safe-area-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-area-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
 }

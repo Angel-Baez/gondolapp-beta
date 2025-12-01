@@ -26,18 +26,18 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2";
+    "font-bold rounded-xl transition-all duration-100 flex items-center justify-center gap-2 select-none touch-manipulation";
 
   const variantClasses = {
     primary:
-      "bg-accent-primary text-white hover:bg-accent-primary/90 active:scale-95 shadow-md",
+      "bg-accent-primary text-white hover:bg-accent-primary/90 shadow-md",
     secondary:
-      "border-2 border-accent-primary text-accent-primary hover:bg-accent-primary/10 active:scale-95",
+      "border-2 border-accent-primary text-accent-primary hover:bg-accent-primary/10",
     destructive:
-      "bg-alert-critico text-white hover:bg-alert-critico/90 active:scale-95 shadow-md",
-    ghost: "bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95",
+      "bg-alert-critico text-white hover:bg-alert-critico/90 shadow-md",
+    ghost: "bg-gray-100 text-gray-700 hover:bg-gray-200",
     outline:
-      "border-2 border-gray-300 text-gray-700 hover:bg-gray-50 active:scale-95",
+      "border-2 border-gray-300 text-gray-700 hover:bg-gray-50",
   };
 
   const sizeClasses = {
@@ -50,7 +50,8 @@ export function Button({
 
   return (
     <motion.button
-      whileTap={!disabled ? { scale: 0.95 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
+      transition={{ type: "tween", duration: 0.1 }}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`}
       disabled={disabled}
       onClick={onClick}
@@ -92,8 +93,9 @@ export function IconButton({
 
   return (
     <motion.button
-      whileTap={!disabled ? { scale: 0.9 } : {}}
-      className={`p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center flex-shrink-0 min-w-[44px] min-h-[44px] ${variantClasses[variant]} ${disabledClasses} ${className}`}
+      whileTap={!disabled ? { scale: 0.92 } : {}}
+      transition={{ type: "tween", duration: 0.1 }}
+      className={`p-2.5 rounded-lg transition-all duration-100 flex items-center justify-center flex-shrink-0 min-w-[44px] min-h-[44px] select-none touch-manipulation ${variantClasses[variant]} ${disabledClasses} ${className}`}
       onClick={onClick}
       type={type}
       disabled={disabled}
