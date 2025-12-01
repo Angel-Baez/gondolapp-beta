@@ -36,18 +36,13 @@ export function SyncPanel() {
   const [stats, setStats] = useState<SyncStats | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [syncResults, setSyncResults] = useState<SyncResults | null>(null);
-  const [filterDays, setFilterDays] = useState<number>(7);
 
-  // Obtener estadísticas
-  const fetchStats = async (days?: number) => {
+  // Obtener estadísticas (sin filtro de fecha para mostrar totales reales)
+  const fetchStats = async () => {
     try {
       setLoading(true);
-      const desde = days
-        ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
-        : undefined;
-
+      // Solo usar limit=1 para obtener conteos sin descargar todos los datos
       const params = new URLSearchParams();
-      if (desde) params.append("desde", desde);
       params.append("limit", "1");
 
       const response = await fetch(`/api/sync?${params}`);
@@ -148,17 +143,18 @@ export function SyncPanel() {
               await db.itemsReposicion.clear();
               await db.itemsVencimiento.clear();
 
+              // Usar bulkPut en vez de bulkAdd para manejar correctamente los IDs
               if (data.data.productosBase?.length) {
-                await db.productosBase.bulkAdd(data.data.productosBase);
+                await db.productosBase.bulkPut(data.data.productosBase);
               }
               if (data.data.variantes?.length) {
-                await db.productosVariantes.bulkAdd(data.data.variantes);
+                await db.productosVariantes.bulkPut(data.data.variantes);
               }
               if (data.data.reposicion?.length) {
-                await db.itemsReposicion.bulkAdd(data.data.reposicion);
+                await db.itemsReposicion.bulkPut(data.data.reposicion);
               }
               if (data.data.vencimientos?.length) {
-                await db.itemsVencimiento.bulkAdd(data.data.vencimientos);
+                await db.itemsVencimiento.bulkPut(data.data.vencimientos);
               }
             }
           );
@@ -190,7 +186,7 @@ export function SyncPanel() {
           </p>
         </div>
         <button 
-          onClick={() => fetchStats(filterDays)}
+          onClick={() => fetchStats()}
           disabled={loading}
           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           title="Refrescar Estadísticas"
