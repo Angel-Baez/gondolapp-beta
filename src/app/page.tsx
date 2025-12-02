@@ -90,9 +90,7 @@ function HomePageContent() {
   };
 
   const handleOpenScanner = () => {
-    const newScanMode =
-      activeView === "reposicion" ? "reposicion" : "vencimiento";
-    setScanMode(newScanMode);
+    setScanMode(activeView);
     setShowScanWorkflow(true);
   };
 

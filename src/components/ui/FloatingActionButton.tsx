@@ -76,9 +76,7 @@ export function FloatingActionButton({
       }}
     >
       <motion.div
-        animate={{
-          rotate: [0, 0],
-        }}
+        animate={{}}
         className="flex items-center gap-2"
       >
         <Icon size={24} strokeWidth={2.5} />
