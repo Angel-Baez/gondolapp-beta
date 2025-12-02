@@ -103,7 +103,7 @@ Antes de implementar un Repository, DEBES recibir del Data Engineer:
   "collection": "itemsVencimiento",
   "indexes": [
     { "field": "fechaVencimiento", "type": "ascending" },
-    { "field": ["alertaNivel", "fechaVencimiento"], "type": "compound" }
+    { "field": "[alertaNivel+fechaVencimiento]", "type": "compound" }
   ]
 }
 ```
