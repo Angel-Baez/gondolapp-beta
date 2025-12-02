@@ -111,6 +111,7 @@ Antes de implementar un Repository, DEBES recibir del Data Engineer:
 **Tú implementas**:
 
 ```typescript
+// Assuming: import { ItemVencimiento } from '@/types';
 // Optimizado para los índices definidos
 async getVencimientosCriticos(): Promise<ItemVencimiento[]> {
   return await db.itemsVencimiento
