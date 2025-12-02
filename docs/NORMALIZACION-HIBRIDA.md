@@ -1,5 +1,14 @@
 # 🤖 Sistema de Normalización Híbrida (IA + Taxonomías)
 
+> ⚠️ **DOCUMENTO LEGACY (Diciembre 2024)**: Este documento describe una versión anterior del sistema de normalización. El proyecto ha sido refactorizado para utilizar una arquitectura SOLID completa. Para la documentación actualizada, consultar:
+> - [`ARQUITECTURA-IA-FIRST.md`](./ARQUITECTURA-IA-FIRST.md) - Arquitectura actual
+> - [`SOLID-PRINCIPLES.md`](./SOLID-PRINCIPLES.md) - Principios SOLID implementados
+> 
+> Los archivos mencionados en este documento (`src/services/normalizador.ts`, `src/services/normalizadorIA.ts`) ya no existen. El sistema actual utiliza:
+> - `src/core/normalizers/GeminiAINormalizer.ts`
+> - `src/core/normalizers/ManualNormalizer.ts`
+> - `src/core/normalizers/NormalizerChain.ts`
+
 ## Descripción General
 
 El sistema combina dos estrategias para normalizar productos de Open Food Facts:
