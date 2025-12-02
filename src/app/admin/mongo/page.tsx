@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle, BarChart3, Download, Code } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
@@ -11,6 +11,8 @@ import { VariantEditor } from "@/components/MongoAdmin/VariantEditor";
 import { VariantCreator } from "@/components/MongoAdmin/VariantCreator";
 import { VariantReassigner } from "@/components/MongoAdmin/VariantReassigner";
 import { ProductMerger } from "@/components/MongoAdmin/ProductMerger";
+import { DocumentViewer } from "@/components/MongoAdmin/DocumentViewer";
+import { ExportPanel } from "@/components/MongoAdmin/ExportPanel";
 import { ProductoBase, ProductoVariante } from "@/types";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -39,6 +41,10 @@ export default function MongoAdminPage() {
   // Modales de creación (P0)
   const [showProductCreator, setShowProductCreator] = useState(false);
   const [productForNewVariant, setProductForNewVariant] = useState<ProductoBase | null>(null);
+
+  // Modales P2 (herramientas avanzadas)
+  const [documentToView, setDocumentToView] = useState<Record<string, any> | null>(null);
+  const [showExport, setShowExport] = useState(false);
 
   // Variantes del producto seleccionado
   const [variantes, setVariantes] = useState<ProductoVariante[]>([]);
@@ -294,12 +300,18 @@ export default function MongoAdminPage() {
             </Link>
           </div>
           
-          {/* Link a integridad */}
-          <div className="mt-2">
+          {/* Links a herramientas avanzadas */}
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Link href="/admin/mongo/stats">
+              <Button variant="outline" className="w-full">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Estadísticas
+              </Button>
+            </Link>
             <Link href="/admin/mongo/integrity">
               <Button variant="outline" className="w-full text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20">
                 <AlertTriangle className="w-4 h-4 mr-2" />
-                Verificar Integridad de Datos
+                Integridad
               </Button>
             </Link>
           </div>
@@ -319,14 +331,25 @@ export default function MongoAdminPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Mostrando {productos.length} de {total} productos
                 </p>
-                {selectedProduct && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setProductToMerge(selectedProduct)}
-                  >
-                    Fusionar Productos
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {productos.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowExport(true)}
+                      className="!py-1 !px-2"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {selectedProduct && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setProductToMerge(selectedProduct)}
+                    >
+                      Fusionar Productos
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Lista de productos */}
@@ -436,6 +459,25 @@ export default function MongoAdminPage() {
           onMerge={handleMergeComplete}
         />
       )}
+
+      {/* Modal Vista JSON (P2) */}
+      {documentToView && (
+        <DocumentViewer
+          isOpen={true}
+          onClose={() => setDocumentToView(null)}
+          document={documentToView}
+          title="Documento JSON"
+        />
+      )}
+
+      {/* Modal Exportar (P2) */}
+      <ExportPanel
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        data={productos}
+        filename="productos-gondolapp"
+        title="Exportar Productos"
+      />
     </div>
   );
 }

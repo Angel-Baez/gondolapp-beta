@@ -6,8 +6,9 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ProductoBase, ProductoVariante } from "@/types";
-import { Save, Trash2, X, Plus } from "lucide-react";
+import { Save, Trash2, X, Plus, Code } from "lucide-react";
 import { VariantList } from "./VariantList";
+import { DocumentViewer } from "./DocumentViewer";
 import toast from "react-hot-toast";
 
 interface ProductEditorProps {
@@ -44,6 +45,7 @@ export function ProductEditor({
   const [imagen, setImagen] = useState(producto.imagen || "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showJsonView, setShowJsonView] = useState(false);
 
   const handleSave = async () => {
     if (!nombre.trim()) {
@@ -98,8 +100,21 @@ export function ProductEditor({
   };
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Producto">
       <div className="space-y-4">
+        {/* Botón Ver JSON */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => setShowJsonView(true)}
+            className="!py-1 !px-2 text-sm"
+          >
+            <Code className="w-4 h-4 mr-1" />
+            Ver JSON
+          </Button>
+        </div>
+
         {/* Formulario de edición */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -224,5 +239,30 @@ export function ProductEditor({
         </Button>
       </div>
     </Modal>
+
+    {/* Modal Vista JSON */}
+    <DocumentViewer
+      isOpen={showJsonView}
+      onClose={() => setShowJsonView(false)}
+      document={{
+        _id: producto.id,
+        nombre: producto.nombre,
+        marca: producto.marca,
+        categoria: producto.categoria,
+        imagen: producto.imagen,
+        createdAt: producto.createdAt,
+        variantes: variantes.map(v => ({
+          _id: v.id,
+          ean: v.codigoBarras,
+          nombreCompleto: v.nombreCompleto,
+          tipo: v.tipo,
+          tamano: v.tamano,
+          sabor: v.sabor,
+          imagen: v.imagen,
+        }))
+      }}
+      title={`JSON: ${producto.nombre}`}
+    />
+    </>
   );
 }
