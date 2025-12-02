@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 /**
  * GET /api/admin/stats
@@ -23,10 +24,17 @@ export async function GET(request: NextRequest) {
       variantesCollection.countDocuments({}),
     ]);
 
-    // Productos sin variantes (más eficiente: dos pasos)
-    const baseIdsConVariante = await variantesCollection.distinct("productoBaseId");
+    // Productos sin variantes (comparar strings correctamente)
+    // productoBaseId en variantes es un STRING del ObjectId
+    const baseIdsConVarianteStrings = await variantesCollection.distinct("productoBaseId");
+    
+    // Convertir los strings a ObjectId para comparar con _id de productos
+    const validObjectIds = baseIdsConVarianteStrings
+      .filter((id: string) => id && ObjectId.isValid(id))
+      .map((id: string) => new ObjectId(id));
+    
     const productosAislados = await productosCollection.countDocuments({
-      _id: { $nin: baseIdsConVariante }
+      _id: { $nin: validObjectIds }
     });
 
     // Variantes sin imagen
