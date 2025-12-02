@@ -77,6 +77,54 @@ Para una nueva funcionalidad, el flujo de trabajo multi-agente sugerido es:
 └────────────────────────────────────────────────────────────────────┘
 ```
 
+## ⚠️ Límites de Responsabilidad de Cada Agente
+
+Cada agente tiene instrucciones claras sobre:
+
+- **✅ LO QUE DEBE HACER**: Su scope y entregables específicos
+- **❌ LO QUE NO DEBE HACER**: Tareas fuera de su responsabilidad
+- **📋 FLUJO DE TRABAJO**: Pasos a seguir cuando recibe una tarea
+- **🔄 HANDOFF**: A qué agente pasar el trabajo cuando termina su parte
+
+### Ejemplo de Workflow Correcto
+
+```
+Usuario: "Quiero agregar notificaciones push a GondolApp"
+
+1️⃣ product-manager-strategist
+   ENTREGA: User Story + Criterios de Aceptación + KPIs
+   HANDOFF → tech-lead-architect
+
+2️⃣ tech-lead-architect
+   ENTREGA: ADR con arquitectura propuesta + diagramas
+   HANDOFF → gondola-pwa-specialist + gondola-backend-architect
+
+3️⃣ gondola-pwa-specialist
+   ENTREGA: Código de Service Worker para push notifications
+   HANDOFF → gondola-test-engineer
+
+4️⃣ gondola-backend-architect
+   ENTREGA: API Route para enviar notificaciones
+   HANDOFF → gondola-test-engineer
+
+5️⃣ gondola-test-engineer
+   ENTREGA: Tests unitarios y de integración
+   HANDOFF → qa-lead
+
+6️⃣ qa-lead
+   ENTREGA: Checklist de QA validado
+   HANDOFF → release-manager
+
+7️⃣ release-manager
+   ENTREGA: Release notes + tag + deploy coordinado
+```
+
+### ⚡ Regla de Oro
+
+> **Cada agente debe entregar su trabajo documentado y luego indicar qué agente debería continuar.**
+>
+> Si un agente intenta hacer el trabajo de otro, debe responder educadamente indicando qué agente es el apropiado.
+
 ## Propósito del YAML Frontmatter
 
 Cada archivo de agente incluye un bloque YAML frontmatter al inicio con los siguientes campos:
