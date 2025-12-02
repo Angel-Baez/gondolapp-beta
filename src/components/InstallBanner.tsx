@@ -83,11 +83,14 @@ export default function InstallBanner() {
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[92%] max-w-xl">
-      <div className="bg-white dark:bg-slate-800 border shadow-lg rounded-lg p-4 flex items-center gap-3">
+    <div 
+      className="fixed left-1/2 transform -translate-x-1/2 z-[60] w-[92%] max-w-xl"
+      style={{ bottom: "max(6rem, calc(6rem + env(safe-area-inset-bottom)))" }}
+    >
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-dark-border shadow-xl rounded-2xl p-4 flex items-center gap-3">
         <div className="flex-1">
-          <div className="font-medium text-sm">{getTitle()}</div>
-          <div className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+          <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{getTitle()}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {getHelpText()}
           </div>
         </div>
@@ -96,14 +99,14 @@ export default function InstallBanner() {
           {isInstallable ? (
             <button
               onClick={handleInstallClick}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-md text-sm"
+              className="bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors touch-manipulation"
             >
               Instalar
             </button>
           ) : (
             <button
               onClick={handleInstallClick}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-3 py-2 rounded-md text-sm"
+              className="bg-gray-100 dark:bg-dark-card hover:bg-gray-200 dark:hover:bg-dark-border text-gray-900 dark:text-gray-100 px-4 py-2 rounded-xl text-sm font-medium transition-colors touch-manipulation"
             >
               Cómo instalar
             </button>
@@ -112,7 +115,7 @@ export default function InstallBanner() {
           <button
             onClick={handleClose}
             aria-label="Cerrar"
-            className="text-slate-500 hover:text-slate-700 p-2 rounded"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg transition-colors touch-manipulation"
           >
             ✕
           </button>

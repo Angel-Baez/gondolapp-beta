@@ -13,13 +13,15 @@
 html,
 body {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Prevent overscroll bounce on iOS */
   overscroll-behavior: none;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior-y: contain;
 }
 
 /* ======================================
@@ -53,7 +55,6 @@ input[type="submit"],
 .clickable {
   min-height: 44px;
   min-width: 44px;
-  padding: 12px;
   /* Improve touch responsiveness */
   touch-action: manipulation;
 }
@@ -62,13 +63,6 @@ input[type="submit"],
 button > svg,
 a > svg {
   pointer-events: none;
-}
-
-/* Touch targets más grandes para acciones primarias */
-button.primary,
-a.primary {
-  min-height: 48px;
-  padding: 14px 20px;
 }
 
 /* Smooth scroll behavior */
@@ -188,4 +182,130 @@ html {
 
 .safe-area-top {
   padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* ======================================
+   iOS/Android Native Patterns
+   ====================================== */
+
+/* Glassmorphism effect for headers/bars */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+/* Card press effect */
+.card-press {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.card-press:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Segmented control styling */
+.segment-control {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 2px;
+}
+
+.dark .segment-control {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* List separator like iOS */
+.list-separator {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .list-separator {
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Haptic feedback hint animation */
+@keyframes haptic-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+}
+
+.haptic-hint {
+  animation: haptic-pulse 100ms ease-out;
+}
+
+/* Bottom sheet indicator */
+.sheet-indicator {
+  width: 36px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 100px;
+  margin: 8px auto 0;
+}
+
+.dark .sheet-indicator {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Floating button shadow elevation */
+.fab-shadow {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .fab-shadow {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* iOS-style navigation bar blur */
+.nav-blur {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.dark .nav-blur {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+/* Empty state styling */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Swipe action background colors */
+.swipe-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.swipe-danger {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+}
+
+.swipe-warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
 }
