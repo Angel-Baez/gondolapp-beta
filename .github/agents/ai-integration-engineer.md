@@ -233,7 +233,7 @@ const GEMINI_API_URL =
 export async function POST(request: NextRequest) {
   try {
     // Validar API key
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.warn("GEMINI_API_KEY no configurada");
       return Response.json(
@@ -460,7 +460,7 @@ const EMBEDDING_MODEL = "text-embedding-004";
 const GEMINI_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent`;
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "API key no configurada" }, { status: 503 });
   }
