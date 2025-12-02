@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 /**
  * GET /api/admin/variantes/search
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     // Obtener información de productos base en una sola consulta
     const productoBaseIds = [...new Set(variantes.map(v => v.productoBaseId))];
     const productos = await productosCollection
-      .find({ _id: { $in: productoBaseIds.map(id => new (require("mongodb").ObjectId)(id)) } })
+      .find({ _id: { $in: productoBaseIds.map(id => new ObjectId(id)) } })
       .toArray();
 
     // Crear mapa de productos

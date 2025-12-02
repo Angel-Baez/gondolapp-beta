@@ -5,6 +5,11 @@ import { Search, Filter, X, Hash, Barcode } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
+// Constants for validation
+const OBJECTID_LENGTH = 24;
+const MIN_EAN_LENGTH = 8;
+const MAX_EAN_LENGTH = 14;
+
 interface ProductSearchPanelProps {
   onSearch: (filters: {
     query: string;
@@ -20,12 +25,14 @@ function detectSearchType(query: string): "objectId" | "ean" | "text" {
   if (!query) return "text";
   
   // ObjectId: 24 caracteres hexadecimales
-  if (/^[0-9a-fA-F]{24}$/.test(query)) {
+  const objectIdRegex = new RegExp(`^[0-9a-fA-F]{${OBJECTID_LENGTH}}$`);
+  if (objectIdRegex.test(query)) {
     return "objectId";
   }
   
   // EAN: 8-14 dígitos numéricos
-  if (/^\d{8,14}$/.test(query)) {
+  const eanRegex = new RegExp(`^\\d{${MIN_EAN_LENGTH},${MAX_EAN_LENGTH}}$`);
+  if (eanRegex.test(query)) {
     return "ean";
   }
   
