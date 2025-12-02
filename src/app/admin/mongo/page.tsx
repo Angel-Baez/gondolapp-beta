@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Database, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
@@ -13,6 +13,7 @@ import { VariantReassigner } from "@/components/MongoAdmin/VariantReassigner";
 import { ProductMerger } from "@/components/MongoAdmin/ProductMerger";
 import { ProductoBase, ProductoVariante } from "@/types";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 /**
  * Página principal de administración MongoDB Compass
@@ -276,16 +277,31 @@ export default function MongoAdminPage() {
             onSearch={(searchFilters) => searchProducts(searchFilters, 1)}
           />
           
-          {/* Botón Nuevo Producto */}
-          <div className="mt-3">
+          {/* Acciones rápidas */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <Button
               onClick={() => setShowProductCreator(true)}
-              className="w-full"
               variant="outline"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Nuevo Producto Base
+              Nuevo Producto
             </Button>
+            <Link href="/admin/mongo/variantes">
+              <Button variant="outline" className="w-full">
+                <Barcode className="w-4 h-4 mr-2" />
+                Variantes
+              </Button>
+            </Link>
+          </div>
+          
+          {/* Link a integridad */}
+          <div className="mt-2">
+            <Link href="/admin/mongo/integrity">
+              <Button variant="outline" className="w-full text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Verificar Integridad de Datos
+              </Button>
+            </Link>
           </div>
         </div>
 
