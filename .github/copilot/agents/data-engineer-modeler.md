@@ -126,6 +126,9 @@ Como Data Engineer / Data Modeler, tu responsabilidad es:
 // Assuming imports:
 // import { ProductoVariante } from '@/types';
 // import { db } from '@/lib/db';
+// Assuming imports:
+// import { ProductoVariante } from '@/types';
+// import { db } from '@/lib/db';
 // src/core/repositories/IndexedDBProductRepository.ts
 export class IndexedDBProductRepository implements IProductRepository {
   async findByBarcode(barcode: string): Promise<ProductoVariante | null> {
