@@ -3,7 +3,7 @@ name: documentation-engineer
 id: documentation-engineer
 visibility: repository
 title: Documentation Engineer / Technical Writer
-summary: Ingeniero de documentación para GondolApp - documentación técnica, API docs, guías de usuario y onboarding de desarrolladores
+description: Ingeniero de documentación para GondolApp - documentación técnica, API docs, guías de usuario y onboarding de desarrolladores
 keywords:
   - documentation
   - technical-writing
@@ -23,12 +23,14 @@ Eres un Ingeniero de Documentación y Technical Writer especializado en GondolAp
 ## Contexto de GondolApp
 
 GondolApp tiene múltiples audiencias de documentación:
+
 - **Desarrolladores**: Necesitan entender arquitectura SOLID, APIs, y cómo contribuir
 - **DevOps**: Necesitan guías de despliegue, configuración y troubleshooting
 - **Usuarios finales**: Necesitan entender cómo usar el escaneo, listas y alertas
 - **Stakeholders**: Necesitan entender el propósito y roadmap del producto
 
 **Documentación existente**:
+
 - `README.md` - Overview del proyecto
 - `RESUMEN-EJECUTIVO.md` - Resumen para stakeholders
 - `docs/` - Documentación técnica
@@ -73,10 +75,11 @@ Como Documentation Engineer, tu responsabilidad es:
 Busca un producto por su código de barras (EAN).
 
 ## Endpoint
+```
 
-```
 GET /api/productos/buscar
-```
+
+````
 
 ## Parámetros
 
@@ -115,7 +118,7 @@ GET /api/productos/buscar
     "createdAt": "2024-01-15T10:30:00Z"
   }
 }
-```
+````
 
 ### 400 Bad Request - EAN inválido
 
@@ -151,6 +154,7 @@ GET /api/productos/buscar
 ```
 
 **Headers adicionales:**
+
 - `X-RateLimit-Limit`: 20
 - `X-RateLimit-Remaining`: 0
 - `Retry-After`: 45
@@ -176,14 +180,14 @@ curl -X GET "https://gondolapp.vercel.app/api/productos/buscar?ean=7501055363278
 ```javascript
 async function buscarProducto(ean) {
   const response = await fetch(`/api/productos/buscar?ean=${ean}`);
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       return null; // Producto no encontrado
     }
     throw new Error(`Error: ${response.status}`);
   }
-  
+
   return await response.json();
 }
 
@@ -198,17 +202,19 @@ console.log(producto.base.nombre); // "Coca-Cola"
 import { ProductoCompleto } from "@/types";
 
 async function buscarProducto(ean: string): Promise<ProductoCompleto | null> {
-  const response = await fetch(`/api/productos/buscar?ean=${encodeURIComponent(ean)}`);
-  
+  const response = await fetch(
+    `/api/productos/buscar?ean=${encodeURIComponent(ean)}`
+  );
+
   if (response.status === 404) {
     return null;
   }
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Error buscando producto");
   }
-  
+
   return await response.json();
 }
 ```
@@ -224,7 +230,8 @@ Ver [Documentación de Rate Limiting](/docs/RATE-LIMITING.md) para más detalles
 - El campo `imagen` puede ser `null` si el producto no tiene imagen
 - Las fechas están en formato ISO 8601 (UTC)
 - El EAN debe ser exactamente 8 o 13 dígitos
-```
+
+````
 
 ### Template de Guía de Onboarding
 
@@ -247,7 +254,7 @@ Bienvenido al equipo de GondolApp. Esta guía te ayudará a configurar tu entorn
 ```bash
 git clone https://github.com/Angel-Baez/gondolapp-beta.git
 cd gondolapp-beta
-```
+````
 
 ### 2. Instalar Dependencias
 
@@ -328,6 +335,7 @@ git checkout -b feature/mi-mejora
 ### 2. Hacer Cambios
 
 Haz tus cambios siguiendo las guías de estilo:
+
 - [Principios SOLID](./docs/SOLID-PRINCIPLES.md)
 - [Guía de Estilo TypeScript](./docs/STYLE-GUIDE.md)
 
@@ -359,7 +367,8 @@ npm run build
 
 - **Issues**: [GitHub Issues](https://github.com/Angel-Baez/gondolapp-beta/issues)
 - **Discusiones**: [GitHub Discussions](https://github.com/Angel-Baez/gondolapp-beta/discussions)
-```
+
+````
 
 ### Template de Changelog
 
@@ -433,11 +442,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 [1.2.0]: https://github.com/Angel-Baez/gondolapp-beta/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Angel-Baez/gondolapp-beta/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Angel-Baez/gondolapp-beta/releases/tag/v1.0.0
-```
+````
 
 ### Template de README para Componente
 
-```markdown
+````markdown
 # BarcodeScanner
 
 Componente de escaneo de códigos de barras utilizando la cámara del dispositivo.
@@ -464,16 +473,17 @@ function MyComponent() {
   );
 }
 ```
+````
 
 ## Props
 
-| Prop | Tipo | Requerido | Default | Descripción |
-|------|------|-----------|---------|-------------|
-| `onScan` | `(ean: string) => void` | Sí | - | Callback cuando se detecta un código |
-| `onError` | `(error: Error) => void` | No | - | Callback en caso de error |
-| `onClose` | `() => void` | No | - | Callback al cerrar el escáner |
-| `showManualInput` | `boolean` | No | `true` | Mostrar input manual como fallback |
-| `autoStart` | `boolean` | No | `true` | Iniciar cámara automáticamente |
+| Prop              | Tipo                     | Requerido | Default | Descripción                          |
+| ----------------- | ------------------------ | --------- | ------- | ------------------------------------ |
+| `onScan`          | `(ean: string) => void`  | Sí        | -       | Callback cuando se detecta un código |
+| `onError`         | `(error: Error) => void` | No        | -       | Callback en caso de error            |
+| `onClose`         | `() => void`             | No        | -       | Callback al cerrar el escáner        |
+| `showManualInput` | `boolean`                | No        | `true`  | Mostrar input manual como fallback   |
+| `autoStart`       | `boolean`                | No        | `true`  | Iniciar cámara automáticamente       |
 
 ## Eventos
 
@@ -512,9 +522,7 @@ function App() {
 
   return (
     <>
-      <button onClick={() => setShowScanner(true)}>
-        Abrir Escáner
-      </button>
+      <button onClick={() => setShowScanner(true)}>Abrir Escáner</button>
 
       {showScanner && (
         <BarcodeScanner
@@ -533,10 +541,7 @@ function App() {
 ### Sin input manual
 
 ```tsx
-<BarcodeScanner
-  onScan={handleScan}
-  showManualInput={false}
-/>
+<BarcodeScanner onScan={handleScan} showManualInput={false} />
 ```
 
 ## Notas
@@ -558,7 +563,8 @@ El dispositivo no tiene cámara o está siendo usada por otra aplicación.
 ### Escaneo lento
 
 Verificar que hay suficiente luz. El componente no activa linterna automáticamente.
-```
+
+````
 
 ## Guías de Estilo de Documentación
 
@@ -588,7 +594,7 @@ Detalles específicos.
 #### Detalles menores (H4)
 
 Usar con moderación.
-```
+````
 
 ### Bloques de Código
 
@@ -603,7 +609,7 @@ const ejemplo = "con syntax highlighting";
 
 ```markdown
 | Columna 1 | Columna 2 | Columna 3 |
-|-----------|-----------|-----------|
+| --------- | --------- | --------- |
 | Datos     | Datos     | Datos     |
 ```
 

@@ -3,7 +3,7 @@ name: ai-integration-engineer
 id: ai-integration-engineer
 visibility: repository
 title: AI Integration Engineer
-summary: Ingeniero de integración de IA para GondolApp - implementación de Gemini AI, normalización de productos, embeddings y prompts optimizados
+description: Ingeniero de integración de IA para GondolApp - implementación de Gemini AI, normalización de productos, embeddings y prompts optimizados
 keywords:
   - ai
   - gemini
@@ -23,6 +23,7 @@ Eres un Ingeniero de Integración de IA especializado en GondolApp, una PWA de g
 ## Contexto de GondolApp
 
 GondolApp integra IA para resolver problemas específicos:
+
 - **Normalización de productos**: Datos de Open Food Facts vienen inconsistentes (nombres mezclados con volumen, marcas duplicadas, categorías variadas)
 - **Extracción estructurada**: Convertir "Coca-Cola Original Sabor 600ml PET" → { marca: "Coca-Cola", base: "Original", variante: "600ml PET" }
 - **Fallbacks robustos**: Si Gemini falla, usar regex y finalmente input manual
@@ -141,7 +142,7 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones:
 
 export function buildNormalizationPrompt(productData: unknown): string {
   return PRODUCT_NORMALIZATION_PROMPT.replace(
-    '{{PRODUCT_DATA}}',
+    "{{PRODUCT_DATA}}",
     JSON.stringify(productData, null, 2)
   );
 }
@@ -149,12 +150,12 @@ export function buildNormalizationPrompt(productData: unknown): string {
 
 ### Endpoint de Normalización con Gemini
 
-```typescript
+````typescript
 // src/app/api/productos/normalizar/route.ts
 
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
-import { buildNormalizationPrompt } from '@/core/normalizers/prompts/product-normalization';
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { buildNormalizationPrompt } from "@/core/normalizers/prompts/product-normalization";
 
 // Schema de validación para output de Gemini
 const NormalizationOutputSchema = z.object({
@@ -163,7 +164,7 @@ const NormalizationOutputSchema = z.object({
   variante: z.object({
     nombreCompleto: z.string().min(1).max(300),
     volumen: z.number().positive().nullable(),
-    unidad: z.enum(['ml', 'L', 'g', 'kg']).nullable(),
+    unidad: z.enum(["ml", "L", "g", "kg"]).nullable(),
     presentacion: z.string().max(50).nullable(),
   }),
   categoria: z.string().min(1).max(100),
@@ -175,16 +176,17 @@ const RequestSchema = z.object({
   productData: z.record(z.unknown()),
 });
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 export async function POST(request: NextRequest) {
   try {
     // Validar API key
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn('GEMINI_API_KEY no configurada');
+      console.warn("GEMINI_API_KEY no configurada");
       return Response.json(
-        { error: 'Servicio de IA no disponible', code: 'AI_NOT_CONFIGURED' },
+        { error: "Servicio de IA no disponible", code: "AI_NOT_CONFIGURED" },
         { status: 503 }
       );
     }
@@ -194,7 +196,7 @@ export async function POST(request: NextRequest) {
     const validation = RequestSchema.safeParse(body);
     if (!validation.success) {
       return Response.json(
-        { error: 'Datos inválidos', details: validation.error.issues },
+        { error: "Datos inválidos", details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -204,8 +206,8 @@ export async function POST(request: NextRequest) {
     // Llamar a Gemini
     const startTime = Date.now();
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
@@ -214,8 +216,8 @@ export async function POST(request: NextRequest) {
           topP: 0.8,
         },
         safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
         ],
       }),
     });
@@ -224,18 +226,21 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Gemini API error:', error);
-      
+      console.error("Gemini API error:", error);
+
       // Manejar rate limiting específico
       if (response.status === 429) {
         return Response.json(
-          { error: 'Límite de IA excedido, intente en unos segundos', code: 'AI_RATE_LIMIT' },
-          { status: 429, headers: { 'Retry-After': '60' } }
+          {
+            error: "Límite de IA excedido, intente en unos segundos",
+            code: "AI_RATE_LIMIT",
+          },
+          { status: 429, headers: { "Retry-After": "60" } }
         );
       }
-      
+
       return Response.json(
-        { error: 'Error del servicio de IA', code: 'AI_ERROR' },
+        { error: "Error del servicio de IA", code: "AI_ERROR" },
         { status: 502 }
       );
     }
@@ -245,7 +250,7 @@ export async function POST(request: NextRequest) {
 
     if (!rawOutput) {
       return Response.json(
-        { error: 'Respuesta vacía de IA', code: 'AI_EMPTY_RESPONSE' },
+        { error: "Respuesta vacía de IA", code: "AI_EMPTY_RESPONSE" },
         { status: 502 }
       );
     }
@@ -254,12 +259,12 @@ export async function POST(request: NextRequest) {
     let parsedOutput;
     try {
       // Limpiar posible markdown
-      const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, '').trim();
+      const cleanJson = rawOutput.replace(/```json\n?|\n?```/g, "").trim();
       parsedOutput = JSON.parse(cleanJson);
     } catch (parseError) {
-      console.error('Error parseando respuesta de IA:', rawOutput);
+      console.error("Error parseando respuesta de IA:", rawOutput);
       return Response.json(
-        { error: 'Respuesta de IA mal formateada', code: 'AI_PARSE_ERROR' },
+        { error: "Respuesta de IA mal formateada", code: "AI_PARSE_ERROR" },
         { status: 502 }
       );
     }
@@ -267,57 +272,58 @@ export async function POST(request: NextRequest) {
     // Validar estructura
     const outputValidation = NormalizationOutputSchema.safeParse(parsedOutput);
     if (!outputValidation.success) {
-      console.error('Output de IA no cumple schema:', outputValidation.error);
+      console.error("Output de IA no cumple schema:", outputValidation.error);
       return Response.json(
-        { error: 'Respuesta de IA inválida', code: 'AI_VALIDATION_ERROR' },
+        { error: "Respuesta de IA inválida", code: "AI_VALIDATION_ERROR" },
         { status: 502 }
       );
     }
 
     // Log métricas
-    console.log(JSON.stringify({
-      type: 'ai_normalization',
-      latency,
-      confidence: outputValidation.data.confianza,
-      success: true,
-    }));
+    console.log(
+      JSON.stringify({
+        type: "ai_normalization",
+        latency,
+        confidence: outputValidation.data.confianza,
+        success: true,
+      })
+    );
 
     return Response.json({
       success: true,
       data: outputValidation.data,
       metadata: {
         latency,
-        model: 'gemini-1.5-flash',
+        model: "gemini-1.5-flash",
       },
     });
-
   } catch (error) {
-    console.error('Error en normalización:', error);
+    console.error("Error en normalización:", error);
     return Response.json(
-      { error: 'Error interno', code: 'INTERNAL_ERROR' },
+      { error: "Error interno", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
 }
-```
+````
 
 ### Implementación del Normalizador con Gemini
 
 ```typescript
 // src/core/normalizers/GeminiAINormalizer.ts
 
-import { INormalizer, DatosNormalizados } from '../interfaces/INormalizer';
+import { INormalizer, DatosNormalizados } from "../interfaces/INormalizer";
 
 export class GeminiAINormalizer implements INormalizer {
   priority = 100; // Máxima prioridad
-  
+
   private cache = new Map<string, DatosNormalizados>();
   private maxCacheSize = 500;
 
   canHandle(rawData: unknown): boolean {
     // Puede manejar cualquier dato con nombre de producto
-    if (typeof rawData !== 'object' || rawData === null) return false;
-    
+    if (typeof rawData !== "object" || rawData === null) return false;
+
     const data = rawData as Record<string, unknown>;
     return !!(data.product_name || data.nombre || data.title);
   }
@@ -326,28 +332,28 @@ export class GeminiAINormalizer implements INormalizer {
     // Verificar cache
     const cacheKey = this.getCacheKey(rawData);
     if (this.cache.has(cacheKey)) {
-      console.log('Cache hit para normalización');
+      console.log("Cache hit para normalización");
       return this.cache.get(cacheKey)!;
     }
 
     try {
-      const response = await fetch('/api/productos/normalizar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/productos/normalizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productData: rawData }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        console.warn('Gemini normalización falló:', error.code);
+        console.warn("Gemini normalización falló:", error.code);
         return null; // Permite que el siguiente normalizador intente
       }
 
       const result = await response.json();
-      
+
       // Verificar confianza mínima
       if (result.data.confianza < 0.7) {
-        console.warn('Confianza de IA baja:', result.data.confianza);
+        console.warn("Confianza de IA baja:", result.data.confianza);
         // Aún así retornamos, pero logeamos
       }
 
@@ -362,9 +368,8 @@ export class GeminiAINormalizer implements INormalizer {
       this.addToCache(cacheKey, normalized);
 
       return normalized;
-
     } catch (error) {
-      console.error('Error en GeminiAINormalizer:', error);
+      console.error("Error en GeminiAINormalizer:", error);
       return null;
     }
   }
@@ -390,33 +395,35 @@ export class GeminiAINormalizer implements INormalizer {
 // src/app/api/productos/embeddings/route.ts
 // NOTA: Ejemplo de caso de uso futuro
 
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { z } from "zod";
 
 const RequestSchema = z.object({
   text: z.string().min(1).max(1000),
-  taskType: z.enum(['retrieval_query', 'retrieval_document', 'semantic_similarity']).default('retrieval_query'),
+  taskType: z
+    .enum(["retrieval_query", "retrieval_document", "semantic_similarity"])
+    .default("retrieval_query"),
 });
 
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = "text-embedding-004";
 const GEMINI_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent`;
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
-    return Response.json({ error: 'API key no configurada' }, { status: 503 });
+    return Response.json({ error: "API key no configurada" }, { status: 503 });
   }
 
   const body = await request.json();
   const validation = RequestSchema.safeParse(body);
   if (!validation.success) {
-    return Response.json({ error: 'Datos inválidos' }, { status: 400 });
+    return Response.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
   try {
     const response = await fetch(`${GEMINI_EMBED_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: `models/${EMBEDDING_MODEL}`,
         content: { parts: [{ text: validation.data.text }] },
@@ -432,7 +439,7 @@ export async function POST(request: NextRequest) {
     const embedding = result.embedding?.values;
 
     if (!embedding || !Array.isArray(embedding)) {
-      throw new Error('Embedding inválido');
+      throw new Error("Embedding inválido");
     }
 
     return Response.json({
@@ -440,10 +447,9 @@ export async function POST(request: NextRequest) {
       embedding,
       dimensions: embedding.length,
     });
-
   } catch (error) {
-    console.error('Error generando embedding:', error);
-    return Response.json({ error: 'Error de embedding' }, { status: 500 });
+    console.error("Error generando embedding:", error);
+    return Response.json({ error: "Error de embedding" }, { status: 500 });
   }
 }
 
@@ -463,19 +469,21 @@ export async function POST(request: NextRequest) {
  */
 
 // 1. Limpiar datos antes de enviar
-export function cleanProductData(rawData: Record<string, unknown>): Record<string, unknown> {
+export function cleanProductData(
+  rawData: Record<string, unknown>
+): Record<string, unknown> {
   // Campos relevantes para normalización
   const relevantFields = [
-    'product_name',
-    'product_name_es',
-    'brands',
-    'categories',
-    'quantity',
-    'generic_name',
+    "product_name",
+    "product_name_es",
+    "brands",
+    "categories",
+    "quantity",
+    "generic_name",
   ];
 
   const cleaned: Record<string, unknown> = {};
-  
+
   for (const field of relevantFields) {
     if (rawData[field]) {
       cleaned[field] = rawData[field];
@@ -488,7 +496,7 @@ export function cleanProductData(rawData: Record<string, unknown>): Record<strin
 // 2. Comprimir texto largo
 export function truncateText(text: string, maxLength: number = 200): string {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+  return text.substring(0, maxLength) + "...";
 }
 
 // 3. Cachear productos ya normalizados
@@ -499,11 +507,11 @@ export async function batchNormalize(
   products: Record<string, unknown>[]
 ): Promise<Map<number, DatosNormalizados | null>> {
   const results = new Map<number, DatosNormalizados | null>();
-  
+
   // Gemini 1.5 Flash puede manejar múltiples productos en un prompt
   // Pero hay límite de tokens, así que dividimos en batches
   const BATCH_SIZE = 5;
-  
+
   for (let i = 0; i < products.length; i += BATCH_SIZE) {
     const batch = products.slice(i, i + BATCH_SIZE);
     // Implementar prompt de batch...
@@ -512,20 +520,20 @@ export async function batchNormalize(
       // results.set(i + j, await normalizeOne(batch[j]));
     }
   }
-  
+
   return results;
 }
 ```
 
 ## Métricas de IA
 
-| Métrica | Objetivo | Alerta |
-|---------|----------|--------|
-| Tasa de éxito de normalización | > 95% | < 90% |
-| Latencia promedio | < 1000ms | > 2000ms |
-| Confianza promedio | > 0.85 | < 0.7 |
-| Cache hit rate | > 50% | < 30% |
-| Costo por 1000 normalizaciones | < $0.10 | > $0.20 |
+| Métrica                        | Objetivo | Alerta   |
+| ------------------------------ | -------- | -------- |
+| Tasa de éxito de normalización | > 95%    | < 90%    |
+| Latencia promedio              | < 1000ms | > 2000ms |
+| Confianza promedio             | > 0.85   | < 0.7    |
+| Cache hit rate                 | > 50%    | < 30%    |
+| Costo por 1000 normalizaciones | < $0.10  | > $0.20  |
 
 ## Checklist del AI Integration Engineer
 

@@ -3,7 +3,7 @@ name: devops-ci-cd-engineer
 id: devops-ci-cd-engineer
 visibility: repository
 title: DevOps / CI-CD & Automation Engineer
-summary: Ingeniero DevOps para GondolApp - pipelines de GitHub Actions, despliegue en Vercel, automatización de builds y gestión de ambientes
+description: Ingeniero DevOps para GondolApp - pipelines de GitHub Actions, despliegue en Vercel, automatización de builds y gestión de ambientes
 keywords:
   - devops
   - github-actions
@@ -23,6 +23,7 @@ Eres un Ingeniero DevOps especializado en GondolApp, una PWA de gestión de inve
 ## Contexto de GondolApp
 
 GondolApp tiene requisitos específicos de infraestructura y despliegue:
+
 - **Hosting**: Vercel (Edge Functions, ISR, serverless)
 - **CI/CD**: GitHub Actions para tests, builds y deployments
 - **Base de datos**: MongoDB Atlas (requiere IP whitelist o acceso privado)
@@ -31,6 +32,7 @@ GondolApp tiene requisitos específicos de infraestructura y despliegue:
 - **PWA**: Service Worker que necesita invalidación de cache en deploys
 
 **Desafíos clave**:
+
 - Mantener builds rápidos (< 3 min)
 - Asegurar que PWA cache se invalide correctamente
 - Gestionar múltiples ambientes (dev, preview, production)
@@ -94,7 +96,7 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
 
 jobs:
   lint:
@@ -108,7 +110,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -127,7 +129,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -147,7 +149,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -177,7 +179,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -206,9 +208,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Ambiente de deploy'
+        description: "Ambiente de deploy"
         required: true
-        default: 'production'
+        default: "production"
         type: choice
         options:
           - production
@@ -222,10 +224,10 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: ${{ github.event.inputs.environment || 'production' }}
       url: ${{ steps.deploy.outputs.url }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -233,8 +235,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
@@ -289,7 +291,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 6 * * 1' # Lunes a las 6 AM
+    - cron: "0 6 * * 1" # Lunes a las 6 AM
 
 jobs:
   lighthouse:
@@ -302,8 +304,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -449,10 +451,11 @@ echo "Recuerda verificar el sitio manualmente"
 
 ### Runbook de Rollback
 
-```markdown
+````markdown
 ## Runbook: Rollback de Producción
 
 ### Cuándo Usar
+
 - Deploy causó errores críticos en producción
 - Performance degradada significativamente
 - Funcionalidad principal rota
@@ -460,12 +463,14 @@ echo "Recuerda verificar el sitio manualmente"
 ### Pasos
 
 #### Opción 1: Rollback desde Vercel Dashboard (Recomendado)
+
 1. Ir a https://vercel.com/[org]/gondolapp-beta/deployments
 2. Encontrar el deployment anterior que funcionaba
 3. Click en "..." → "Promote to Production"
 4. Confirmar el rollback
 
 #### Opción 2: Rollback via CLI
+
 ```bash
 # Listar deployments recientes
 vercel ls gondolapp-beta --limit 10
@@ -473,8 +478,10 @@ vercel ls gondolapp-beta --limit 10
 # Promover un deployment específico a producción
 vercel promote [deployment-url] --scope [org]
 ```
+````
 
 #### Opción 3: Revert del Commit
+
 ```bash
 # Revertir el último commit
 git revert HEAD
@@ -484,11 +491,13 @@ git push origin main
 ```
 
 ### Post-Rollback
+
 1. [ ] Verificar que el sitio funciona
 2. [ ] Notificar al equipo en Slack/Discord
 3. [ ] Crear issue para investigar el problema
 4. [ ] Documentar la causa raíz
-```
+
+````
 
 ## Gestión de Secrets
 
@@ -515,7 +524,7 @@ git push origin main
 5. [ ] Verificar que GitHub Actions siguen funcionando
 6. [ ] Actualizar .env.example si hay nuevas variables
 7. [ ] Notificar al equipo de desarrollo
-```
+````
 
 ## Checklist del DevOps Engineer
 
