@@ -122,7 +122,7 @@ Cuando dos agentes tienen objetivos en tensión, aplica esta jerarquía:
 
 **Situación**: AI quiere enviar JSON completo a Gemini (2KB), Security quiere minimizar datos a terceros.
 
-**Aplicar jerarquía**: Seguridad (pos 1) > AI (no está en jerarquía, cede siempre)
+**Aplicar jerarquía**: Seguridad (pos 1) > AI Integration (funcionalidad, cede ante prioridades superiores)
 
 **Resolución**:
 - Definir whitelist de campos permitidos para enviar a Gemini

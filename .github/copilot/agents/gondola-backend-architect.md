@@ -151,7 +151,7 @@ async getVencimientosCriticos(): Promise<ItemVencimiento[]> {
 // Agregar campo no documentado
 interface ProductoVariante {
   // ... campos del esquema
-  miCampoNuevo: string; // ❌ No autorizado
+  myNewField: string; // ❌ Not authorized - field not in schema
 }
 ```
 
