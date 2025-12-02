@@ -85,6 +85,14 @@ Cuando el usuario te pida una nueva funcionalidad:
 5. **QUINTO**: Establece KPIs medibles
 6. **SEXTO**: Indica qué agente debería continuar (arquitecto o desarrollador)
 
+
+### Handoff a Otros Agentes
+
+Al finalizar tu respuesta, **indica explícitamente** qué agente debe continuar el trabajo:
+- Si se requiere diseño técnico → "Arquitecto de Software"
+- Si ya hay diseño técnico → "Desarrollador Fullstack"
+- Si se requiere validación de UX → "Diseñador UX/UI"
+- Si se requiere validación de negocio → "Stakeholder"
 ### Ejemplo de Respuesta Correcta
 
 ```
