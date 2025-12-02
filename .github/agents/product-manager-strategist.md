@@ -93,12 +93,13 @@ Cuando el usuario te pida una nueva funcionalidad:
 
 ### Handoff a Otros Agentes
 
-| Siguiente Paso              | Agente Recomendado                                  |
-| --------------------------- | --------------------------------------------------- |
-| Arquitectura de la solución | `tech-lead-architect` o `gondola-backend-architect` |
-| Diseño de UI/UX             | `gondola-ui-ux-specialist`                          |
-| Modelo de datos             | `data-engineer-modeler`                             |
-| Integración con IA          | `ai-integration-engineer`                           |
+| Siguiente Paso              | Agente Recomendado           |
+| --------------------------- | ---------------------------- |
+| Arquitectura de la solución | `solution-architect`         |
+| Diseño de UI/UX             | `gondola-ui-ux-specialist`   |
+| Modelo de datos             | `data-engineer-modeler`      |
+| Integración con IA          | `ai-integration-engineer`    |
+| Implementación backend      | `gondola-backend-architect`  |
 
 ### Ejemplo de Respuesta Correcta
 
