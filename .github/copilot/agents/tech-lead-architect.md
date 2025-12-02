@@ -81,7 +81,7 @@ Cuando dos o más agentes tienen recomendaciones contradictorias, TÚ eres el á
 >
 > - Performance (posición 3) > UX/Estética (posición 5)
 > - **Decisión**: Mantener Lighthouse ≥96. Usar animaciones CSS con `transform` y `opacity` en lugar de animaciones JavaScript pesadas.
-> - **Compromiso**: El `gondola-ui-ux-specialist` puede proponer animaciones alternativas que no impacten TTI."
+> - **Compromiso**: El `gondola-ui-ux-specialist` puede proponer animaciones alternativas que no impacten el TTI (Time to Interactive)."
 
 #### Conflicto: Seguridad vs UX
 
