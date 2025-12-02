@@ -192,6 +192,22 @@ Usuario: "Quiero agregar notificaciones push a GondolApp"
 >
 > Si un agente intenta hacer el trabajo de otro, debe responder educadamente indicando qué agente es el apropiado.
 
+## Resolución de Conflictos
+
+Cuando dos agentes tienen objetivos en tensión, se aplica la siguiente jerarquía:
+
+1. 🔒 **Seguridad** - Veto absoluto
+2. 📴 **Offline-First** - Core del producto
+3. ⚡ **Performance** - Lighthouse ≥96
+4. ♿ **Accesibilidad** - WCAG AA
+5. 📦 **Entrega** - Valor de negocio
+6. 🎨 **Estética** - Nice-to-have
+7. 🧹 **Mantenibilidad** - Flexible
+
+El `tech-lead-architect` es el árbitro final.
+
+Ver [Guía de Resolución de Conflictos](./tech-lead-architect.md#-resolución-de-conflictos-entre-agentes) para escenarios específicos.
+
 ## Propósito del YAML Frontmatter
 
 Cada archivo de agente incluye un bloque YAML frontmatter al inicio:

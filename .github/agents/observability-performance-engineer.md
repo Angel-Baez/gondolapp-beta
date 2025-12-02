@@ -109,6 +109,26 @@ Responde educadamente:
 > He completado el análisis de performance solicitado.
 > Para [tarea solicitada], te recomiendo usar el agente `[agente-apropiado]`."
 
+## ⚠️ Límites con Backend Architect
+
+### División de Responsabilidades para Logging/Métricas
+
+| Responsabilidad | Observability | Backend |
+|-----------------|---------------|---------|
+| Definir QUÉ loggear | ✅ | ❌ |
+| Definir formato de logs | ✅ | ❌ |
+| Implementar llamadas a logger | ❌ | ✅ |
+| Configurar alertas | ✅ | ❌ |
+| Definir métricas custom | ✅ | ❌ |
+| Instrumentar código con métricas | ❌ | ✅ |
+
+### Flujo de Trabajo
+
+1. **Observability** define: "Necesito métrica de latencia de normalización IA"
+2. **Observability** especifica: nombre, tipo, labels, umbral de alerta
+3. **Backend** implementa: código que emite la métrica
+4. **Observability** configura: dashboard y alertas
+
 ## Stack y Herramientas
 
 - **Métricas de cliente**: Vercel Analytics, Web Vitals API
@@ -728,6 +748,14 @@ Antes de aprobar cambios:
 - [ ] ¿El bundle size no aumentó significativamente?
 - [ ] ¿Se documentaron optimizaciones aplicadas?
 - [ ] ¿Hay runbook para debugging del nuevo código?
+
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `gondola-ui-ux-specialist` | Animaciones vs Lighthouse | Performance (pos 3) | Animaciones CSS, reducir duración, usar will-change |
+| `gondola-pwa-specialist` | Métricas frescas vs cache agresivo | Offline-First (pos 2) | Stale-while-revalidate para analytics |
+| `ai-integration-engineer` | Latencia de IA vs UX | Performance (pos 3) | Timeouts estrictos, fallbacks rápidos |
 
 ## Cómo Invocar Otro Agente
 

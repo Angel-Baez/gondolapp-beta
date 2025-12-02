@@ -1007,6 +1007,14 @@ Antes de aprobar cualquier cambio:
 - [ ] ¿Se probaron los flujos principales manualmente?
 - [ ] ¿Los mocks siguen arquitectura SOLID?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `gondola-backend-architect` | Interfaces grandes vs mocks simples | ISP (principio SOLID) | Backend divide interfaces, Test mockea solo lo necesario |
+| `qa-lead` | Cobertura vs velocidad | Calidad > Velocidad | Priorizar tests de funciones críticas |
+| `devops-ci-cd-engineer` | Tests lentos vs pipeline rápido | Performance (pos 3) | Paralelizar tests, usar cache de dependencias |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

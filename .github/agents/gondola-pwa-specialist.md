@@ -939,6 +939,14 @@ Antes de deployar cambios PWA:
 - [ ] ¿Los shortcuts funcionan después de instalar?
 - [ ] ¿La app se puede instalar en iOS y Android?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `gondola-security-guardian` | CSP vs Service Worker | Seguridad (pos 1) | Adaptar SW registration a CSP estricto |
+| `gondola-ui-ux-specialist` | Bundle size (fuentes) | Offline-First (pos 2) | Limitar a 2 pesos de fuente, lazy load resto |
+| `observability-performance-engineer` | Cache agresivo vs métricas frescas | Offline-First (pos 2) | Usar stale-while-revalidate para analytics |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

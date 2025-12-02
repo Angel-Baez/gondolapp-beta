@@ -174,6 +174,60 @@ export class IndexedDBProductRepository implements IProductRepository {
 | Implementación Repository| Backend Architect| Test Engineer    | Código TypeScript   |
 | Feedback de performance  | Backend Architect| Data Engineer    | Métricas de queries |
 
+### Qué Hacer en Caso de Duda
+
+Si no estás seguro de si algo es tu responsabilidad:
+
+1. **Pregunta**: "¿Esto es diseño de datos o código de acceso?"
+2. **Regla**: Si involucra TypeScript/código → Backend Architect
+3. **Regla**: Si es estructura/optimización de DB → Data Engineer
+4. **Escalar**: En caso de duda, consultar a Tech Lead
+
+### Ejemplo Completo de Entrega
+
+**Data Engineer entrega (Esquema JSON)**:
+
+```json
+// schemas/producto-variante.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProductoVariante",
+  "type": "object",
+  "required": ["id", "productoBaseId", "codigoBarras"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "productoBaseId": { "type": "string", "format": "uuid" },
+    "codigoBarras": { "type": "string", "pattern": "^[0-9]{8,14}$" },
+    "nombreCompleto": { "type": "string", "maxLength": 300 },
+    "tamano": { "type": "string" },
+    "imagen": { "type": "string", "format": "uri" },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "indices": [
+    { "field": "codigoBarras", "unique": true },
+    { "field": "productoBaseId", "unique": false },
+    { "fields": ["productoBaseId", "createdAt"], "compound": true }
+  ]
+}
+```
+
+**Backend Architect implementa (basado en el esquema)**:
+
+```typescript
+// src/core/repositories/IndexedDBProductRepository.ts
+// (Basado en el esquema del Data Engineer)
+
+export class IndexedDBProductRepository implements IProductRepository {
+  async findByBarcode(barcode: string): Promise<ProductoVariante | null> {
+    // Usa el índice 'codigoBarras' definido por Data Engineer
+    return await db.productosVariantes
+      .where('codigoBarras')
+      .equals(barcode)
+      .first() ?? null;
+  }
+}
+```
+
 ### Flujo de Trabajo Correcto
 
 1. **RECIBE**: Requisitos de datos de una nueva feature

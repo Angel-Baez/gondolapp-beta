@@ -601,6 +601,14 @@ Antes de aprobar cambios de IA:
 - [ ] ¿Se probó con datos edge case (productos raros)?
 - [ ] ¿La temperatura del modelo es apropiada?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `gondola-security-guardian` | Datos enviados a terceros | Seguridad (pos 1) | Usar whitelist de campos, minimizar datos |
+| `observability-performance-engineer` | Latencia de IA vs UX | Performance (pos 3) | Implementar timeouts, fallbacks rápidos |
+| `gondola-backend-architect` | Dónde vive la lógica de IA | Colaborativo | IA define prompts, Backend implementa llamadas |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

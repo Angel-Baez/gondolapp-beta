@@ -702,6 +702,14 @@ Antes de deployar cualquier cambio:
 - [ ] ¿Se ejecutó `scripts/test-security.sh`?
 - [ ] ¿CSP permite solo los dominios necesarios?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `gondola-pwa-specialist` | CSP vs Service Worker registration | Seguridad (pos 1) | Usar scripts externos con nonce/hash para SW |
+| `ai-integration-engineer` | Datos enviados a Gemini | Seguridad (pos 1) | Definir whitelist de campos permitidos |
+| `gondola-ui-ux-specialist` | Rate limiting vs UX de escaneo | Seguridad (pos 1) | Ajustar límites por endpoint, usar cache local |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

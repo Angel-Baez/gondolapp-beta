@@ -517,6 +517,14 @@ Antes de aprobar un release:
 - [ ] ¿El changelog está actualizado?
 - [ ] ¿El equipo está listo para soporte post-release?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `product-manager-strategist` | Bug P2 vs release urgente | Tech Lead arbitra | Usar matriz de severidad, escalar con contexto |
+| `release-manager` | Timing de release | Proceso (no jerarquía) | QA tiene veto en P0/P1, Tech Lead decide P2 |
+| `gondola-test-engineer` | Cobertura vs velocidad | Calidad > Velocidad | Priorizar tests de funciones críticas |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:
