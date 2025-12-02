@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ProductoBase, ProductoVariante } from "@/types";
-import { Save, Trash2, X } from "lucide-react";
+import { Save, Trash2, X, Plus } from "lucide-react";
 import { VariantList } from "./VariantList";
 import toast from "react-hot-toast";
 
@@ -20,6 +20,7 @@ interface ProductEditorProps {
   onVariantClick: (variante: ProductoVariante) => void;
   onReassignVariant: (variante: ProductoVariante) => void;
   onDeleteVariant: (varianteId: string) => Promise<void>;
+  onAddVariant?: () => void;
 }
 
 /**
@@ -35,6 +36,7 @@ export function ProductEditor({
   onVariantClick,
   onReassignVariant,
   onDeleteVariant,
+  onAddVariant,
 }: ProductEditorProps) {
   const [nombre, setNombre] = useState(producto.nombre);
   const [marca, setMarca] = useState(producto.marca || "");
@@ -149,9 +151,21 @@ export function ProductEditor({
 
         {/* Lista de variantes */}
         <div className="border-t dark:border-dark-border pt-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-            Variantes ({variantes.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+              Variantes ({variantes.length})
+            </h3>
+            {onAddVariant && (
+              <Button
+                variant="outline"
+                onClick={onAddVariant}
+                className="!py-1 !px-2 text-sm"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Nueva Variante
+              </Button>
+            )}
+          </div>
           {variantes.length > 0 ? (
             <VariantList
               variantes={variantes}
@@ -160,9 +174,21 @@ export function ProductEditor({
               onDelete={onDeleteVariant}
             />
           ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay variantes asociadas
-            </p>
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                No hay variantes asociadas
+              </p>
+              {onAddVariant && (
+                <Button
+                  variant="outline"
+                  onClick={onAddVariant}
+                  className="text-sm"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Agregar primera variante
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
