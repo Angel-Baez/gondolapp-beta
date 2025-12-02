@@ -123,6 +123,9 @@ Como Data Engineer / Data Modeler, tu responsabilidad es:
 **Backend Architect RECIBE y implementa**:
 
 ```typescript
+// Assuming imports:
+// import { ProductoVariante } from '@/types';
+// import { db } from '@/lib/db';
 // src/core/repositories/IndexedDBProductRepository.ts
 export class IndexedDBProductRepository implements IProductRepository {
   async findByBarcode(barcode: string): Promise<ProductoVariante | null> {
