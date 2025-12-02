@@ -1,5 +1,13 @@
 # 🎉 GondolApp - Resumen de Implementación Completa
 
+> ⚠️ **DOCUMENTO HISTÓRICO (Diciembre 2024)**: Este documento describe la implementación inicial del proyecto. Desde entonces, el proyecto ha evolucionado significativamente:
+> - Se ha implementado arquitectura SOLID completa en `src/core/`
+> - El escaneo ahora usa `html5-qrcode` en lugar de `@zxing/browser`
+> - Se añadió integración con MongoDB Atlas para productos centralizados
+> - Se implementó sistema de feedback para beta-testers
+> 
+> Para la estructura actual del proyecto, consultar el [`README.md`](../README.md) principal.
+
 ## ✅ Transformación Exitosa: SPA Estática → PWA Modular Dinámica
 
 Tu aplicación ha sido completamente transformada de un prototipo estático con datos mock a una **PWA (Progressive Web App)** completamente funcional con arquitectura modular y datos reales.

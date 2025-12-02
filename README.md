@@ -44,10 +44,10 @@ GondolApp incluye un sistema integral de feedback que permite a los beta-testers
 - **Estilos**: Tailwind CSS
 - **Estado**: Zustand
 - **Base de Datos Local**: IndexedDB (Dexie.js)
-- **Escaneo**: @zxing/browser
+- **Escaneo**: html5-qrcode
 - **Animaciones**: Framer Motion
 - **API Externa**: MongoDB Atlas (productos centralizados)
-- **IA**: Google Gemini 1.5 Flash (normalización inteligente)
+- **IA**: Google Gemini (normalización inteligente)
 - **Cache**: Redis (Upstash) para rate limiting
 
 #### Sistema de Normalización IA-First 🤖
@@ -183,8 +183,10 @@ gondolapp-beta/
 │   │   ├── vencimiento.ts
 │   │   └── feedback.ts        # Estado UI del feedback
 │   ├── lib/                   # Utilidades y configuración
-│   │   ├── db.ts             # Configuración de Dexie
+│   │   ├── db.ts             # Configuración de Dexie (IndexedDB)
+│   │   ├── mongodb.ts        # Conexión a MongoDB
 │   │   ├── feedbackUtils.ts  # Utilidades de feedback
+│   │   ├── presets.ts        # Presets de productos
 │   │   └── utils.ts          # Funciones auxiliares
 │   ├── services/              # Capa de compatibilidad (Facade)
 │   │   └── productos.ts      # Interfaz legacy → ProductService
@@ -192,7 +194,9 @@ gondolapp-beta/
 │   │   └── index.ts          # Incluye tipos de Feedback
 │   └── hooks/                 # Custom hooks
 │       ├── usePWA.ts         # Hook para PWA
-│       └── useFeedbackApi.tsx # Hook para operaciones de feedback (SOLID)
+│       ├── useFeedbackApi.tsx # Hook para operaciones de feedback (SOLID)
+│       ├── useScanProduct.ts  # Hook para escaneo de productos
+│       └── useHaptics.ts      # Hook para vibración táctil
 ├── public/                    # Archivos estáticos
 │   ├── manifest.json         # Manifest de PWA
 │   └── sw.js                 # Service Worker
@@ -336,7 +340,7 @@ Para obtener normalización inteligente de productos:
 ./scripts/test-security.sh
 ```
 
-📊 **Detalles completos**: [`RESULTADOS-REALES.md`](RESULTADOS-REALES.md)
+📊 **Detalles completos**: [`docs/RESULTADOS-REALES.md`](docs/RESULTADOS-REALES.md)
 
 ### Seguridad 🛡️
 

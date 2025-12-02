@@ -1,5 +1,7 @@
 # Arquitectura de Normalización IA-First con SOLID
 
+> ⚠️ **Nota de Actualización (Diciembre 2024)**: Este documento describe la arquitectura actual del sistema. Las rutas de archivos han sido actualizadas para reflejar la estructura SOLID en `src/core/`. Para referencias específicas a archivos legacy (como `src/services/normalizador.ts`), consultar los archivos en `src/core/normalizers/` y `src/core/sanitizers/`.
+
 ## 🎯 Filosofía del Sistema
 
 **La IA es la normalización principal, implementada con principios SOLID.**
@@ -449,13 +451,14 @@ POST https://generativelanguage.googleapis.com/.../gemini-1.5-flash:generateCont
 
 ---
 
-## �📝 Guía de Mantenimiento
+## 📝 Guía de Mantenimiento
 
 ### Actualizar Prompt de IA
 
-Editar `src/services/normalizadorIA.ts`:
+Editar `src/core/normalizers/GeminiAINormalizer.ts`:
 
 ```typescript
+// Buscar la constante SYSTEM_PROMPT o el método buildPrompt
 const SYSTEM_PROMPT = `
 // Aquí agregar nuevas reglas o ejemplos
 `;
@@ -463,7 +466,7 @@ const SYSTEM_PROMPT = `
 
 ### Agregar Más Sanitizaciones
 
-Editar `src/services/normalizador.ts`:
+Editar `src/core/sanitizers/ProductDataSanitizer.ts`:
 
 ```typescript
 export function sanitizarDatos(datos: DatosNormalizados) {
@@ -475,10 +478,10 @@ export function sanitizarDatos(datos: DatosNormalizados) {
 
 ### Mejorar Fallback Manual
 
-Editar `src/services/normalizador.ts`:
+Editar `src/core/normalizers/ManualNormalizer.ts`:
 
 ```typescript
-export function normalizarManualmente(datosOFF: any) {
+export class ManualNormalizer implements INormalizer {
   // Mejorar lógica de extracción básica
 }
 ```

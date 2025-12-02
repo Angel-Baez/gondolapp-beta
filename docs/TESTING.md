@@ -1,5 +1,7 @@
 # Guía de Pruebas - GondolApp
 
+> ℹ️ **Nota de Actualización (Diciembre 2024)**: El sistema actual prioriza la búsqueda en MongoDB Atlas antes de Open Food Facts. El flujo es: Cache Local → MongoDB Atlas → Crear Manual. Los códigos de barras de prueba siguen siendo válidos para testing.
+
 ## 🧪 Códigos de Barras de Prueba
 
 ### ✅ Códigos que SÍ funcionan (verificados en Open Food Facts)
