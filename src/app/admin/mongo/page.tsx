@@ -1,16 +1,21 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Database } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle, BarChart3, Download } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
 import { ProductEditor } from "@/components/MongoAdmin/ProductEditor";
+import { ProductCreator } from "@/components/MongoAdmin/ProductCreator";
 import { VariantEditor } from "@/components/MongoAdmin/VariantEditor";
+import { VariantCreator } from "@/components/MongoAdmin/VariantCreator";
 import { VariantReassigner } from "@/components/MongoAdmin/VariantReassigner";
 import { ProductMerger } from "@/components/MongoAdmin/ProductMerger";
+import { DocumentViewer } from "@/components/MongoAdmin/DocumentViewer";
+import { ExportPanel } from "@/components/MongoAdmin/ExportPanel";
 import { ProductoBase, ProductoVariante } from "@/types";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 /**
  * Página principal de administración MongoDB Compass
@@ -27,11 +32,19 @@ export default function MongoAdminPage() {
   // Filtros actuales
   const [filters, setFilters] = useState({ query: "", marca: "", categoria: "" });
 
-  // Modales
+  // Modales de edición
   const [selectedProduct, setSelectedProduct] = useState<ProductoBase | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductoVariante | null>(null);
   const [variantToReassign, setVariantToReassign] = useState<ProductoVariante | null>(null);
   const [productToMerge, setProductToMerge] = useState<ProductoBase | null>(null);
+
+  // Modales de creación (P0)
+  const [showProductCreator, setShowProductCreator] = useState(false);
+  const [productForNewVariant, setProductForNewVariant] = useState<ProductoBase | null>(null);
+
+  // Modales P2 (herramientas avanzadas)
+  const [documentToView, setDocumentToView] = useState<Record<string, any> | null>(null);
+  const [showExport, setShowExport] = useState(false);
 
   // Variantes del producto seleccionado
   const [variantes, setVariantes] = useState<ProductoVariante[]>([]);
@@ -62,6 +75,13 @@ export default function MongoAdminPage() {
         setTotalPages(data.totalPages);
         setTotal(data.total);
         setFilters(searchFilters);
+
+        // Mostrar notificación si se encontró por EAN u ObjectId
+        if (data.searchType === "ean" && data.matchedEan) {
+          toast.success(`Producto encontrado por EAN: ${data.matchedEan}`, { duration: 2000 });
+        } else if (data.searchType === "objectId" && data.total === 1) {
+          toast.success("Producto encontrado por ObjectId", { duration: 2000 });
+        }
       } else {
         toast.error("Error al buscar productos");
       }
@@ -220,6 +240,37 @@ export default function MongoAdminPage() {
     await searchProducts(filters, page);
   };
 
+  /**
+   * Callback después de crear un producto
+   */
+  const handleProductCreated = async () => {
+    await searchProducts(filters, page);
+  };
+
+  /**
+   * Callback después de crear una variante
+   */
+  const handleVariantCreated = async () => {
+    try {
+      // Recargar variantes del producto actual
+      if (selectedProduct) {
+        await handleSelectProduct(selectedProduct);
+      }
+      // Recargar lista para actualizar conteo de variantes
+      await searchProducts(filters, page);
+    } catch (error) {
+      console.error("Error al actualizar después de crear variante:", error);
+      toast.error("Error al actualizar la vista");
+    }
+  };
+
+  /**
+   * Abrir modal para crear nueva variante
+   */
+  const handleAddVariant = (producto: ProductoBase) => {
+    setProductForNewVariant(producto);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
       <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
@@ -236,6 +287,39 @@ export default function MongoAdminPage() {
           <ProductSearchPanel
             onSearch={(searchFilters) => searchProducts(searchFilters, 1)}
           />
+          
+          {/* Acciones rápidas */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => setShowProductCreator(true)}
+              variant="outline"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Producto
+            </Button>
+            <Link href="/admin/mongo/variantes">
+              <Button variant="outline" className="w-full">
+                <Barcode className="w-4 h-4 mr-2" />
+                Variantes
+              </Button>
+            </Link>
+          </div>
+          
+          {/* Links a herramientas avanzadas */}
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Link href="/admin/mongo/stats">
+              <Button variant="outline" className="w-full">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Estadísticas
+              </Button>
+            </Link>
+            <Link href="/admin/mongo/integrity">
+              <Button variant="outline" className="w-full text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Integridad
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Contenido principal */}
@@ -252,14 +336,25 @@ export default function MongoAdminPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Mostrando {productos.length} de {total} productos
                 </p>
-                {selectedProduct && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setProductToMerge(selectedProduct)}
-                  >
-                    Fusionar Productos
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {productos.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowExport(true)}
+                      className="!py-1 !px-2"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {selectedProduct && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setProductToMerge(selectedProduct)}
+                    >
+                      Fusionar Productos
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Lista de productos */}
@@ -298,12 +393,32 @@ export default function MongoAdminPage() {
               <p className="text-sm mt-1">
                 Usa el panel de búsqueda para encontrar y administrar productos
               </p>
+              <p className="text-xs mt-3 text-gray-400">
+                💡 Puedes buscar por nombre, código de barras (EAN) o ID de MongoDB
+              </p>
             </div>
           )}
         </main>
       </div>
 
-      {/* Modales */}
+      {/* Modal Crear Producto (P0) */}
+      <ProductCreator
+        isOpen={showProductCreator}
+        onClose={() => setShowProductCreator(false)}
+        onCreated={handleProductCreated}
+      />
+
+      {/* Modal Crear Variante (P0) */}
+      {productForNewVariant && (
+        <VariantCreator
+          isOpen={true}
+          producto={productForNewVariant}
+          onClose={() => setProductForNewVariant(null)}
+          onCreated={handleVariantCreated}
+        />
+      )}
+
+      {/* Modales de edición */}
       {selectedProduct && (
         <ProductEditor
           isOpen={true}
@@ -318,6 +433,7 @@ export default function MongoAdminPage() {
           onVariantClick={setSelectedVariant}
           onReassignVariant={setVariantToReassign}
           onDeleteVariant={handleDeleteVariant}
+          onAddVariant={() => handleAddVariant(selectedProduct)}
         />
       )}
 
@@ -348,6 +464,25 @@ export default function MongoAdminPage() {
           onMerge={handleMergeComplete}
         />
       )}
+
+      {/* Modal Vista JSON (P2) */}
+      {documentToView && (
+        <DocumentViewer
+          isOpen={true}
+          onClose={() => setDocumentToView(null)}
+          document={documentToView}
+          title="Documento JSON"
+        />
+      )}
+
+      {/* Modal Exportar (P2) */}
+      <ExportPanel
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        data={productos}
+        filename="productos-gondolapp"
+        title="Exportar Productos"
+      />
     </div>
   );
 }

@@ -6,8 +6,9 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ProductoBase, ProductoVariante } from "@/types";
-import { Save, Trash2, X } from "lucide-react";
+import { Save, Trash2, X, Plus, Code } from "lucide-react";
 import { VariantList } from "./VariantList";
+import { DocumentViewer } from "./DocumentViewer";
 import toast from "react-hot-toast";
 
 interface ProductEditorProps {
@@ -20,6 +21,7 @@ interface ProductEditorProps {
   onVariantClick: (variante: ProductoVariante) => void;
   onReassignVariant: (variante: ProductoVariante) => void;
   onDeleteVariant: (varianteId: string) => Promise<void>;
+  onAddVariant?: () => void;
 }
 
 /**
@@ -35,6 +37,7 @@ export function ProductEditor({
   onVariantClick,
   onReassignVariant,
   onDeleteVariant,
+  onAddVariant,
 }: ProductEditorProps) {
   const [nombre, setNombre] = useState(producto.nombre);
   const [marca, setMarca] = useState(producto.marca || "");
@@ -42,6 +45,7 @@ export function ProductEditor({
   const [imagen, setImagen] = useState(producto.imagen || "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showJsonView, setShowJsonView] = useState(false);
 
   const handleSave = async () => {
     if (!nombre.trim()) {
@@ -96,8 +100,21 @@ export function ProductEditor({
   };
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Producto">
       <div className="space-y-4">
+        {/* Botón Ver JSON */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => setShowJsonView(true)}
+            className="!py-1 !px-2 text-sm"
+          >
+            <Code className="w-4 h-4 mr-1" />
+            Ver JSON
+          </Button>
+        </div>
+
         {/* Formulario de edición */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -149,9 +166,21 @@ export function ProductEditor({
 
         {/* Lista de variantes */}
         <div className="border-t dark:border-dark-border pt-4">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-            Variantes ({variantes.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">
+              Variantes ({variantes.length})
+            </h3>
+            {onAddVariant && (
+              <Button
+                variant="outline"
+                onClick={onAddVariant}
+                className="!py-1 !px-2 text-sm"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Nueva Variante
+              </Button>
+            )}
+          </div>
           {variantes.length > 0 ? (
             <VariantList
               variantes={variantes}
@@ -160,9 +189,21 @@ export function ProductEditor({
               onDelete={onDeleteVariant}
             />
           ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-              No hay variantes asociadas
-            </p>
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                No hay variantes asociadas
+              </p>
+              {onAddVariant && (
+                <Button
+                  variant="outline"
+                  onClick={onAddVariant}
+                  className="text-sm"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Agregar primera variante
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
@@ -198,5 +239,30 @@ export function ProductEditor({
         </Button>
       </div>
     </Modal>
+
+    {/* Modal Vista JSON */}
+    <DocumentViewer
+      isOpen={showJsonView}
+      onClose={() => setShowJsonView(false)}
+      document={{
+        _id: producto.id,
+        nombre: producto.nombre,
+        marca: producto.marca,
+        categoria: producto.categoria,
+        imagen: producto.imagen,
+        createdAt: producto.createdAt,
+        variantes: variantes.map(v => ({
+          _id: v.id,
+          ean: v.codigoBarras,
+          nombreCompleto: v.nombreCompleto,
+          tipo: v.tipo,
+          tamano: v.tamano,
+          sabor: v.sabor,
+          imagen: v.imagen,
+        }))
+      }}
+      title={`JSON: ${producto.nombre}`}
+    />
+    </>
   );
 }

@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, Hash, Barcode } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+
+// Constants for validation
+const OBJECTID_LENGTH = 24;
+const MIN_EAN_LENGTH = 8;
+const MAX_EAN_LENGTH = 14;
 
 interface ProductSearchPanelProps {
   onSearch: (filters: {
@@ -14,14 +19,38 @@ interface ProductSearchPanelProps {
 }
 
 /**
+ * Detectar tipo de búsqueda para mostrar indicador visual
+ */
+function detectSearchType(query: string): "objectId" | "ean" | "text" {
+  if (!query) return "text";
+  
+  // ObjectId: 24 caracteres hexadecimales
+  const objectIdRegex = new RegExp(`^[0-9a-fA-F]{${OBJECTID_LENGTH}}$`);
+  if (objectIdRegex.test(query)) {
+    return "objectId";
+  }
+  
+  // EAN: 8-14 dígitos numéricos
+  const eanRegex = new RegExp(`^\\d{${MIN_EAN_LENGTH},${MAX_EAN_LENGTH}}$`);
+  if (eanRegex.test(query)) {
+    return "ean";
+  }
+  
+  return "text";
+}
+
+/**
  * Panel de búsqueda con filtros para productos
  * Single Responsibility: Solo maneja la UI de búsqueda y filtros
+ * Soporta detección automática de búsqueda por ObjectId y EAN
  */
 export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
   const [query, setQuery] = useState("");
   const [marca, setMarca] = useState("");
   const [categoria, setCategoria] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  const searchType = detectSearchType(query);
 
   const handleSearch = () => {
     onSearch({ query, marca, categoria });
@@ -41,10 +70,16 @@ export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
       {/* Barra de búsqueda principal */}
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          {searchType === "ean" ? (
+            <Barcode className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
+          ) : searchType === "objectId" ? (
+            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-500 w-5 h-5" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          )}
           <Input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre, EAN o ID..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -52,7 +87,13 @@ export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
                 handleSearch();
               }
             }}
-            className="pl-10"
+            className={`pl-10 ${
+              searchType === "ean" 
+                ? "border-green-300 focus:border-green-500 focus:ring-green-500" 
+                : searchType === "objectId"
+                ? "border-purple-300 focus:border-purple-500 focus:ring-purple-500"
+                : ""
+            }`}
           />
         </div>
         <Button
@@ -68,6 +109,27 @@ export function ProductSearchPanel({ onSearch }: ProductSearchPanelProps) {
           )}
         </Button>
       </div>
+
+      {/* Indicador de tipo de búsqueda */}
+      {query && searchType !== "text" && (
+        <div className={`text-xs px-3 py-1 rounded-full inline-flex items-center gap-1 ${
+          searchType === "ean"
+            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+            : "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+        }`}>
+          {searchType === "ean" ? (
+            <>
+              <Barcode className="w-3 h-3" />
+              Buscando por código de barras
+            </>
+          ) : (
+            <>
+              <Hash className="w-3 h-3" />
+              Buscando por ObjectId
+            </>
+          )}
+        </div>
+      )}
 
       {/* Panel de filtros expandible */}
       {showFilters && (
