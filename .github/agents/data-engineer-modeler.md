@@ -3,7 +3,7 @@ name: data-engineer-modeler
 id: data-engineer-modeler
 visibility: repository
 title: Data Engineer / Data Modeler
-summary: Ingeniero de datos para GondolApp - diseño de esquemas MongoDB, IndexedDB, pipelines de agregación y optimización de queries
+description: Ingeniero de datos para GondolApp - diseño de esquemas MongoDB, IndexedDB, pipelines de agregación y optimización de queries
 keywords:
   - data-modeling
   - mongodb
@@ -23,6 +23,7 @@ Eres un Ingeniero de Datos y Modelador especializado en GondolApp, una PWA de ge
 ## Contexto de GondolApp
 
 GondolApp maneja datos de productos, inventario y vencimientos con requisitos específicos:
+
 - **Offline-first**: IndexedDB (Dexie.js) como fuente primaria de verdad local
 - **Sincronización**: MongoDB Atlas para persistencia centralizada y compartida
 - **Escaneo de códigos**: Lookup rápido por código de barras (índices críticos)
@@ -66,33 +67,33 @@ Como Data Engineer / Data Modeler, tu responsabilidad es:
 
 // ProductoBase: Producto genérico (ej: "Coca-Cola")
 interface ProductoBase {
-  id: string;           // UUID v4
-  nombre: string;       // "Coca-Cola"
-  marca?: string;       // "The Coca-Cola Company"
-  categoria?: string;   // "Bebidas Carbonatadas"
-  imagen?: string;      // URL de imagen
+  id: string; // UUID v4
+  nombre: string; // "Coca-Cola"
+  marca?: string; // "The Coca-Cola Company"
+  categoria?: string; // "Bebidas Carbonatadas"
+  imagen?: string; // URL de imagen
   createdAt: Date;
   updatedAt: Date;
 }
 
 // ProductoVariante: SKU específico con código de barras
 interface ProductoVariante {
-  id: string;              // UUID v4
-  productoBaseId: string;  // FK a ProductoBase
-  codigoBarras: string;    // EAN-13: "7501234567890"
-  nombreCompleto: string;  // "Coca-Cola Original 600ml"
-  tamano?: string;         // "600ml"
-  imagen?: string;         // URL específica de variante
+  id: string; // UUID v4
+  productoBaseId: string; // FK a ProductoBase
+  codigoBarras: string; // EAN-13: "7501234567890"
+  nombreCompleto: string; // "Coca-Cola Original 600ml"
+  tamano?: string; // "600ml"
+  imagen?: string; // URL específica de variante
   createdAt: Date;
 }
 
 // ItemReposicion: Items en lista de reposición
 interface ItemReposicion {
   id: string;
-  varianteId: string;      // FK a ProductoVariante
-  cantidad: number;        // Cantidad a reponer
-  repuesto: boolean;       // ¿Ya se repuso?
-  sinStock: boolean;       // ¿Está sin stock?
+  varianteId: string; // FK a ProductoVariante
+  cantidad: number; // Cantidad a reponer
+  repuesto: boolean; // ¿Ya se repuso?
+  sinStock: boolean; // ¿Está sin stock?
   agregadoAt: Date;
   actualizadoAt?: Date;
 }
@@ -100,11 +101,11 @@ interface ItemReposicion {
 // ItemVencimiento: Items con fecha de vencimiento
 interface ItemVencimiento {
   id: string;
-  varianteId: string;           // FK a ProductoVariante
-  fechaVencimiento: Date;       // Fecha de expiración
-  alertaNivel: AlertLevel;      // Calculado: "critico" | "advertencia" | "precaucion" | "normal"
-  cantidad: number;             // Unidades con esta fecha
-  ubicacion?: string;           // Ubicación en tienda
+  varianteId: string; // FK a ProductoVariante
+  fechaVencimiento: Date; // Fecha de expiración
+  alertaNivel: AlertLevel; // Calculado: "critico" | "advertencia" | "precaucion" | "normal"
+  cantidad: number; // Unidades con esta fecha
+  ubicacion?: string; // Ubicación en tienda
   agregadoAt: Date;
 }
 
@@ -203,11 +204,11 @@ db.inventarioVencimientos.aggregate([
     $match: {
       fechaVencimiento: {
         $gte: new Date(),
-        $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      }
-    }
+        $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    },
   },
-  
+
   // Etapa 2: Calcular nivel de alerta
   {
     $addFields: {
@@ -215,10 +216,10 @@ db.inventarioVencimientos.aggregate([
         $dateDiff: {
           startDate: new Date(),
           endDate: "$fechaVencimiento",
-          unit: "day"
-        }
-      }
-    }
+          unit: "day",
+        },
+      },
+    },
   },
   {
     $addFields: {
@@ -227,25 +228,25 @@ db.inventarioVencimientos.aggregate([
           branches: [
             { case: { $lte: ["$diasRestantes", 15] }, then: "critico" },
             { case: { $lte: ["$diasRestantes", 30] }, then: "advertencia" },
-            { case: { $lte: ["$diasRestantes", 60] }, then: "precaucion" }
+            { case: { $lte: ["$diasRestantes", 60] }, then: "precaucion" },
           ],
-          default: "normal"
-        }
-      }
-    }
+          default: "normal",
+        },
+      },
+    },
   },
-  
+
   // Etapa 3: Lookup de producto
   {
     $lookup: {
       from: "productos",
       localField: "productoId",
       foreignField: "_id",
-      as: "producto"
-    }
+      as: "producto",
+    },
   },
   { $unwind: "$producto" },
-  
+
   // Etapa 4: Agrupar por nivel de alerta
   {
     $group: {
@@ -257,12 +258,12 @@ db.inventarioVencimientos.aggregate([
           nombre: "$producto.base.nombre",
           variante: "$producto.variantes.nombreCompleto",
           fechaVencimiento: "$fechaVencimiento",
-          cantidad: "$cantidad"
-        }
-      }
-    }
+          cantidad: "$cantidad",
+        },
+      },
+    },
   },
-  
+
   // Etapa 5: Ordenar por criticidad
   {
     $addFields: {
@@ -271,15 +272,15 @@ db.inventarioVencimientos.aggregate([
           branches: [
             { case: { $eq: ["$_id", "critico"] }, then: 1 },
             { case: { $eq: ["$_id", "advertencia"] }, then: 2 },
-            { case: { $eq: ["$_id", "precaucion"] }, then: 3 }
+            { case: { $eq: ["$_id", "precaucion"] }, then: 3 },
           ],
-          default: 4
-        }
-      }
-    }
+          default: 4,
+        },
+      },
+    },
   },
   { $sort: { orden: 1 } },
-  
+
   // Etapa 6: Proyección final
   {
     $project: {
@@ -287,9 +288,9 @@ db.inventarioVencimientos.aggregate([
       nivel: "$_id",
       totalItems: "$count",
       totalUnidades: 1,
-      productos: { $slice: ["$productos", 10] } // Top 10 por nivel
-    }
-  }
+      productos: { $slice: ["$productos", 10] }, // Top 10 por nivel
+    },
+  },
 ]);
 ```
 
@@ -305,42 +306,42 @@ db.itemsReposicion.aggregate([
       from: "productos",
       localField: "varianteId",
       foreignField: "variantes._id",
-      as: "producto"
-    }
+      as: "producto",
+    },
   },
   { $unwind: "$producto" },
-  
+
   // Etapa 2: Agrupar por categoría y estado
   {
     $group: {
       _id: {
         categoria: "$producto.base.categoria",
-        repuesto: "$repuesto"
+        repuesto: "$repuesto",
       },
       count: { $sum: 1 },
-      cantidadTotal: { $sum: "$cantidad" }
-    }
+      cantidadTotal: { $sum: "$cantidad" },
+    },
   },
-  
+
   // Etapa 3: Pivot para tener repuesto y pendiente en mismo documento
   {
     $group: {
       _id: "$_id.categoria",
       repuestos: {
-        $sum: { $cond: ["$_id.repuesto", "$count", 0] }
+        $sum: { $cond: ["$_id.repuesto", "$count", 0] },
       },
       pendientes: {
-        $sum: { $cond: ["$_id.repuesto", 0, "$count"] }
+        $sum: { $cond: ["$_id.repuesto", 0, "$count"] },
       },
       cantidadRepuesta: {
-        $sum: { $cond: ["$_id.repuesto", "$cantidadTotal", 0] }
+        $sum: { $cond: ["$_id.repuesto", "$cantidadTotal", 0] },
       },
       cantidadPendiente: {
-        $sum: { $cond: ["$_id.repuesto", 0, "$cantidadTotal"] }
-      }
-    }
+        $sum: { $cond: ["$_id.repuesto", 0, "$cantidadTotal"] },
+      },
+    },
   },
-  
+
   // Etapa 4: Calcular porcentaje de cumplimiento
   {
     $addFields: {
@@ -348,19 +349,24 @@ db.itemsReposicion.aggregate([
         $round: [
           {
             $multiply: [
-              { $divide: ["$repuestos", { $add: ["$repuestos", "$pendientes"] }] },
-              100
-            ]
+              {
+                $divide: [
+                  "$repuestos",
+                  { $add: ["$repuestos", "$pendientes"] },
+                ],
+              },
+              100,
+            ],
           },
-          1
-        ]
-      }
-    }
+          1,
+        ],
+      },
+    },
   },
-  
+
   // Etapa 5: Ordenar por pendientes (más urgente primero)
   { $sort: { pendientes: -1 } },
-  
+
   // Etapa 6: Proyección
   {
     $project: {
@@ -370,9 +376,9 @@ db.itemsReposicion.aggregate([
       pendientes: 1,
       cantidadRepuesta: 1,
       cantidadPendiente: 1,
-      cumplimiento: { $concat: [{ $toString: "$cumplimiento" }, "%"] }
-    }
-  }
+      cumplimiento: { $concat: [{ $toString: "$cumplimiento" }, "%"] },
+    },
+  },
 ]);
 ```
 
@@ -383,7 +389,7 @@ db.itemsReposicion.aggregate([
 
 /**
  * Migración: Agregar campo 'ubicacion' a itemsVencimiento
- * 
+ *
  * Ejecutar con: mongosh < migrations/001_add_ubicacion_to_vencimientos.js
  */
 
@@ -419,8 +425,8 @@ db.migrations.insertOne({
   name: migrationName,
   executedAt: new Date(),
   result: {
-    documentsUpdated: result.modifiedCount
-  }
+    documentsUpdated: result.modifiedCount,
+  },
 });
 
 print(`Migración ${migrationName} completada exitosamente.`);
@@ -454,20 +460,25 @@ class GondolAppDB extends Dexie {
     this.version(2)
       .stores({
         // Sin cambios en índices, solo en datos
-        itemsVencimiento: "id, varianteId, fechaVencimiento, alertaNivel, ubicacion",
+        itemsVencimiento:
+          "id, varianteId, fechaVencimiento, alertaNivel, ubicacion",
       })
       .upgrade((tx) => {
         // Migrar datos existentes
-        return tx.table("itemsVencimiento").toCollection().modify((item) => {
-          if (!item.ubicacion) {
-            item.ubicacion = null;
-          }
-        });
+        return tx
+          .table("itemsVencimiento")
+          .toCollection()
+          .modify((item) => {
+            if (!item.ubicacion) {
+              item.ubicacion = null;
+            }
+          });
       });
 
     // Versión 3: Agregar índice compuesto para queries frecuentes
     this.version(3).stores({
-      itemsVencimiento: "id, varianteId, fechaVencimiento, alertaNivel, ubicacion, [alertaNivel+fechaVencimiento]",
+      itemsVencimiento:
+        "id, varianteId, fechaVencimiento, alertaNivel, ubicacion, [alertaNivel+fechaVencimiento]",
     });
   }
 }
