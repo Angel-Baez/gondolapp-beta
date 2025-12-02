@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle, BarChart3, Download, Code } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle, BarChart3, Download } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
@@ -251,12 +251,17 @@ export default function MongoAdminPage() {
    * Callback después de crear una variante
    */
   const handleVariantCreated = async () => {
-    // Recargar variantes del producto actual
-    if (selectedProduct) {
-      await handleSelectProduct(selectedProduct);
+    try {
+      // Recargar variantes del producto actual
+      if (selectedProduct) {
+        await handleSelectProduct(selectedProduct);
+      }
+      // Recargar lista para actualizar conteo de variantes
+      await searchProducts(filters, page);
+    } catch (error) {
+      console.error("Error al actualizar después de crear variante:", error);
+      toast.error("Error al actualizar la vista");
     }
-    // Recargar lista para actualizar conteo de variantes
-    await searchProducts(filters, page);
   };
 
   /**

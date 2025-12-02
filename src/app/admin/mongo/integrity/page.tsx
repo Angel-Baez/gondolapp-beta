@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle, Trash2, ArrowRightLeft, RefreshCw, Barcode, Copy } from "lucide-react";
+import { AlertTriangle, CheckCircle, Trash2, RefreshCw, Barcode, Copy } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { Card } from "@/components/ui/Card";
 import { ProductoVariante } from "@/types";
@@ -103,17 +103,17 @@ export default function IntegrityCheckPage() {
    * Eliminar variante huérfana
    */
   const deleteOrphan = async (varianteId: string) => {
-    const confirmed = await confirmAsync({
-      title: "¿Eliminar variante huérfana?",
-      description: "Esta acción eliminará la variante de forma permanente.",
-      confirmLabel: "Eliminar",
-      cancelLabel: "Cancelar",
-      variant: "danger",
-    });
-
-    if (!confirmed) return;
-
     try {
+      const confirmed = await confirmAsync({
+        title: "¿Eliminar variante huérfana?",
+        description: "Esta acción eliminará la variante de forma permanente.",
+        confirmLabel: "Eliminar",
+        cancelLabel: "Cancelar",
+        variant: "danger",
+      });
+
+      if (!confirmed) return;
+
       const response = await fetch(`/api/admin/variantes/${varianteId}`, {
         method: "DELETE",
       });
@@ -127,7 +127,8 @@ export default function IntegrityCheckPage() {
         toast.error(result.error || "Error al eliminar");
       }
     } catch (error) {
-      toast.error("Error al eliminar variante");
+      console.error("Error:", error);
+      toast.error("Error al procesar la eliminación");
     }
   };
 

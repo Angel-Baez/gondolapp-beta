@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    // Validate limit to prevent DoS via extremely large values
+    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10), 1), 100);
 
     const db = await getDatabase();
     const variantesCollection = db.collection("productos_variantes");
@@ -21,12 +22,14 @@ export async function GET(request: NextRequest) {
     const searchFilter: any = {};
 
     if (query) {
+      // Escapar caracteres especiales de regex en la consulta
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       // Buscar en múltiples campos
       searchFilter.$or = [
-        { ean: { $regex: query, $options: "i" } },
-        { nombreCompleto: { $regex: query, $options: "i" } },
-        { tipo: { $regex: query, $options: "i" } },
-        { tamano: { $regex: query, $options: "i" } },
+        { ean: { $regex: escapedQuery, $options: "i" } },
+        { nombreCompleto: { $regex: escapedQuery, $options: "i" } },
+        { tipo: { $regex: escapedQuery, $options: "i" } },
+        { tamano: { $regex: escapedQuery, $options: "i" } },
       ];
     }
 
@@ -46,8 +49,10 @@ export async function GET(request: NextRequest) {
 
     // Obtener información de productos base en una sola consulta
     const productoBaseIds = [...new Set(variantes.map(v => v.productoBaseId))];
+    // Filter valid ObjectIds to prevent query failures
+    const validProductoBaseIds = productoBaseIds.filter(id => ObjectId.isValid(id));
     const productos = await productosCollection
-      .find({ _id: { $in: productoBaseIds.map(id => new ObjectId(id)) } })
+      .find({ _id: { $in: validProductoBaseIds.map(id => new ObjectId(id)) } })
       .toArray();
 
     // Crear mapa de productos

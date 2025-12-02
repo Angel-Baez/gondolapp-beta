@@ -38,37 +38,42 @@ export async function GET(request: NextRequest) {
       },
     ]).toArray();
 
-    // Obtener nombres de productos para cada variante
-    const duplicatesWithProducts = await Promise.all(
-      duplicateEans.map(async (group) => {
-        const variantesConProducto = await Promise.all(
-          group.variantes.map(async (variante: any) => {
-            let productoNombre = null;
-            try {
-              const producto = await productosCollection.findOne({
-                _id: new ObjectId(variante.productoBaseId) as any,
-              });
-              productoNombre = producto?.nombre;
-            } catch {
-              // Producto no encontrado
-            }
-
-            return {
-              id: variante.id.toString(),
-              nombreCompleto: variante.nombreCompleto,
-              productoBaseId: variante.productoBaseId,
-              productoNombre,
-            };
-          })
-        );
-
-        return {
-          ean: group._id,
-          count: group.count,
-          variantes: variantesConProducto,
-        };
+    // Batch fetch all unique productoBaseIds to avoid N+1 queries
+    const allProductBaseIds = [
+      ...new Set(
+        duplicateEans.flatMap((group) =>
+          group.variantes.map((v: any) => v.productoBaseId)
+        )
+      ),
+    ].filter((id) => ObjectId.isValid(id));
+    
+    const productos = await productosCollection
+      .find({
+        _id: { $in: allProductBaseIds.map((id) => new ObjectId(id)) },
       })
+      .toArray();
+    const productoMap = new Map(
+      productos.map((p: any) => [p._id.toString(), p.nombre])
     );
+
+    // Build response using lookup map
+    const duplicatesWithProducts = duplicateEans.map((group) => {
+      const variantesConProducto = group.variantes.map((variante: any) => {
+        const productoNombre = productoMap.get(variante.productoBaseId) || null;
+        return {
+          id: variante.id.toString(),
+          nombreCompleto: variante.nombreCompleto,
+          productoBaseId: variante.productoBaseId,
+          productoNombre,
+        };
+      });
+
+      return {
+        ean: group._id,
+        count: group.count,
+        variantes: variantesConProducto,
+      };
+    });
 
     return NextResponse.json({
       success: true,

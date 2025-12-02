@@ -62,16 +62,17 @@ export default function StatsPage() {
 
         <main className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
           {loading ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <div className="animate-spin w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-              <p>Cargando estadísticas...</p>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400" role="status" aria-live="polite">
+              <div className="animate-spin w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full mx-auto mb-3" aria-hidden="true"></div>
+              <span className="sr-only">Cargando estadísticas...</span>
+              <p aria-hidden="true">Cargando estadísticas...</p>
             </div>
           ) : stats ? (
             <div className="space-y-6">
               {/* Botón de recarga */}
               <div className="flex justify-end">
-                <Button variant="outline" onClick={loadStats} disabled={loading}>
-                  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                <Button variant="outline" onClick={loadStats}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Actualizar
                 </Button>
               </div>

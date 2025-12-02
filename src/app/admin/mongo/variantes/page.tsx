@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Barcode, ArrowLeft, Search, AlertTriangle, Copy } from "lucide-react";
+import { ChevronLeft, ChevronRight, Barcode, Search, AlertTriangle, Copy } from "lucide-react";
 import { Button, Header } from "@/components/ui";
 import { Input } from "@/components/ui/Input";
-import { Card } from "@/components/ui/Card";
-import { ProductoVariante, ProductoBase } from "@/types";
+import { ProductoVariante } from "@/types";
 import { VariantEditor } from "@/components/MongoAdmin/VariantEditor";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -146,10 +145,19 @@ export default function VariantesAdminPage() {
               {/* Lista de variantes */}
               <div className="space-y-3">
                 {variantes.map((variante) => (
-                  <Card 
+                  <div
                     key={variante.id} 
-                    className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+                    className="p-4 cursor-pointer hover:shadow-lg transition-shadow bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-dark-border"
                     onClick={() => setSelectedVariant(variante)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedVariant(variante);
+                      }
+                    }}
+                    aria-label={`Ver detalles de ${variante.nombreCompleto}`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -165,6 +173,7 @@ export default function VariantesAdminPage() {
                               copyEan(variante.codigoBarras);
                             }}
                             className="p-1 hover:bg-gray-100 dark:hover:bg-dark-card rounded"
+                            aria-label="Copiar código de barras"
                           >
                             <Copy className="w-3 h-3" />
                           </button>
@@ -183,7 +192,7 @@ export default function VariantesAdminPage() {
                         )}
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
 

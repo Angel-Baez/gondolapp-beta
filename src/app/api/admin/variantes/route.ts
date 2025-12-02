@@ -62,9 +62,17 @@ export async function POST(request: NextRequest) {
     const variantesCollection = db.collection("productos_variantes");
 
     // Verificar que el producto base existe
-    const productoBase = await productosCollection.findOne({
-      _id: new ObjectId(productoBaseId) as any,
-    });
+    let productoBase;
+    try {
+      productoBase = await productosCollection.findOne({
+        _id: new ObjectId(productoBaseId),
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: "ID de producto base inválido" },
+        { status: 400 }
+      );
+    }
 
     if (!productoBase) {
       return NextResponse.json(
@@ -80,9 +88,14 @@ export async function POST(request: NextRequest) {
 
     if (existingVariante) {
       // Obtener el nombre del producto al que pertenece
-      const existingProduct = await productosCollection.findOne({
-        _id: new ObjectId(existingVariante.productoBaseId) as any,
-      });
+      let existingProduct = null;
+      try {
+        existingProduct = await productosCollection.findOne({
+          _id: new ObjectId(existingVariante.productoBaseId),
+        });
+      } catch (err) {
+        // Si el productoBaseId existente no es válido, continuar sin nombre
+      }
 
       return NextResponse.json(
         {
@@ -126,8 +139,16 @@ export async function POST(request: NextRequest) {
       success: true,
       variante: {
         id: result.insertedId.toString(),
-        ...nuevaVariante,
+        productoBaseId: nuevaVariante.productoBaseId,
         codigoBarras: nuevaVariante.ean,
+        nombreCompleto: nuevaVariante.nombreCompleto,
+        tipo: nuevaVariante.tipo,
+        tamano: nuevaVariante.tamano,
+        volumen: nuevaVariante.volumen,
+        unidad: nuevaVariante.unidad,
+        sabor: nuevaVariante.sabor,
+        imagen: nuevaVariante.imagen,
+        createdAt: nuevaVariante.createdAt,
       },
       message: "Variante creada correctamente",
     });

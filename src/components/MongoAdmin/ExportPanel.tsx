@@ -62,11 +62,17 @@ export function ExportPanel({
     try {
       if (data.length === 0) {
         toast.error("No hay datos para exportar");
+        setExporting(false);
         return;
       }
 
       // Obtener headers de las keys del primer objeto
-      const headers = Object.keys(data[0]);
+      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+      if (headers.length === 0) {
+        toast.error("No hay datos para exportar");
+        setExporting(false);
+        return;
+      }
       
       // Crear filas CSV
       const csvRows = [
@@ -83,9 +89,10 @@ export function ExportPanel({
               cell = JSON.stringify(cell);
             }
             
-            // Escapar comillas y envolver en comillas si contiene coma o comilla
+            // Escapar comillas y envolver en comillas si contiene coma, comilla, newline o espacios al inicio/final
             cell = String(cell);
-            if (cell.includes(",") || cell.includes('"') || cell.includes("\n")) {
+            const needsQuotes = cell.includes(",") || cell.includes('"') || cell.includes("\n") || cell !== cell.trim();
+            if (needsQuotes) {
               cell = `"${cell.replace(/"/g, '""')}"`;
             }
             
@@ -109,7 +116,8 @@ export function ExportPanel({
       toast.success(`Exportados ${data.length} registros como CSV`);
       onClose();
     } catch (error) {
-      toast.error("Error al exportar");
+      console.error("Error al exportar CSV:", error);
+      toast.error(error instanceof Error ? error.message : "Error al exportar");
     } finally {
       setExporting(false);
     }

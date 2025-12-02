@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { AdminProductService } from "@/core/admin/services/AdminProductService";
 import { ServerSideProductRepository } from "@/core/repositories/ServerSideProductRepository";
-import { ObjectId } from "mongodb";
 
 /**
  * Detectar tipo de búsqueda automáticamente
@@ -172,8 +171,8 @@ export async function POST(request: NextRequest) {
     // Crear documento
     const nuevoProducto = {
       nombre: nombre.trim(),
-      marca: marca?.trim() || "",
-      categoria: categoria?.trim() || "",
+      marca: marca?.trim() || undefined,
+      categoria: categoria?.trim() || undefined,
       imagen: imagen?.trim() || undefined,
       createdAt: new Date(),
     };

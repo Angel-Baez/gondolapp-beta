@@ -5,6 +5,11 @@ import { getDatabase } from "@/lib/mongodb";
  * GET /api/admin/stats
  * Estadísticas de las colecciones de productos
  * US-111: Dashboard de estadísticas
+ * 
+ * Note: For optimal performance, ensure these indexes exist:
+ * - db.productos_base.createIndex({ createdAt: 1 })
+ * - db.productos_variantes.createIndex({ createdAt: 1 })
+ * - db.productos_variantes.createIndex({ productoBaseId: 1 })
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,27 +23,11 @@ export async function GET(request: NextRequest) {
       variantesCollection.countDocuments({}),
     ]);
 
-    // Productos sin variantes
-    const productosSinVariantes = await productosCollection.aggregate([
-      {
-        $lookup: {
-          from: "productos_variantes",
-          localField: "_id",
-          foreignField: "productoBaseId",
-          as: "variantes"
-        }
-      },
-      {
-        $match: {
-          "variantes": { $size: 0 }
-        }
-      },
-      {
-        $count: "count"
-      }
-    ]).toArray();
-
-    const productosAislados = productosSinVariantes[0]?.count || 0;
+    // Productos sin variantes (más eficiente: dos pasos)
+    const baseIdsConVariante = await variantesCollection.distinct("productoBaseId");
+    const productosAislados = await productosCollection.countDocuments({
+      _id: { $nin: baseIdsConVariante }
+    });
 
     // Variantes sin imagen
     const variantesSinImagen = await variantesCollection.countDocuments({

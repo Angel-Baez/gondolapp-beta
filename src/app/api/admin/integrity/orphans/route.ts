@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 
 /**
  * GET /api/admin/integrity/orphans
@@ -11,32 +10,31 @@ export async function GET(request: NextRequest) {
   try {
     const db = await getDatabase();
     const variantesCollection = db.collection("productos_variantes");
-    const productosCollection = db.collection("productos_base");
 
-    // Obtener todos los IDs de productos base
-    const productosIds = await productosCollection
-      .find({}, { projection: { _id: 1 } })
-      .map((p) => p._id.toString())
-      .toArray();
+    // Buscar variantes huérfanas usando agregación (más eficiente que cargar todo en memoria)
+    const orphansRaw = await variantesCollection.aggregate([
+      {
+        $lookup: {
+          from: "productos_base",
+          localField: "productoBaseId",
+          foreignField: "_id",
+          as: "producto"
+        }
+      },
+      { $match: { producto: { $size: 0 } } }
+    ]).toArray();
 
-    const productosIdSet = new Set(productosIds);
-
-    // Obtener todas las variantes y filtrar las huérfanas
-    const variantes = await variantesCollection.find({}).toArray();
-
-    const orphans = variantes
-      .filter((v) => !productosIdSet.has(v.productoBaseId))
-      .map((v) => ({
-        id: v._id?.toString() || "",
-        productoBaseId: v.productoBaseId,
-        codigoBarras: v.ean,
-        nombreCompleto: v.nombreCompleto,
-        tipo: v.tipo,
-        tamano: v.tamano,
-        sabor: v.sabor,
-        imagen: v.imagen,
-        createdAt: v.createdAt,
-      }));
+    const orphans = orphansRaw.map((v) => ({
+      id: v._id?.toString() || "",
+      productoBaseId: v.productoBaseId,
+      codigoBarras: v.ean,
+      nombreCompleto: v.nombreCompleto,
+      tipo: v.tipo,
+      tamano: v.tamano,
+      sabor: v.sabor,
+      imagen: v.imagen,
+      createdAt: v.createdAt,
+    }));
 
     return NextResponse.json({
       success: true,
