@@ -7,6 +7,9 @@ export type ItemStatus = "PENDING" | "RESTOCKED" | "OUT_OF_STOCK";
 // Modo de escaneo
 export type ScanMode = "reposicion" | "vencimiento";
 
+// Vista activa en la navegación principal
+export type ActiveView = "reposicion" | "vencimiento";
+
 // Producto Base
 export interface ProductoBase {
   id: string; // UUID

@@ -65,45 +65,52 @@ export function Modal({
     );
   }
 
-  // En desktop, usar modal centrado tradicional
+  // En desktop, usar modal centrado con diseño nativo mejorado
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
           />
 
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ 
+                type: "spring",
+                damping: 25,
+                stiffness: 300,
+              }}
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full ${sizeClasses[size]} overflow-hidden transition-colors`}
+              className={`bg-white dark:bg-dark-surface rounded-2xl shadow-native-xl w-full ${sizeClasses[size]} overflow-hidden transition-colors`}
             >
               {/* Header */}
               {title && (
-                <div className={`p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between ${headerClassName || ""}`}>
-                  <h3 className={`text-xl font-bold ${headerClassName ? "" : "text-gray-900 dark:text-gray-100"}`}>{title}</h3>
-                  <button
+                <div className={`p-5 border-b border-gray-100 dark:border-dark-border flex items-center justify-between ${headerClassName || ""}`}>
+                  <h3 className={`text-lg font-bold ${headerClassName ? "" : "text-gray-900 dark:text-gray-100"}`}>{title}</h3>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
                     onClick={onClose}
-                    className={`p-1 rounded-full transition ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 dark:hover:bg-dark-card text-gray-500 dark:text-gray-400"}`}
+                    className={`p-2 rounded-xl transition min-h-[44px] min-w-[44px] flex items-center justify-center ${headerClassName ? "hover:bg-white/20 text-current" : "hover:bg-gray-100 dark:hover:bg-dark-card text-gray-500 dark:text-gray-400"}`}
+                    aria-label="Cerrar"
                   >
-                    <X size={24} />
-                  </button>
+                    <X size={20} />
+                  </motion.button>
                 </div>
               )}
 
               {/* Body */}
-              <div className="p-4 max-h-[70vh] overflow-y-auto">{children}</div>
+              <div className="p-5 max-h-[70vh] overflow-y-auto">{children}</div>
             </motion.div>
           </div>
         </>

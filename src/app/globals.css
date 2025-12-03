@@ -189,3 +189,180 @@ html {
 .safe-area-top {
   padding-top: max(0.5rem, env(safe-area-inset-top));
 }
+
+/* ======================================
+   Native App Visual Enhancements
+   ====================================== */
+
+/* Glassmorphism backdrop effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+/* Frosted glass effect for nav bars */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.dark .glass-nav {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+/* Card shadows with depth */
+.shadow-card {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.dark .shadow-card {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Elevated shadow for FABs and modals */
+.shadow-elevated {
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 12px 24px -4px rgba(0, 0, 0, 0.15);
+}
+
+.dark .shadow-elevated {
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 12px 24px -4px rgba(0, 0, 0, 0.4);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtle border gradient */
+.border-gradient {
+  position: relative;
+}
+
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(236, 72, 153, 0.5));
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ======================================
+   Animations for Native Feel
+   ====================================== */
+
+/* Smooth fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Scale in for modals */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Bounce for attention */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* Pulse ring for scan button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+}
+
+.dark .animate-skeleton {
+  background: linear-gradient(
+    90deg,
+    #334155 25%,
+    #475569 50%,
+    #334155 75%
+  );
+  background-size: 200% 100%;
+}

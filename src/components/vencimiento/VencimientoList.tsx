@@ -139,43 +139,50 @@ export function VencimientoList() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-3 sm:mb-4">
-        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+      <m.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             Control de Vencimientos
           </h2>
-          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
+          <span className="px-3 py-1.5 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-xl font-bold text-sm shadow-sm">
             {totalItems} producto{totalItems !== 1 ? "s" : ""}
           </span>
         </div>
 
         {itemsCriticos > 0 && (
-          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
+          <m.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+          >
             {/* ✨ Icono con pulso constante */}
             <m.div
               animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, -5, 5, 0],
+                scale: [1, 1.15, 1],
               }}
               transition={{
-                duration: 2,
+                duration: 1.5,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
             >
               <AlertTriangle
-                size={18}
-                className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
+                size={20}
+                className="text-red-500 flex-shrink-0 mt-0.5"
               />
             </m.div>
-            <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
+            <p className="text-sm font-medium text-red-700 dark:text-red-300 leading-snug">
               {itemsCriticos} producto{itemsCriticos > 1 ? "s" : ""} crítico
               {itemsCriticos > 1 ? "s" : ""} (vencido
               {itemsCriticos > 1 ? "s" : ""} o por vencer)
             </p>
-          </div>
+          </m.div>
         )}
-      </div>
+      </m.div>
 
       {/* Lista de Items */}
       <div className="space-y-4 sm:space-y-6">

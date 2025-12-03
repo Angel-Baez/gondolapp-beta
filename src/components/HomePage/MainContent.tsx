@@ -1,7 +1,7 @@
 import { ReposicionList } from "@/components/reposicion/ReposicionList";
 import { VencimientoList } from "@/components/vencimiento/VencimientoList";
-
-type ActiveView = "reposicion" | "vencimiento";
+import { motion as m, AnimatePresence } from "framer-motion";
+import { ActiveView } from "@/types";
 
 interface MainContentProps {
   activeView: ActiveView;
@@ -10,14 +10,37 @@ interface MainContentProps {
 /**
  * MainContent component para HomePage
  * 
- * ✅ SOLID Principles:
- * - SRP: Solo responsable de mostrar el contenido principal
- * - LSP: Componentes intercambiables
+ * ✅ Native Mobile Features:
+ * - Animated view transitions
+ * - Proper padding for content
+ * - Smooth scroll behavior
  */
 export function MainContent({ activeView }: MainContentProps) {
   return (
-    <main className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
-      {activeView === "reposicion" ? <ReposicionList /> : <VencimientoList />}
-    </main>
+    <div className="flex-1 p-4">
+      <AnimatePresence mode="wait">
+        {activeView === "reposicion" ? (
+          <m.div
+            key="reposicion"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ReposicionList />
+          </m.div>
+        ) : (
+          <m.div
+            key="vencimiento"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <VencimientoList />
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

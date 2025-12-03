@@ -428,14 +428,14 @@ export function ReposicionList() {
       )}
     </div>
 
-    {/* Botón Guardar Lista - Solo si hay items */}
+    {/* Botón Guardar Lista - Positioned above bottom nav and FAB */}
     {itemsConProductos.length > 0 && (
       <button
         onClick={() => setShowSaveModal(true)}
-        className="fixed bottom-24 right-6 z-20 w-14 h-14 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center"
+        className="fixed bottom-36 right-4 z-20 w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-xl shadow-fab hover:shadow-fab-hover hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
         aria-label="Guardar lista"
       >
-        <Save size={24} />
+        <Save size={20} />
       </button>
     )}
 

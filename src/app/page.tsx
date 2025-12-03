@@ -1,37 +1,46 @@
 "use client";
 
 import { MainContent } from "@/components/HomePage/MainContent";
-import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
-import { ScanButton } from "@/components/HomePage/ScanButton";
 import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Header } from "@/components/ui";
-import { ScanMode } from "@/types";
+import { BottomNavBar, NativeHeader, ScanFAB } from "@/components/ui";
+import { ActiveView, ScanMode } from "@/types";
 import { motion as m } from "framer-motion";
-import { Archive, Loader2, Settings } from "lucide-react";
+import { Archive, Loader2, Scan, Settings } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-
-type ActiveView = "reposicion" | "vencimiento";
 
 // Loading fallback para Suspense
 function HomePageLoading() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+      <m.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center gap-4"
+      >
+        <div className="relative">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+            <Archive className="w-8 h-8 text-white" />
+          </div>
+          <Loader2 className="absolute -bottom-1 -right-1 w-6 h-6 animate-spin text-cyan-500" />
+        </div>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cargando...</p>
+      </m.div>
     </div>
   );
 }
 
 /**
- * HomePage - Refactorizada siguiendo principios SOLID
+ * HomePage - Native Mobile PWA Design
  *
- * ✅ SOLID Principles aplicados:
- * - SRP: Solo responsable de composición de componentes
- * - OCP: Extensible sin modificar código existente
- * - LSP: Componentes intercambiables
- * - DIP: Depende de abstracciones (componentes reutilizables)
+ * ✅ Native Mobile Features:
+ * - Bottom navigation bar for thumb-friendly access
+ * - Floating Action Button (FAB) for primary scan action
+ * - iOS-style large title header
+ * - Full-screen scanner overlay
+ * - Safe area insets support
  *
  * ✅ PWA Shortcuts Support:
  * - ?action=scan → Abre el escáner automáticamente
@@ -72,12 +81,6 @@ function HomePageContent() {
   const handleOpenScanner = () => {
     const newScanMode =
       activeView === "reposicion" ? "reposicion" : "vencimiento";
-    console.log(
-      "handleOpenScanner called. activeView:",
-      activeView,
-      "newScanMode:",
-      newScanMode
-    );
     setScanMode(newScanMode);
     setShowScanWorkflow(true);
   };
@@ -88,37 +91,50 @@ function HomePageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
-      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
-        <Header
-          variant="main"
+      {/* Main container with max-width for tablets */}
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen flex flex-col transition-colors relative">
+        {/* Native Header */}
+        <NativeHeader
           title="GondolApp"
           subtitle="Gestor de Inventario Inteligente"
           icon={Archive}
-          animateIcon
+          accentColor={activeView === "reposicion" ? "cyan" : "red"}
           rightContent={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <ThemeToggle />
               <Link
                 href="/admin"
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-card transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Administración"
               >
                 <m.div
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
+                  whileHover={{ rotate: 90 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Settings size={20} />
+                  <Settings size={22} />
                 </m.div>
-                <span className="hidden sm:inline">Admin</span>
               </Link>
             </div>
           }
         />
-        <NavigationTabs activeView={activeView} onViewChange={setActiveView} />
-        <ScanButton activeView={activeView} onScanClick={handleOpenScanner} />
-        <MainContent activeView={activeView} />
+
+        {/* Main Content Area - with padding for bottom nav */}
+        <main className="flex-1 overflow-y-auto pb-36 native-scroll">
+          <MainContent activeView={activeView} />
+        </main>
+
+        {/* Floating Scan Button */}
+        <ScanFAB
+          icon={Scan}
+          onClick={handleOpenScanner}
+          activeView={activeView}
+        />
+
+        {/* Bottom Navigation */}
+        <BottomNavBar activeView={activeView} onViewChange={setActiveView} />
       </div>
 
-      {/* Scan Workflow - Maneja todo el flujo de escaneo y modales */}
+      {/* Scan Workflow - Full screen overlay */}
       {showScanWorkflow && (
         <ScanWorkflow scanMode={scanMode} onClose={handleCloseScanWorkflow} />
       )}
