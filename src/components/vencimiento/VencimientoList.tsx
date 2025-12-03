@@ -10,8 +10,8 @@ import {
   Clock,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Modal, Input, Button } from "../ui";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Modal, Input, Button, RefreshButton } from "../ui";
 import { VencimientoItem } from "./VencimientoItem";
 import { motion as m } from "framer-motion";
 
@@ -29,6 +29,18 @@ export function VencimientoList() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<ItemVencimiento | null>(null);
   const [newDate, setNewDate] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Función de refresh para pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await recalcularAlertas();
+      await cargarItems();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [cargarItems, recalcularAlertas]);
 
   useEffect(() => {
     cargarItems();
@@ -144,9 +156,12 @@ export function VencimientoList() {
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             Control de Vencimientos
           </h2>
-          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
-            {totalItems} producto{totalItems !== 1 ? "s" : ""}
-          </span>
+          <div className="flex items-center gap-2">
+            <RefreshButton onRefresh={handleRefresh} isRefreshing={isRefreshing} />
+            <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
+              {totalItems} producto{totalItems !== 1 ? "s" : ""}
+            </span>
+          </div>
         </div>
 
         {itemsCriticos > 0 && (
@@ -178,7 +193,7 @@ export function VencimientoList() {
       </div>
 
       {/* Lista de Items */}
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4 sm:space-y-6 pb-8">
         {/* Críticos */}
         {itemsByAlertLevel.critico.length > 0 && (
           <div>

@@ -2,15 +2,13 @@
 
 import { MainContent } from "@/components/HomePage/MainContent";
 import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
-import { ScanButton } from "@/components/HomePage/ScanButton";
 import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Header } from "@/components/ui";
+import { Header, BottomNavigation } from "@/components/ui";
 import { ScanMode } from "@/types";
 import { motion as m } from "framer-motion";
-import { Archive, Loader2, Settings } from "lucide-react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Archive, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 type ActiveView = "reposicion" | "vencimiento";
@@ -37,8 +35,14 @@ function HomePageLoading() {
  * - ?action=scan → Abre el escáner automáticamente
  * - ?view=reposicion → Muestra vista de reposición
  * - ?view=vencimiento → Muestra vista de vencimientos
+ * 
+ * ✅ Native Mobile UI:
+ * - Bottom Tab Navigation (iOS/Android style)
+ * - Floating Scan Button in center
+ * - Safe area insets support
  */
 function HomePageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeView, setActiveView] = useState<ActiveView>("reposicion");
   const [showScanWorkflow, setShowScanWorkflow] = useState(false);
@@ -72,12 +76,6 @@ function HomePageContent() {
   const handleOpenScanner = () => {
     const newScanMode =
       activeView === "reposicion" ? "reposicion" : "vencimiento";
-    console.log(
-      "handleOpenScanner called. activeView:",
-      activeView,
-      "newScanMode:",
-      newScanMode
-    );
     setScanMode(newScanMode);
     setShowScanWorkflow(true);
   };
@@ -86,9 +84,23 @@ function HomePageContent() {
     setShowScanWorkflow(false);
   };
 
+  const handleViewChange = (view: ActiveView) => {
+    setActiveView(view);
+    setScanMode(view);
+  };
+
+  const handleSyncClick = () => {
+    // Navigate to admin page with sync panel open
+    router.push("/admin?panel=sync");
+  };
+
+  const handleAdminClick = () => {
+    router.push("/admin");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
-      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors pb-24">
         <Header
           variant="main"
           title="GondolApp"
@@ -98,25 +110,21 @@ function HomePageContent() {
           rightContent={
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Link
-                href="/admin"
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-              >
-                <m.div
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Settings size={20} />
-                </m.div>
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
             </div>
           }
         />
-        <NavigationTabs activeView={activeView} onViewChange={setActiveView} />
-        <ScanButton activeView={activeView} onScanClick={handleOpenScanner} />
+        <NavigationTabs activeView={activeView} onViewChange={handleViewChange} />
         <MainContent activeView={activeView} />
       </div>
+
+      {/* Bottom Navigation - Native mobile style */}
+      <BottomNavigation
+        activeView={activeView}
+        onViewChange={handleViewChange}
+        onScanClick={handleOpenScanner}
+        onSyncClick={handleSyncClick}
+        onAdminClick={handleAdminClick}
+      />
 
       {/* Scan Workflow - Maneja todo el flujo de escaneo y modales */}
       {showScanWorkflow && (
