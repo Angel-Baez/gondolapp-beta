@@ -128,8 +128,13 @@ export function PullToRefresh({
       <m.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={{ top: 0.4, bottom: 0 }}
-        style={{ y }}
+        dragElastic={{ top: 0.5, bottom: 0 }}
+        onDrag={(_event, info) => {
+          // Only allow downward drag (positive offset)
+          // The touchAction style handles normal scrolling
+          const newY = Math.max(0, info.offset.y);
+          y.set(newY);
+        }}
         onDragEnd={handleDragEnd}
         animate={isActive ? { y: 60 } : { y: 0 }}
         transition={{
@@ -137,7 +142,8 @@ export function PullToRefresh({
           stiffness: 300,
           damping: 30,
         }}
-        className="min-h-full touch-pan-y"
+        className="min-h-full"
+        style={{ touchAction: "pan-x pan-down pinch-zoom" }}
       >
         {children}
       </m.div>
