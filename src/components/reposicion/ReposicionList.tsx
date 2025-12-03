@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  LucideIcon,
   Package,
   Save,
   XCircle,
@@ -17,16 +18,15 @@ import { ReposicionCard } from "./ReposicionCard";
 import { ReposicionHeader } from "./ReposicionHeader";
 import { SkeletonCard } from "./SkeletonCard";
 import { motion as m } from "framer-motion";
-import { Modal } from "@/components/ui/Modal";
+import { Modal } from "@/components/ui";
 import toast from "react-hot-toast";
+import { ItemReposicion } from "@/types";
 
 interface ItemConProducto {
-  item: any;
+  item: ItemReposicion;
   variante: ProductoVariante;
   base: ProductoBase;
 }
-
-type SeccionType = "pendiente" | "repuesto" | "sinStock";
 
 export function ReposicionList() {
   const { items, cargarItems, guardarListaActual } = useReposicionStore();
@@ -36,6 +36,7 @@ export function ReposicionList() {
   const [loading, setLoading] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Estados para controlar el colapso de cada sección
   const [isPendientesExpanded, setIsPendientesExpanded] = useState(false);
@@ -71,6 +72,16 @@ export function ReposicionList() {
       return newSet;
     });
   }, []);
+
+  // Función de refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await cargarItems();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [cargarItems]);
 
   useEffect(() => {
     cargarItems();
@@ -251,7 +262,7 @@ export function ReposicionList() {
   if (itemsConProductos.length === 0) {
     return (
       <>
-        <ReposicionHeader />
+        <ReposicionHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
         <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
           <m.div
                     animate={{
@@ -291,7 +302,7 @@ export function ReposicionList() {
   }: {
     title: string;
     count: number;
-    icon: any;
+    icon: LucideIcon;
     colorClass: string;
     isExpanded?: boolean;
     onToggle?: () => void;
@@ -331,9 +342,9 @@ export function ReposicionList() {
 
   return (
     <>
-      <ReposicionHeader />
+      <ReposicionHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
 
-      <div className="space-y-6 sm:space-y-8 pb-24">
+      <div className="space-y-6 sm:space-y-8 pb-8">
       {/* Sección: PENDIENTES */}
       {groupedBySections.pendientes.length > 0 && (
         <div className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors">
