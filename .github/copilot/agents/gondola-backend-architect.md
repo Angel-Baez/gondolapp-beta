@@ -137,6 +137,30 @@ async getVencimientosCriticos(): Promise<ItemVencimiento[]> {
 | Implementación Repository| Backend Architect| Test Engineer    | Código TypeScript   |
 | Feedback de performance  | Backend Architect| Data Engineer    | Métricas de queries |
 
+### Cómo Recibir Trabajo del Data Engineer
+
+1. **Espera** el documento de esquema aprobado por Tech Lead
+2. **Revisa** que el esquema tenga: campos, tipos, índices, relaciones
+3. **Implementa** siguiendo el diseño, no lo modifiques sin consultar
+4. **Notifica** al Data Engineer si encuentras problemas de implementación
+
+### Si Necesitas Cambiar el Esquema
+
+❌ **NO hagas esto:**
+```typescript
+// Agregar campo no documentado
+interface ProductoVariante {
+  // ... campos del esquema
+  myNewField: string; // ❌ Not authorized - field not in schema
+}
+```
+
+✅ **Haz esto:**
+1. Documenta la necesidad del cambio
+2. Solicita al Data Engineer que actualice el esquema
+3. Espera aprobación del Tech Lead
+4. Implementa el cambio aprobado
+
 ### Flujo de Trabajo Correcto
 
 1. **RECIBE**: Arquitectura/ADR del Tech Lead o User Story del Product Manager

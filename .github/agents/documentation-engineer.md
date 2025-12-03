@@ -1113,6 +1113,14 @@ Antes de aprobar cambios de documentación:
 - [ ] ¿Se documentan los errores posibles?
 - [ ] ¿La audiencia objetivo está clara?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| Desarrolladores (varios) | PR sin docs vs merge urgente | Tipo de cambio | Major/Minor requieren docs; Patch/Hotfix pueden documentar después (48h) |
+| `release-manager` | Docs incompletas vs release | Entrega (pos 5) | Bloquear Major/Minor; permitir Patch con known issue |
+| `product-manager-strategist` | Scope de documentación | Colaborativo | PM define qué documentar para usuarios, Docs define cómo |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

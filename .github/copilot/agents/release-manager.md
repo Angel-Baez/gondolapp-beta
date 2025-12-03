@@ -587,6 +587,14 @@ Antes de aprobar un release:
 - [ ] ¿El runbook de rollback está listo?
 - [ ] ¿Se notificó a stakeholders del release?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `devops-ci-cd-engineer` | Auto-deploy vs validación manual | Proceso (no jerarquía) | Release Manager decide cuándo, DevOps cómo |
+| `qa-lead` | Release urgente vs bugs P2 | Tech Lead arbitra | Escalar con contexto escrito |
+| `product-manager-strategist` | Timing de release | Entrega (pos 5) | Coordinar con PM, pero seguridad/estabilidad primero |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

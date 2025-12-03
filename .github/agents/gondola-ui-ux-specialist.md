@@ -670,6 +670,14 @@ Antes de finalizar cualquier componente UI:
 - [ ] ¿Usa Framer Motion para animaciones?
 - [ ] ¿Está optimizado para uso con guantes (retail)?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `observability-performance-engineer` | Animaciones vs Lighthouse score | Performance (pos 3) | Usar animaciones CSS, reducir duración |
+| `gondola-pwa-specialist` | Fuentes pesadas vs bundle size | Offline-First (pos 2) | Limitar a 2 pesos, usar system fonts fallback |
+| `gondola-security-guardian` | Experiencia vs rate limiting | Seguridad (pos 1) | Cache local para reducir requests |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:

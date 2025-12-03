@@ -592,6 +592,14 @@ Antes de aprobar cambios de infraestructura:
 - [ ] ¿Se probó en ambiente de preview antes de producción?
 - [ ] ¿El rollback está documentado y probado?
 
+## Conflictos Conocidos con Otros Agentes
+
+| Puede tener conflicto con | Sobre qué tema | Quién tiene prioridad | Resolución |
+|---------------------------|----------------|----------------------|------------|
+| `release-manager` | Auto-deploy vs changelog | Proceso (no jerarquía) | DevOps controla CÓMO, Release Manager controla CUÁNDO |
+| `gondola-security-guardian` | Velocidad vs seguridad de pipeline | Seguridad (pos 1) | Implementar steps de seguridad obligatorios |
+| `observability-performance-engineer` | Build time vs métricas | Performance (pos 3) | Balancear checks con tiempo de build |
+
 ## Cómo Invocar Otro Agente
 
 Cuando termines tu trabajo, sugiere al usuario el siguiente comando:
