@@ -34,14 +34,11 @@ const navItems: NavItem[] = [
   },
 ];
 
-// SVG path for curved notch - more visible cutout
-const NOTCH_WIDTH = 76;
-const NOTCH_DEPTH = 28;
-const NOTCH_CURVE_RADIUS = 20;
-// Height for the nav bar content area (below the notch)
-export const NAV_CONTENT_HEIGHT = 56;
-// Total height including notch area
-const TOTAL_NAV_HEIGHT = NAV_CONTENT_HEIGHT + NOTCH_DEPTH;
+// Height for the nav bar content area
+export const NAV_CONTENT_HEIGHT = 64;
+// Notch dimensions
+const NOTCH_WIDTH = 88;
+const NOTCH_DEPTH = 32;
 
 /**
  * BottomNavBar - iOS/Android style bottom tab bar with FAB notch
@@ -55,70 +52,76 @@ const TOTAL_NAV_HEIGHT = NAV_CONTENT_HEIGHT + NOTCH_DEPTH;
  * - Large touch targets (48px+)
  */
 export function BottomNavBar({ activeView, onViewChange }: BottomNavBarProps) {
+  // SVG path for the notched shape - creates the curved cutout
+  const notchPath = `
+    M 0 ${NOTCH_DEPTH}
+    L ${50 - NOTCH_WIDTH/2 - 8}% ${NOTCH_DEPTH}
+    C ${50 - NOTCH_WIDTH/2}% ${NOTCH_DEPTH}, ${50 - NOTCH_WIDTH/2}% 0, 50% 0
+    C ${50 + NOTCH_WIDTH/2}% 0, ${50 + NOTCH_WIDTH/2}% ${NOTCH_DEPTH}, ${50 + NOTCH_WIDTH/2 + 8}% ${NOTCH_DEPTH}
+    L 100% ${NOTCH_DEPTH}
+    L 100% 100%
+    L 0 100%
+    Z
+  `;
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom"
       role="navigation"
       aria-label="Navegación principal"
+      style={{ height: `${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}px` }}
     >
-      {/* SVG Background with notch cutout */}
-      <div className="absolute inset-0 overflow-hidden" style={{ height: `${TOTAL_NAV_HEIGHT}px` }}>
-        <svg
-          className="absolute bottom-0 left-0 right-0 w-full"
-          style={{ height: `${TOTAL_NAV_HEIGHT}px` }}
-          preserveAspectRatio="none"
-          viewBox={`0 0 400 ${TOTAL_NAV_HEIGHT}`}
-        >
-          <defs>
-            {/* Shadow filter for depth */}
-            <filter id="notchShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="-2" stdDeviation="4" floodOpacity="0.15" />
-            </filter>
-          </defs>
-          {/* Background shape with notch cutout */}
-          <path
-            d={`
-              M 0,${NOTCH_DEPTH}
-              L ${200 - NOTCH_WIDTH / 2 - NOTCH_CURVE_RADIUS},${NOTCH_DEPTH}
-              Q ${200 - NOTCH_WIDTH / 2},${NOTCH_DEPTH} ${200 - NOTCH_WIDTH / 2},${NOTCH_DEPTH - NOTCH_CURVE_RADIUS / 2}
-              Q ${200 - NOTCH_WIDTH / 2},0 ${200 - NOTCH_WIDTH / 4},0
-              Q 200,0 ${200 + NOTCH_WIDTH / 4},0
-              Q ${200 + NOTCH_WIDTH / 2},0 ${200 + NOTCH_WIDTH / 2},${NOTCH_DEPTH - NOTCH_CURVE_RADIUS / 2}
-              Q ${200 + NOTCH_WIDTH / 2},${NOTCH_DEPTH} ${200 + NOTCH_WIDTH / 2 + NOTCH_CURVE_RADIUS},${NOTCH_DEPTH}
-              L 400,${NOTCH_DEPTH}
-              L 400,${TOTAL_NAV_HEIGHT}
-              L 0,${TOTAL_NAV_HEIGHT}
-              Z
-            `}
-            className="fill-white/95 dark:fill-dark-surface/95"
-            filter="url(#notchShadow)"
-          />
-          {/* Top border following the notch curve */}
-          <path
-            d={`
-              M 0,${NOTCH_DEPTH}
-              L ${200 - NOTCH_WIDTH / 2 - NOTCH_CURVE_RADIUS},${NOTCH_DEPTH}
-              Q ${200 - NOTCH_WIDTH / 2},${NOTCH_DEPTH} ${200 - NOTCH_WIDTH / 2},${NOTCH_DEPTH - NOTCH_CURVE_RADIUS / 2}
-              Q ${200 - NOTCH_WIDTH / 2},0 ${200 - NOTCH_WIDTH / 4},0
-              Q 200,0 ${200 + NOTCH_WIDTH / 4},0
-              Q ${200 + NOTCH_WIDTH / 2},0 ${200 + NOTCH_WIDTH / 2},${NOTCH_DEPTH - NOTCH_CURVE_RADIUS / 2}
-              Q ${200 + NOTCH_WIDTH / 2},${NOTCH_DEPTH} ${200 + NOTCH_WIDTH / 2 + NOTCH_CURVE_RADIUS},${NOTCH_DEPTH}
-              L 400,${NOTCH_DEPTH}
-            `}
-            fill="none"
-            className="stroke-gray-200 dark:stroke-dark-border"
-            strokeWidth="1"
-          />
-        </svg>
-        {/* Backdrop blur layer */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 backdrop-blur-xl" 
-          style={{ height: `${NAV_CONTENT_HEIGHT}px` }}
+      {/* SVG Background with visible notch cutout */}
+      <svg
+        className="absolute inset-0 w-full h-full"
+        preserveAspectRatio="none"
+        viewBox={`0 0 100 ${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}`}
+      >
+        <defs>
+          <filter id="notchShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="-2" stdDeviation="3" floodColor="#000" floodOpacity="0.1" />
+          </filter>
+        </defs>
+        {/* Main shape with notch */}
+        <path
+          d={`
+            M 0,${NOTCH_DEPTH}
+            L ${50 - NOTCH_WIDTH/2 - 10},${NOTCH_DEPTH}
+            Q ${50 - NOTCH_WIDTH/2 - 2},${NOTCH_DEPTH} ${50 - NOTCH_WIDTH/2 + 4},${NOTCH_DEPTH - 10}
+            Q ${50 - NOTCH_WIDTH/4},0 50,0
+            Q ${50 + NOTCH_WIDTH/4},0 ${50 + NOTCH_WIDTH/2 - 4},${NOTCH_DEPTH - 10}
+            Q ${50 + NOTCH_WIDTH/2 + 2},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2 + 10},${NOTCH_DEPTH}
+            L 100,${NOTCH_DEPTH}
+            L 100,${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}
+            L 0,${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}
+            Z
+          `}
+          className="fill-white dark:fill-dark-surface"
+          filter="url(#notchShadow)"
         />
-      </div>
+        {/* Border line following the notch */}
+        <path
+          d={`
+            M 0,${NOTCH_DEPTH}
+            L ${50 - NOTCH_WIDTH/2 - 10},${NOTCH_DEPTH}
+            Q ${50 - NOTCH_WIDTH/2 - 2},${NOTCH_DEPTH} ${50 - NOTCH_WIDTH/2 + 4},${NOTCH_DEPTH - 10}
+            Q ${50 - NOTCH_WIDTH/4},0 50,0
+            Q ${50 + NOTCH_WIDTH/4},0 ${50 + NOTCH_WIDTH/2 - 4},${NOTCH_DEPTH - 10}
+            Q ${50 + NOTCH_WIDTH/2 + 2},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2 + 10},${NOTCH_DEPTH}
+            L 100,${NOTCH_DEPTH}
+          `}
+          fill="none"
+          className="stroke-gray-200 dark:stroke-dark-border"
+          strokeWidth="0.5"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
 
-      {/* Navigation items */}
-      <div className="relative z-10 max-w-lg mx-auto flex items-stretch" style={{ paddingTop: `${NOTCH_DEPTH}px` }}>
+      {/* Navigation items - positioned below the notch area */}
+      <div 
+        className="relative z-10 max-w-lg mx-auto flex items-stretch h-full"
+        style={{ paddingTop: `${NOTCH_DEPTH}px` }}
+      >
         {navItems.map((item, index) => {
           const isActive = activeView === item.id;
           const Icon = item.icon;
@@ -131,8 +134,8 @@ export function BottomNavBar({ activeView, onViewChange }: BottomNavBarProps) {
               onClick={() => onViewChange(item.id)}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "tween", duration: 0.1 }}
-              className={`flex-1 flex flex-col items-center justify-center py-2 px-4 min-h-[56px] relative select-none touch-manipulation transition-colors ${
-                isLeft ? "mr-10" : "ml-10"
+              className={`flex-1 flex flex-col items-center justify-center py-1 px-4 relative select-none touch-manipulation transition-colors ${
+                isLeft ? "mr-12" : "ml-12"
               } ${isActive ? item.activeBg : ""}`}
               aria-current={isActive ? "page" : undefined}
               aria-label={item.label}

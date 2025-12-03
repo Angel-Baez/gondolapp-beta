@@ -89,8 +89,11 @@ interface ScanFABProps {
 }
 
 export function ScanFAB({ icon, onClick, activeView }: ScanFABProps) {
+  // Position the FAB to sit in the notch - bottom should be at nav bar level
+  // NAV_CONTENT_HEIGHT is 64px, NOTCH_DEPTH is 32px, FAB is 64px (w-16 h-16)
+  // FAB center should be at NOTCH_DEPTH from bottom of nav
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+    <div className="fixed left-1/2 -translate-x-1/2 z-40" style={{ bottom: '48px' }}>
       <FloatingActionButton
         icon={icon}
         onClick={onClick}
