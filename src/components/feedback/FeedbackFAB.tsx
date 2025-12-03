@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquarePlus, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useFeedbackStore } from "@/store/feedback";
 
 /**
@@ -9,9 +10,21 @@ import { useFeedbackStore } from "@/store/feedback";
  * 
  * Componente flotante discreto que permite a los beta-testers
  * acceder rápidamente al formulario de feedback.
+ * 
+ * Hidden on the main page (/) to avoid multiple FABs.
+ * Only shown on admin pages where it's more relevant.
  */
 export function FeedbackFAB() {
   const { isModalOpen, openModal, closeModal } = useFeedbackStore();
+  const pathname = usePathname();
+
+  // Hide on main page to avoid FAB clutter
+  // Only show on admin pages (/admin/*)
+  const shouldShow = pathname?.startsWith("/admin");
+
+  if (!shouldShow) {
+    return null;
+  }
 
   const handleClick = () => {
     if (isModalOpen) {

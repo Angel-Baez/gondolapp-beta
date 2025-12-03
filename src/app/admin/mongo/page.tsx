@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Database, Plus, Barcode, AlertTriangle, BarChart3, Download } from "lucide-react";
-import { Button, Header } from "@/components/ui";
+import { Button, NativeHeader } from "@/components/ui";
 import { ProductSearchPanel } from "@/components/MongoAdmin/ProductSearchPanel";
 import { ProductList } from "@/components/MongoAdmin/ProductList";
 import { ProductEditor } from "@/components/MongoAdmin/ProductEditor";
@@ -274,12 +274,12 @@ export default function MongoAdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
       <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
-        <Header
+        <NativeHeader
           title="MongoDB Compass"
           subtitle="Administra productos y variantes"
           icon={Database}
           backHref="/admin"
-          backText="Volver a Administración"
+          accentColor="cyan"
         />
 
         {/* Panel de búsqueda */}

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
+import { SwipeableCard, SwipeActions } from "../ui/SwipeableCard";
 
 interface ReposicionCardProps {
   productoBase: ProductoBase;
@@ -40,6 +41,62 @@ export function ReposicionCard({
   const { haptic } = useHaptics();
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
+
+  // Helper to create swipe actions for a specific item
+  const createSwipeActions = (itemId: string, isPending: boolean) => {
+    const handleMarkComplete = () => {
+      marcarRepuesto(itemId, true);
+      haptic([30, 30, 30]);
+      toast.success(
+        <m.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1.2, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-2"
+        >
+          <m.div
+            initial={{ rotate: -180, scale: 0 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
+            <CheckCircle className="text-emerald-500 w-5 h-5" />
+          </m.div>
+          <span>Producto marcado como repuesto</span>
+        </m.div>,
+        { duration: 2000 }
+      );
+    };
+
+    const handleDelete = () => {
+      eliminarItem(itemId);
+      haptic([50, 100, 50]);
+      toast.error(
+        <m.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-2"
+        >
+          <m.div
+            initial={{ y: 0 }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 0.4 }}
+          >
+            <Trash2 className="text-red-500 w-5 h-5" />
+          </m.div>
+          <span>Producto eliminado</span>
+        </m.div>,
+        { duration: 2000 }
+      );
+    };
+
+    return {
+      leftAction: isPending ? SwipeActions.markComplete(handleMarkComplete) : undefined,
+      rightAction: SwipeActions.delete(handleDelete),
+    };
+  };
 
   // Colores según sección
   const sectionColors = {
@@ -127,9 +184,20 @@ export function ReposicionCard({
             className="border-t border-gray-100 dark:border-dark-border"
           >
             <div className="divide-y divide-gray-100 dark:divide-dark-border">
-              {variantes.map(({ item, variante }) => (
-                <div key={item.id} className="p-3 sm:p-4">
-                  <div className="space-y-3">
+              {variantes.map(({ item, variante }) => {
+                // Only enable swipe for pending items (not already repuesto or sinStock)
+                const isPending = !item.repuesto && !item.sinStock;
+                const { leftAction, rightAction } = createSwipeActions(item.id, isPending);
+
+                return (
+                  <SwipeableCard
+                    key={item.id}
+                    leftAction={leftAction}
+                    rightAction={rightAction}
+                    className="rounded-none"
+                  >
+                    <div className="p-3 sm:p-4">
+                      <div className="space-y-3">
                     {/* Info */}
                     <div className="flex items-start gap-3">
                       {variante.imagen && (
@@ -400,7 +468,9 @@ export function ReposicionCard({
                     </div>
                   </div>
                 </div>
-              ))}
+              </SwipeableCard>
+                );
+              })}
             </div>
           </m.div>
         )}

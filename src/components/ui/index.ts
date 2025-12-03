@@ -8,7 +8,7 @@ export { Header } from "./Header";
 export type { HeaderProps } from "./Header";
 
 // New native-style components
-export { BottomNavBar } from "./BottomNavBar";
+export { BottomNavBar, NAV_CONTENT_HEIGHT } from "./BottomNavBar";
 export { FloatingActionButton, ScanFAB } from "./FloatingActionButton";
 export { NativeHeader } from "./NativeHeader";
 export { SwipeableCard, SwipeActions } from "./SwipeableCard";

@@ -14,7 +14,7 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MessageSquare, RefreshCw, Loader2 } from "lucide-react";
-import { Button, Header } from "@/components/ui";
+import { Button, NativeHeader } from "@/components/ui";
 import { FeedbackReporte, FeedbackEstado, FeedbackPrioridad, FeedbackTipo } from "@/types";
 import { useFeedbackApi, FeedbackFilters } from "@/hooks/useFeedbackApi";
 import {
@@ -127,12 +127,12 @@ export default function FeedbackAdminPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
       <div className="max-w-6xl mx-auto bg-white dark:bg-dark-surface min-h-screen shadow-2xl overflow-hidden flex flex-col transition-colors">
         {/* Header */}
-        <Header
+        <NativeHeader
           title="Panel de Feedback"
           subtitle="Gestión de reportes de beta-testers"
           icon={MessageSquare}
           backHref="/admin"
-          backText="Volver a Administración"
+          accentColor="cyan"
           rightContent={
             <Button
               variant="ghost"

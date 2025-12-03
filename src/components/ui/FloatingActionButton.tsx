@@ -80,7 +80,7 @@ export function FloatingActionButton({
 
 /**
  * ScanFAB - Pre-configured FAB for scan action
- * Positioned fixed at bottom-center, above the nav bar
+ * Positioned fixed at bottom-center, sitting in the bottom nav notch
  */
 interface ScanFABProps {
   icon: LucideIcon;
@@ -90,7 +90,7 @@ interface ScanFABProps {
 
 export function ScanFAB({ icon, onClick, activeView }: ScanFABProps) {
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
       <FloatingActionButton
         icon={icon}
         onClick={onClick}

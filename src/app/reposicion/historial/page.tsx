@@ -2,7 +2,7 @@
 
 import { HistorialList } from "@/components/reposicion/HistorialList";
 import { Calendar, History } from "lucide-react";
-import { Header } from "@/components/ui";
+import { NativeHeader } from "@/components/ui";
 import { useState } from "react";
 
 export default function HistorialPage() {
@@ -33,12 +33,12 @@ export default function HistorialPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
       <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
-        <Header
+        <NativeHeader
           title="Historial de Listas"
           subtitle="Revisa todas tus listas guardadas"
           icon={History}
           backHref="/"
-          backText="Volver al Inventario"
+          accentColor="cyan"
         />
 
         {/* Filtros */}

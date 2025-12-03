@@ -9,7 +9,6 @@ import {
   ChevronDown,
   ChevronUp,
   Package,
-  Save,
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -331,7 +330,10 @@ export function ReposicionList() {
 
   return (
     <>
-      <ReposicionHeader />
+      <ReposicionHeader 
+        showSaveButton={itemsConProductos.length > 0}
+        onSaveClick={() => setShowSaveModal(true)}
+      />
 
       <div className="space-y-6 sm:space-y-8 pb-24">
       {/* Sección: PENDIENTES */}
@@ -427,17 +429,6 @@ export function ReposicionList() {
         </div>
       )}
     </div>
-
-    {/* Botón Guardar Lista - Positioned above bottom nav and FAB */}
-    {itemsConProductos.length > 0 && (
-      <button
-        onClick={() => setShowSaveModal(true)}
-        className="fixed bottom-36 right-4 z-20 w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-xl shadow-fab hover:shadow-fab-hover hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
-        aria-label="Guardar lista"
-      >
-        <Save size={20} />
-      </button>
-    )}
 
     {/* Modal de confirmación de guardado */}
     <Modal
