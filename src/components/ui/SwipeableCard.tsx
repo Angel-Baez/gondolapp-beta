@@ -172,6 +172,7 @@ export function SwipeableCard({
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: onSwipeLeft ? -DRAG_CONSTRAINT : 0, right: onSwipeRight ? DRAG_CONSTRAINT : 0 }}
+        dragListener={!!(onSwipeLeft || onSwipeRight)}
         dragElastic={0.1}
         style={{ x }}
         onDragStart={() => setIsDragging(true)}

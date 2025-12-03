@@ -100,7 +100,7 @@ function HomePageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
-      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors pb-24">
+      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors pb-bottom-nav">
         <Header
           variant="main"
           title="GondolApp"

@@ -211,7 +211,7 @@ export function ScanFAB({
       mainAction={{
         icon: <Plus className="w-7 h-7 text-white" />,
         label: "Agregar",
-        onClick: () => {},
+        onClick: onScan, // Default to scan when FAB is clicked
       }}
       secondaryActions={actions}
       variant={variant}

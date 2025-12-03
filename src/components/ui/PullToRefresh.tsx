@@ -135,7 +135,7 @@ export function PullToRefresh({
         dragDirectionLock
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0.4, bottom: 0 }}
-        style={{ y: isRefreshing ? threshold / 2 : y }}
+        style={{ y }}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         onScroll={handleScroll}

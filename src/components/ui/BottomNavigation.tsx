@@ -12,6 +12,14 @@ import { useHaptics } from "@/hooks/useHaptics";
 
 type ActiveView = "reposicion" | "vencimiento";
 
+// Color mapping for text to background conversion
+const colorToBg: Record<string, string> = {
+  "text-cyan-500": "bg-cyan-500",
+  "text-red-500": "bg-red-500",
+  "text-gray-400": "bg-gray-400",
+  "text-gray-500": "bg-gray-500",
+};
+
 interface BottomNavigationProps {
   activeView: ActiveView;
   onViewChange: (view: ActiveView) => void;
@@ -193,7 +201,7 @@ function NavTab({
             <m.div
               layoutId="nav-indicator"
               className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
-                activeColor.replace("text-", "bg-")
+                colorToBg[activeColor] || "bg-cyan-500"
               }`}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
