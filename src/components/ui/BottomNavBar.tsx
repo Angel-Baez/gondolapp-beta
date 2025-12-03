@@ -36,79 +36,63 @@ const navItems: NavItem[] = [
 
 // Height for the nav bar content area
 export const NAV_CONTENT_HEIGHT = 64;
-// Notch dimensions
-const NOTCH_WIDTH = 88;
-const NOTCH_DEPTH = 32;
+// Notch dimensions - curve goes INWARD (concave)
+const NOTCH_WIDTH = 80;
+const NOTCH_DEPTH = 28;
 
 /**
  * BottomNavBar - iOS/Android style bottom tab bar with FAB notch
  *
  * Native-like features:
  * - Fixed at bottom with safe area insets
- * - Curved notch/cutout for FAB integration
+ * - Curved notch/cutout for FAB integration (concave - curves inward)
  * - Animated indicator
  * - Haptic-ready tap animations
  * - Glassmorphism backdrop
  * - Large touch targets (48px+)
  */
 export function BottomNavBar({ activeView, onViewChange }: BottomNavBarProps) {
-  // SVG path for the notched shape - creates the curved cutout
-  const notchPath = `
-    M 0 ${NOTCH_DEPTH}
-    L ${50 - NOTCH_WIDTH/2 - 8}% ${NOTCH_DEPTH}
-    C ${50 - NOTCH_WIDTH/2}% ${NOTCH_DEPTH}, ${50 - NOTCH_WIDTH/2}% 0, 50% 0
-    C ${50 + NOTCH_WIDTH/2}% 0, ${50 + NOTCH_WIDTH/2}% ${NOTCH_DEPTH}, ${50 + NOTCH_WIDTH/2 + 8}% ${NOTCH_DEPTH}
-    L 100% ${NOTCH_DEPTH}
-    L 100% 100%
-    L 0 100%
-    Z
-  `;
-
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 safe-area-bottom"
       role="navigation"
       aria-label="Navegación principal"
-      style={{ height: `${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}px` }}
+      style={{ height: `${NAV_CONTENT_HEIGHT}px` }}
     >
-      {/* SVG Background with visible notch cutout */}
+      {/* SVG Background with INWARD (concave) notch cutout */}
       <svg
         className="absolute inset-0 w-full h-full"
         preserveAspectRatio="none"
-        viewBox={`0 0 100 ${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}`}
+        viewBox="0 0 100 64"
       >
         <defs>
           <filter id="notchShadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="0" dy="-2" stdDeviation="3" floodColor="#000" floodOpacity="0.1" />
           </filter>
         </defs>
-        {/* Main shape with notch */}
+        {/* Main shape with INWARD curved notch - semicircle going INTO the nav bar */}
         <path
           d={`
-            M 0,${NOTCH_DEPTH}
-            L ${50 - NOTCH_WIDTH/2 - 10},${NOTCH_DEPTH}
-            Q ${50 - NOTCH_WIDTH/2 - 2},${NOTCH_DEPTH} ${50 - NOTCH_WIDTH/2 + 4},${NOTCH_DEPTH - 10}
-            Q ${50 - NOTCH_WIDTH/4},0 50,0
-            Q ${50 + NOTCH_WIDTH/4},0 ${50 + NOTCH_WIDTH/2 - 4},${NOTCH_DEPTH - 10}
-            Q ${50 + NOTCH_WIDTH/2 + 2},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2 + 10},${NOTCH_DEPTH}
-            L 100,${NOTCH_DEPTH}
-            L 100,${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}
-            L 0,${NAV_CONTENT_HEIGHT + NOTCH_DEPTH}
+            M 0,0
+            L ${50 - NOTCH_WIDTH/2},0
+            C ${50 - NOTCH_WIDTH/2},0 ${50 - NOTCH_WIDTH/2 + 5},${NOTCH_DEPTH} 50,${NOTCH_DEPTH}
+            C ${50 + NOTCH_WIDTH/2 - 5},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2},0 ${50 + NOTCH_WIDTH/2},0
+            L 100,0
+            L 100,64
+            L 0,64
             Z
           `}
           className="fill-white dark:fill-dark-surface"
           filter="url(#notchShadow)"
         />
-        {/* Border line following the notch */}
+        {/* Border line following the inward notch curve */}
         <path
           d={`
-            M 0,${NOTCH_DEPTH}
-            L ${50 - NOTCH_WIDTH/2 - 10},${NOTCH_DEPTH}
-            Q ${50 - NOTCH_WIDTH/2 - 2},${NOTCH_DEPTH} ${50 - NOTCH_WIDTH/2 + 4},${NOTCH_DEPTH - 10}
-            Q ${50 - NOTCH_WIDTH/4},0 50,0
-            Q ${50 + NOTCH_WIDTH/4},0 ${50 + NOTCH_WIDTH/2 - 4},${NOTCH_DEPTH - 10}
-            Q ${50 + NOTCH_WIDTH/2 + 2},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2 + 10},${NOTCH_DEPTH}
-            L 100,${NOTCH_DEPTH}
+            M 0,0
+            L ${50 - NOTCH_WIDTH/2},0
+            C ${50 - NOTCH_WIDTH/2},0 ${50 - NOTCH_WIDTH/2 + 5},${NOTCH_DEPTH} 50,${NOTCH_DEPTH}
+            C ${50 + NOTCH_WIDTH/2 - 5},${NOTCH_DEPTH} ${50 + NOTCH_WIDTH/2},0 ${50 + NOTCH_WIDTH/2},0
+            L 100,0
           `}
           fill="none"
           className="stroke-gray-200 dark:stroke-dark-border"
@@ -117,10 +101,9 @@ export function BottomNavBar({ activeView, onViewChange }: BottomNavBarProps) {
         />
       </svg>
 
-      {/* Navigation items - positioned below the notch area */}
+      {/* Navigation items */}
       <div 
         className="relative z-10 max-w-lg mx-auto flex items-stretch h-full"
-        style={{ paddingTop: `${NOTCH_DEPTH}px` }}
       >
         {navItems.map((item, index) => {
           const isActive = activeView === item.id;

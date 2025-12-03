@@ -8,9 +8,10 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  ChevronLeft,
-  ChevronRight,
+  MoveHorizontal,
   Trash2,
+  XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Badge } from "../ui";
@@ -35,66 +36,110 @@ export function ReposicionCard({
   isExpanded,
   onToggleExpand,
 }: ReposicionCardProps) {
-  const { marcarRepuesto, actualizarCantidad, eliminarItem } =
+  const { marcarRepuesto, marcarSinStock, actualizarCantidad, eliminarItem } =
     useReposicionStore();
   const { haptic } = useHaptics();
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
 
-  // Helper to create swipe actions for a specific item
-  const createSwipeActions = (itemId: string, isPending: boolean) => {
-    const handleMarkComplete = () => {
-      marcarRepuesto(itemId, true);
+  // Helper to create swipe actions based on current item state
+  const createSwipeActions = (item: ItemReposicion) => {
+    const isPending = !item.repuesto && !item.sinStock;
+    const isRepuesto = item.repuesto;
+    const isSinStock = item.sinStock;
+
+    // Action: Mark as Repuesto (complete)
+    const handleMarkRepuesto = () => {
+      marcarRepuesto(item.id, true);
       haptic([30, 30, 30]);
       toast.success(
         <m.div
           initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1.2, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          animate={{ scale: 1, opacity: 1 }}
           className="flex items-center gap-2"
         >
-          <m.div
-            initial={{ rotate: -180, scale: 0 }}
-            animate={{ rotate: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-          >
-            <CheckCircle className="text-emerald-500 w-5 h-5" />
-          </m.div>
-          <span>Producto marcado como repuesto</span>
+          <CheckCircle className="text-emerald-500 w-5 h-5" />
+          <span>Marcado como repuesto</span>
         </m.div>,
         { duration: 2000 }
       );
     };
 
+    // Action: Mark as Sin Stock
+    const handleMarkSinStock = () => {
+      marcarSinStock(item.id, true);
+      haptic([30, 30, 30]);
+      toast.success(
+        <m.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex items-center gap-2"
+        >
+          <XCircle className="text-red-500 w-5 h-5" />
+          <span>Marcado sin stock</span>
+        </m.div>,
+        { duration: 2000 }
+      );
+    };
+
+    // Action: Return to Pending
+    const handleReturnToPending = () => {
+      // Reset both flags to return to pending state
+      if (item.repuesto) marcarRepuesto(item.id, false);
+      if (item.sinStock) marcarSinStock(item.id, false);
+      haptic([30, 30, 30]);
+      toast(
+        <m.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="text-cyan-500 w-5 h-5" />
+          <span>Devuelto a pendientes</span>
+        </m.div>,
+        { duration: 2000 }
+      );
+    };
+
+    // Action: Delete item
     const handleDelete = () => {
-      eliminarItem(itemId);
+      eliminarItem(item.id);
       haptic([50, 100, 50]);
       toast.error(
         <m.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ duration: 0.3 }}
           className="flex items-center gap-2"
         >
-          <m.div
-            initial={{ y: 0 }}
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 0.4 }}
-          >
-            <Trash2 className="text-red-500 w-5 h-5" />
-          </m.div>
+          <Trash2 className="text-red-500 w-5 h-5" />
           <span>Producto eliminado</span>
         </m.div>,
         { duration: 2000 }
       );
     };
 
-    return {
-      leftAction: isPending ? SwipeActions.markComplete(handleMarkComplete) : undefined,
-      rightAction: SwipeActions.delete(handleDelete),
-    };
+    // Configure actions based on current state
+    if (isPending) {
+      // Pendientes: Swipe left → Repuesto, Swipe right → Sin Stock
+      return {
+        leftAction: SwipeActions.markComplete(handleMarkRepuesto),
+        rightAction: SwipeActions.markOutOfStock(handleMarkSinStock),
+      };
+    } else if (isRepuesto) {
+      // Repuestos: Swipe left → Volver a Pendiente, Swipe right → Sin Stock
+      return {
+        leftAction: SwipeActions.returnToPending(handleReturnToPending),
+        rightAction: SwipeActions.markOutOfStock(handleMarkSinStock),
+      };
+    } else if (isSinStock) {
+      // Sin Stock: Swipe left → Volver a Pendiente, Swipe right → Eliminar
+      return {
+        leftAction: SwipeActions.returnToPending(handleReturnToPending),
+        rightAction: SwipeActions.delete(handleDelete),
+      };
+    }
+
+    return { leftAction: undefined, rightAction: undefined };
   };
 
   // Colores según sección
@@ -117,6 +162,17 @@ export function ReposicionCard({
   };
 
   const colors = sectionColors[seccion];
+
+  // Get swipe hint text based on section
+  const getSwipeHint = () => {
+    if (seccion === "pendiente") {
+      return "← Repuesto | Sin Stock →";
+    } else if (seccion === "repuesto") {
+      return "← Pendiente | Sin Stock →";
+    } else {
+      return "← Pendiente | Eliminar →";
+    }
+  };
 
   return (
     <div
@@ -184,9 +240,7 @@ export function ReposicionCard({
           >
             <div className="divide-y divide-gray-100 dark:divide-dark-border">
               {variantes.map(({ item, variante }) => {
-                // Only enable swipe for pending items (not already repuesto or sinStock)
-                const isPending = !item.repuesto && !item.sinStock;
-                const { leftAction, rightAction } = createSwipeActions(item.id, isPending);
+                const { leftAction, rightAction } = createSwipeActions(item);
 
                 return (
                   <SwipeableCard
@@ -229,7 +283,7 @@ export function ReposicionCard({
                       </div>
                     </div>
 
-                    {/* Controls - Simplified: quantity + swipe hint */}
+                    {/* Controls - Quantity + swipe hint */}
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-dark-border">
                       {/* Quantity Control */}
                       <div className="flex items-center gap-3">
@@ -270,20 +324,10 @@ export function ReposicionCard({
                         )}
                       </div>
 
-                      {/* Swipe Hint */}
+                      {/* Swipe Hint - Shows available actions */}
                       <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
-                        {isPending && (
-                          <>
-                            <ChevronRight size={14} />
-                            <span>desliza</span>
-                          </>
-                        )}
-                        {!isPending && (
-                          <>
-                            <ChevronLeft size={14} />
-                            <span>eliminar</span>
-                          </>
-                        )}
+                        <MoveHorizontal size={14} />
+                        <span>{getSwipeHint()}</span>
                       </div>
                     </div>
                   </div>

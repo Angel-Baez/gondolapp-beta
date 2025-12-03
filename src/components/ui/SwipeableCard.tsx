@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { CheckCircle, Trash2, XCircle } from "lucide-react";
+import { CheckCircle, RefreshCw, Trash2, XCircle } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 
 interface SwipeAction {
@@ -177,6 +177,14 @@ export const SwipeActions = {
     color: "bg-red-600", // Icon background
     bgColor: "bg-red-500", // Action area background
     label: "Sin stock",
+    onAction,
+  }),
+
+  returnToPending: (onAction: () => void): SwipeAction => ({
+    icon: <RefreshCw size={24} className="text-white" />,
+    color: "bg-cyan-600", // Icon background
+    bgColor: "bg-cyan-500", // Action area background
+    label: "Volver a pendiente",
     onAction,
   }),
 
