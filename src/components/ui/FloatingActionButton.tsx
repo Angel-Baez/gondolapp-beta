@@ -16,11 +16,11 @@ interface FloatingActionButtonProps {
 
 const variantStyles = {
   primary:
-    "bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-cyan-500/30 hover:shadow-cyan-500/50",
+    "bg-gradient-to-br from-cyan-400 to-cyan-600",
   secondary:
-    "bg-gradient-to-br from-red-400 to-red-600 shadow-red-500/30 hover:shadow-red-500/50",
+    "bg-gradient-to-br from-red-400 to-red-600",
   success:
-    "bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30 hover:shadow-emerald-500/50",
+    "bg-gradient-to-br from-emerald-400 to-emerald-600",
 };
 
 const sizeStyles = {
@@ -38,6 +38,7 @@ const iconSizes = {
  *
  * Native-like features:
  * - Elevated with gradient and shadow
+ * - Border matches background to create visual "cutout" effect
  * - Smooth press animation
  * - Positioned for thumb reach
  * - Touch target >= 48px
@@ -64,10 +65,11 @@ export function FloatingActionButton({
         ${variantStyles[variant]}
         rounded-full text-white
         flex items-center justify-center
-        shadow-2xl hover:shadow-3xl
+        shadow-lg
         transition-shadow duration-200
         select-none touch-manipulation
         disabled:opacity-50 disabled:cursor-not-allowed
+        border-4 border-gray-50 dark:border-dark-bg
         ${className}
       `}
       aria-label={label}
@@ -80,7 +82,8 @@ export function FloatingActionButton({
 
 /**
  * ScanFAB - Pre-configured FAB for scan action
- * Positioned fixed at bottom-center, sitting in the bottom nav notch
+ * Positioned fixed at bottom-center, floating above the bottom nav
+ * The border creates a visual "cutout" effect against the nav bar
  */
 interface ScanFABProps {
   icon: LucideIcon;
@@ -89,11 +92,11 @@ interface ScanFABProps {
 }
 
 export function ScanFAB({ icon, onClick, activeView }: ScanFABProps) {
-  // Position the FAB to sit in the INWARD notch
-  // NAV_CONTENT_HEIGHT is 64px, notch curves inward 28px from top
-  // FAB is 64px (w-16 h-16), so bottom should be 32px to center in the notch curve
+  // Position the FAB to float above the nav bar
+  // NAV_CONTENT_HEIGHT is 64px, FAB is 64px (w-16 h-16)
+  // bottom: 30px positions FAB so it overlaps the nav bar nicely
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 z-40" style={{ bottom: '32px' }}>
+    <div className="fixed left-1/2 -translate-x-1/2 z-40" style={{ bottom: '30px' }}>
       <FloatingActionButton
         icon={icon}
         onClick={onClick}
