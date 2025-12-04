@@ -1,0 +1,180 @@
+# Project Configuration Example
+# Copy this file to your project root as `project-context.yml`
+# and customize for your specific project.
+
+# ============================================
+# PROJECT INFORMATION
+# ============================================
+project:
+  name: "MyProject"                    # Your project name
+  type: "pwa"                          # pwa | saas | ecommerce | dashboard | custom
+  description: "Brief description of your project"
+  version: "1.0.0"
+  repository: "org/repo-name"
+
+# ============================================
+# TECHNOLOGY STACK
+# ============================================
+stack:
+  # Frontend Framework
+  framework: "nextjs"                  # nextjs | remix | vite
+  framework_version: "15"              # Major version
+  
+  # Language
+  typescript: true                     # Always recommended
+  strict_mode: true                    # TypeScript strict mode
+  
+  # Styling
+  styling: "tailwind"                  # tailwind | css-modules | styled-components
+  ui_library: "custom"                 # shadcn | radix | mui | custom
+  
+  # State Management
+  client_state: "zustand"              # zustand | jotai | redux
+  server_state: "tanstack-query"       # tanstack-query | swr
+  
+  # Database
+  database:
+    primary: "mongodb"                 # mongodb | postgresql | mysql
+    local: "indexeddb"                 # indexeddb | none (for offline-first)
+    cache: "redis"                     # redis | none
+  
+  # ORM/ODM
+  orm: "prisma"                        # prisma | mongoose | drizzle | none
+  
+  # Authentication
+  auth:
+    provider: "nextauth"               # nextauth | clerk | auth0 | custom
+    strategies:                        # Enabled auth strategies
+      - "email"
+      - "google"
+      - "github"
+
+# ============================================
+# PROJECT FEATURES
+# ============================================
+features:
+  # Core Features
+  authentication: true
+  authorization: true                  # Role-based access control
+  
+  # Offline/PWA
+  pwa: true                            # Progressive Web App
+  offline_first: true                  # Offline-first architecture
+  service_worker: true
+  
+  # API
+  api_type: "rest"                     # rest | graphql | trpc
+  rate_limiting: true
+  
+  # Additional Features
+  ai_integration: false                # AI/LLM features
+  real_time: false                     # WebSocket/SSE
+  file_uploads: false
+  notifications: false                 # Push notifications
+  analytics: false
+  i18n: false                          # Internationalization
+  
+  # Commerce (for ecommerce type)
+  payments: false
+  subscriptions: false
+  inventory: false
+
+# ============================================
+# QUALITY TARGETS
+# ============================================
+quality:
+  # Performance
+  lighthouse_performance: 90           # Minimum score (0-100)
+  lighthouse_accessibility: 90
+  lighthouse_best_practices: 90
+  lighthouse_seo: 90
+  
+  # Core Web Vitals
+  lcp_target: 2.5                      # Seconds
+  fid_target: 100                      # Milliseconds
+  cls_target: 0.1
+  
+  # Code Quality
+  test_coverage: 80                    # Minimum percentage
+  type_coverage: 95                    # TypeScript coverage
+  
+  # Accessibility
+  wcag_level: "AA"                     # A | AA | AAA
+
+# ============================================
+# DEPLOYMENT
+# ============================================
+deployment:
+  platform: "vercel"                   # vercel | aws | railway | render
+  environments:
+    - "development"
+    - "staging"
+    - "production"
+  
+  ci_cd: "github-actions"              # github-actions | gitlab-ci | circleci
+  
+  # Domain (optional)
+  domain: "example.com"
+  
+  # Environment Variables (just names, not values)
+  required_env_vars:
+    - "DATABASE_URL"
+    - "NEXTAUTH_SECRET"
+    - "NEXTAUTH_URL"
+
+# ============================================
+# TEAM & WORKFLOW
+# ============================================
+team:
+  # Code Review
+  required_approvals: 1
+  
+  # Branch Strategy
+  main_branch: "main"
+  develop_branch: "develop"
+  
+  # Git Workflow
+  commit_convention: "conventional"    # conventional | gitmoji | custom
+  
+  # Agent Usage
+  preferred_agents:                    # Agents to prioritize for this project
+    - "orchestrator"
+    - "solution-architect"
+    - "backend-architect"
+
+# ============================================
+# CUSTOM CONTEXT
+# ============================================
+# Add any project-specific context that agents should know about
+custom:
+  # Business Domain
+  domain: "retail"                     # retail | healthcare | finance | etc.
+  
+  # Target Users
+  primary_users: "Retail staff with mobile devices"
+  
+  # Key Constraints
+  constraints:
+    - "Must work offline in areas with poor connectivity"
+    - "Touch targets must be glove-friendly (48px minimum)"
+  
+  # External Integrations
+  integrations:
+    - name: "Open Food Facts API"
+      purpose: "Product data lookup"
+    - name: "Google Gemini"
+      purpose: "Product data normalization"
+  
+  # Special Patterns
+  patterns:
+    - "Offline-first with IndexedDB"
+    - "Background sync when online"
+    - "Chain of responsibility for data normalization"
+
+# ============================================
+# NOTES
+# ============================================
+# - This file is read by agents to understand project context
+# - Update this file when project requirements change
+# - All agents should respect the settings in this file
+# - Template-specific settings can override defaults
