@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Package, Save, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Package, Save, X, Camera, Sparkles, Loader2, X as XIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -37,6 +37,11 @@ export default function FormularioProductoManual({
   const [cargando, setCargando] = useState(false);
   const [nombreCompletoPreview, setNombreCompletoPreview] = useState("");
 
+  // AI Image Analysis state
+  const [analizandoImagen, setAnalizandoImagen] = useState(false);
+  const [imagenCapturada, setImagenCapturada] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Cargar marcas y categorías existentes
   useEffect(() => {
     const cargarDatos = async () => {
@@ -59,11 +64,84 @@ export default function FormularioProductoManual({
 
   // Actualizar preview del nombreCompleto
   useEffect(() => {
-    const partes = [formData.tipo, formData.sabor, formData.tamano, ].filter(
+    const partes = [formData.tipo, formData.sabor, formData.tamano].filter(
       Boolean
     );
     setNombreCompletoPreview(partes.join(" "));
-  }, [formData.tipo, formData.sabor, formData.tamano, ]);
+  }, [formData.tipo, formData.sabor, formData.tamano]);
+
+  // Handler for camera/file input change
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Data = event.target?.result as string;
+      setImagenCapturada(base64Data);
+      
+      // Analyze with AI
+      await analizarImagenConIA(base64Data, file.type);
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset file input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // AI Image Analysis function
+  const analizarImagenConIA = async (imageBase64: string, mimeType: string) => {
+    setAnalizandoImagen(true);
+    
+    try {
+      const response = await fetch("/api/productos/analizar-imagen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64, mimeType }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const { nombreBase, marca, categoria, tipo, tamano, sabor, confianza } = data.data;
+        
+        // Auto-fill form with AI results (only non-empty values)
+        setFormData(prev => ({
+          ...prev,
+          nombreBase: nombreBase || prev.nombreBase,
+          marca: marca || prev.marca,
+          categoria: categoria || prev.categoria,
+          tipo: tipo || prev.tipo,
+          tamano: tamano || prev.tamano,
+          sabor: sabor || prev.sabor,
+        }));
+
+        if (confianza >= 0.7) {
+          toast.success("✨ Producto detectado con alta confianza");
+        } else if (confianza >= 0.4) {
+          toast.success("📷 Información extraída. Verifica los campos.");
+        } else {
+          toast("⚠️ Baja confianza. Revisa y completa los campos.", { icon: "📷" });
+        }
+      } else {
+        const errorMessage = data.error || "No se pudo analizar la imagen";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error al analizar imagen:", error);
+      toast.error("Error al conectar con el servicio de IA");
+    } finally {
+      setAnalizandoImagen(false);
+    }
+  };
+
+  // Clear captured image
+  const limpiarImagen = () => {
+    setImagenCapturada(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,6 +193,8 @@ export default function FormularioProductoManual({
           tamano: "",
           sabor: "",
         });
+        // Resetear imagen capturada
+        setImagenCapturada(null);
         // NO llamar onClose() aquí - el padre (AddProductWorkflow) controla el flujo
       } else {
         toast.error(data.error || "Error al crear el producto");
@@ -136,6 +216,91 @@ export default function FormularioProductoManual({
           <p className="text-lg font-mono font-bold text-cyan-900 dark:text-cyan-400">
             {eanEscaneado}
           </p>
+        </div>
+
+        {/* AI Image Analysis Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-cyan-50 dark:from-purple-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h3 className="font-bold text-gray-800 dark:text-gray-200">
+              Auto-completar con IA
+            </h3>
+          </div>
+          
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Toma una foto del producto y la IA completará los campos automáticamente.
+          </p>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleImageCapture}
+            className="hidden"
+            disabled={analizandoImagen}
+          />
+
+          {/* Image preview or capture button */}
+          {imagenCapturada ? (
+            <div className="relative">
+              <img
+                src={imagenCapturada}
+                alt="Producto capturado"
+                className="w-full h-40 object-contain rounded-lg bg-white dark:bg-dark-card"
+              />
+              <button
+                type="button"
+                onClick={limpiarImagen}
+                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                title="Eliminar imagen"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+              
+              {analizandoImagen && (
+                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center gap-2 text-white">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Analizando...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={analizandoImagen}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {analizandoImagen ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Analizando imagen...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4" />
+                  Tomar Foto del Producto
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Retake photo button when image exists */}
+          {imagenCapturada && !analizandoImagen && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full mt-2"
+            >
+              <Camera className="w-4 h-4" />
+              Tomar otra foto
+            </Button>
+          )}
         </div>
 
         {/* Producto Base */}
