@@ -1,0 +1,175 @@
+# =============================================================================
+# PROJECT CONTEXT - gondolapp-beta
+# =============================================================================
+# Contexto del proyecto para agentes de IA
+# Última actualización: 2025-12-08
+# =============================================================================
+
+project:
+  name: "gondolapp-beta"
+  description: "PWA offline-first para gestión de inventario de supermercado con escaneo de códigos de barras, control de vencimientos y normalización inteligente con IA"
+  repository: "Angel-Baez/gondolapp-beta"
+  type: "pwa"
+  version: "1.0.0"
+
+stack:
+  framework: "next.js"
+  framework_version: "16"
+  react_version: "19"
+  typescript: true
+  styling: "tailwind"
+  ui_library: "lucide-react"
+  animations: "framer-motion"
+  state_management: "zustand"
+  data_fetching: "tanstack-react-query"
+  local_database: "dexie" # IndexedDB wrapper
+  remote_database: "mongodb"
+  orm: "mongodb-native" # Driver nativo, no Mongoose
+  barcode_scanner: "html5-qrcode"
+  ai_sdk: "@google/generative-ai"
+  rate_limiting: "upstash-redis"
+  deployment: "vercel"
+  backend: "next-api-routes"
+  api_style: "rest"
+
+features:
+  authentication: false
+  offline_first: true
+  pwa: true
+  barcode_scanning: true
+  ai_normalization: true
+  ai_provider: "google-gemini"
+  expiry_alerts: true
+  restock_tracking: true
+  feedback_system: true
+  github_issues_integration: true
+  excel_import: true
+  haptic_feedback: true
+
+architecture:
+  pattern: "clean-architecture-solid"
+  layers:
+    interfaces: "src/core/interfaces"
+    types: "src/core/types"
+    repositories: "src/core/repositories"
+    datasources: "src/core/datasources"
+    services: "src/core/services"
+    normalizers: "src/core/normalizers"
+    validators: "src/core/validators"
+    sanitizers: "src/core/sanitizers"
+    container: "src/core/container"
+    utils: "src/core/utils"
+    api: "src/app/api"
+    components: "src/components"
+    hooks: "src/hooks"
+    store: "src/store"
+    lib: "src/lib"
+
+quality_targets:
+  lighthouse_performance: 96
+  lighthouse_accessibility: 95
+  test_coverage: 80
+
+domain:
+  entities:
+    - name: "ProductoBase"
+      description: "Producto genérico (ej: 'Coca-Cola', 'Leche Rica'). Almacena nombre, marca, categoría e imagen."
+      storage: "IndexedDB + MongoDB"
+      table: "productosBase"
+
+    - name: "ProductoVariante"
+      description: "SKU específico con código de barras (ej: 'Coca-Cola 500ml'). Referencia a ProductoBase."
+      storage: "IndexedDB + MongoDB"
+      table: "productosVariantes"
+      relations: "N:1 con ProductoBase"
+
+    - name: "ItemReposicion"
+      description: "Item en lista de reposición/recompra. Rastrea cantidad, estado repuesto y sin stock."
+      storage: "IndexedDB only"
+      table: "itemsReposicion"
+      relations: "N:1 con ProductoVariante"
+
+    - name: "ItemVencimiento"
+      description: "Producto con fecha de vencimiento a controlar. Calcula alertaNivel automáticamente."
+      storage: "IndexedDB only"
+      table: "itemsVencimiento"
+      relations: "N:1 con ProductoVariante"
+      alert_levels:
+        [
+          "critico (≤15d)",
+          "advertencia (≤30d)",
+          "precaucion (≤60d)",
+          "normal (>60d)",
+        ]
+
+    - name: "ListaReposicionHistorial"
+      description: "Historial de listas de reposición completadas con estadísticas y items."
+      storage: "IndexedDB only"
+      table: "listasHistorial"
+
+    - name: "FeedbackReporte"
+      description: "Reportes de bugs/sugerencias de beta-testers con metadata, screenshots e integración GitHub."
+      storage: "MongoDB only"
+      collection: "feedback"
+
+  main_flows:
+    - name: "barcode-scan-to-product"
+      description: "Escaneo → Cache local → MongoDB → Open Food Facts API → Normalización IA → Guardar"
+
+    - name: "add-to-restock-list"
+      description: "Escanear producto → Ajustar cantidad → Agregar a itemsReposicion"
+
+    - name: "add-to-expiry-list"
+      description: "Escanear producto → Ingresar fecha vencimiento → Calcular alertaNivel → Agregar a itemsVencimiento"
+
+    - name: "mark-as-restocked"
+      description: "Expandir producto → Toggle repuesto → Actualizar itemsReposicion"
+
+    - name: "ai-product-normalization"
+      description: "Producto nuevo → Google Gemini API → Extraer marca/nombre/variante → Guardar normalizado"
+
+    - name: "submit-feedback"
+      description: "Usuario reporta bug → Captura metadata → Guarda en MongoDB → Opcional crear GitHub Issue"
+
+conventions:
+  component_naming: "PascalCase"
+  file_naming: "kebab-case"
+  function_naming: "camelCase"
+  hook_naming: "useCamelCase"
+  store_naming: "camelCase"
+  commit_convention: "conventional"
+
+  # Tailwind color conventions
+  primary_action_color: "cyan-500" # Reposición
+  alert_color: "red-500" # Vencimientos
+  destructive_color: "red-100/red-600"
+
+  # Data patterns
+  uuid_generation: "uuid v4"
+  date_storage: "Date objects (not strings)"
+  date_display: "toLocaleDateString('es-ES')"
+
+key_files:
+  database_schema: "src/lib/db.ts"
+  type_definitions: "src/types/index.ts"
+  product_service: "src/core/services/"
+  ai_normalizer: "src/core/normalizers/"
+  main_page: "src/app/page.tsx"
+  barcode_scanner: "src/components/BarcodeScanner.tsx"
+  zustand_stores: "src/store/"
+  custom_hooks: "src/hooks/"
+
+external_apis:
+  - name: "Open Food Facts"
+    endpoint: "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
+    purpose: "Lookup product info by EAN barcode"
+
+  - name: "Google Gemini"
+    purpose: "AI-powered product name normalization"
+    cost: "~$0.000045 per product"
+
+  - name: "MongoDB Atlas"
+    purpose: "Centralized product database + feedback storage"
+
+  - name: "Upstash Redis"
+    purpose: "Rate limiting for API endpoints"
