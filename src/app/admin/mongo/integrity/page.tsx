@@ -61,7 +61,7 @@ export default function IntegrityCheckPage() {
    * Buscar productos base con debounce
    */
   const searchProducts = useCallback(async (query: string) => {
-    if (!query.trim()) {
+    if (!query.trim() || query.trim().length < 2) {
       setSearchResults([]);
       return;
     }
@@ -69,6 +69,11 @@ export default function IntegrityCheckPage() {
     setSearchLoading(true);
     try {
       const response = await fetch(`/api/admin/productos?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
 
       if (data.success) {
@@ -135,6 +140,10 @@ export default function IntegrityCheckPage() {
           nuevoProductoBaseId,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -470,9 +479,15 @@ export default function IntegrityCheckPage() {
               </div>
             )}
 
-            {!searchLoading && searchQuery && searchResults.length === 0 && (
+            {!searchLoading && searchQuery && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
               <div className="text-center py-4 text-sm text-gray-500">
                 No se encontraron productos
+              </div>
+            )}
+            
+            {!searchLoading && searchQuery && searchQuery.trim().length < 2 && (
+              <div className="text-center py-4 text-sm text-gray-500">
+                Escribe al menos 2 caracteres para buscar
               </div>
             )}
 
