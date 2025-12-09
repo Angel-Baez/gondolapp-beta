@@ -89,18 +89,20 @@ export default function IntegrityCheckPage() {
     } finally {
       setSearchLoading(false);
     }
-  }, []);
+  }, [setSearchResults, setSearchLoading]);
 
   /**
    * Efecto para debounce de búsqueda
    */
   useEffect(() => {
+    if (!showReassignModal) return; // Don't search when modal is closed
+
     const timer = setTimeout(() => {
       searchProducts(searchQuery);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, searchProducts]);
+  }, [searchQuery, searchProducts, showReassignModal]);
 
   /**
    * Abrir modal de reasignación
@@ -459,13 +461,17 @@ export default function IntegrityCheckPage() {
             {/* Búsqueda de productos */}
             <div>
               <div className="relative">
+                <label htmlFor="product-search" className="sr-only">
+                  Buscar producto base
+                </label>
                 <Input
+                  id="product-search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar producto base..."
                   className="pl-10"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Escribe el nombre del producto al que quieres reasignar esta variante
@@ -485,7 +491,7 @@ export default function IntegrityCheckPage() {
               </div>
             )}
             
-            {!searchLoading && searchQuery && searchQuery.trim().length < 2 && (
+            {!searchLoading && searchQuery.trim().length < 2 && (
               <div className="text-center py-4 text-sm text-gray-500">
                 Escribe al menos 2 caracteres para buscar
               </div>
@@ -503,17 +509,26 @@ export default function IntegrityCheckPage() {
                     disabled={reassigning}
                     className="w-full p-3 text-left bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                      {producto.nombre}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {producto.marca && <span>Marca: {producto.marca}</span>}
-                      {producto.categoria && <span>• {producto.categoria}</span>}
-                    </div>
-                    {producto.variantesCount !== undefined && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {producto.variantesCount} variante(s)
-                      </p>
+                    {reassigning ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin w-4 h-4 border-2 border-cyan-600 border-t-transparent rounded-full" />
+                        <span className="text-gray-900 dark:text-gray-100">Reasignando...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {producto.nombre}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          {producto.marca && <span>Marca: {producto.marca}</span>}
+                          {producto.categoria && <span>• {producto.categoria}</span>}
+                        </div>
+                        {producto.variantesCount !== undefined && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {producto.variantesCount} variante(s)
+                          </p>
+                        )}
+                      </>
                     )}
                   </button>
                 ))}
