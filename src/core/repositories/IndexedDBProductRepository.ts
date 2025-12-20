@@ -5,7 +5,7 @@
  * Repositorio de productos usando IndexedDB (Dexie)
  */
 
-import { db } from "@/lib/db";
+import { _internalDb as db } from "@/lib/db";
 import { ProductoBase, ProductoVariante } from "@/types";
 import { IProductRepository } from "../interfaces/IProductRepository";
 

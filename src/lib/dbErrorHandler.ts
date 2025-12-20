@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { __unsafeDirectDbAccess as db } from "./db";
 import toast from "react-hot-toast";
 
 /**

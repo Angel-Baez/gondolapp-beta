@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { db } from "@/lib/db";
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
 import { ProductoVariante } from "@/types";
 
 /**
