@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
 import { generarUUID } from "@/lib/utils";
 import {
   EstadisticasReposicion,

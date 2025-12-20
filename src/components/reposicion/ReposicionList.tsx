@@ -1,6 +1,6 @@
 "use client";
 
-import { db } from "@/lib/db";
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
 import { useReposicionStore } from "@/store/reposicion";
 import { ProductoBase, ProductoVariante } from "@/types";
 import {

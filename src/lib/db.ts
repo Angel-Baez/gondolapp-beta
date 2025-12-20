@@ -42,4 +42,95 @@ export class GondolAppDB extends Dexie {
   }
 }
 
-export const db = new GondolAppDB();
+// ✅ Hacer db privado (solo interno en este archivo)
+const db = new GondolAppDB();
+
+// ✅ Exportar facade controlado
+export const dbService = {
+  // Productos Base
+  async getProductosBase() {
+    return await db.productosBase.toArray();
+  },
+  
+  async getProductoBaseById(id: string) {
+    return await db.productosBase.get(id);
+  },
+  
+  async countProductosBase() {
+    return await db.productosBase.count();
+  },
+  
+  async searchProductosBase(term: string) {
+    return await db.productosBase
+      .filter(p => {
+        const nombre = p.nombre.toLowerCase();
+        const marca = p.marca?.toLowerCase() || "";
+        const busqueda = term.toLowerCase();
+        return nombre.includes(busqueda) || marca.includes(busqueda);
+      })
+      .toArray();
+  },
+
+  // Variantes
+  async getVariantes() {
+    return await db.productosVariantes.toArray();
+  },
+  
+  async getVarianteById(id: string) {
+    return await db.productosVariantes.get(id);
+  },
+  
+  async getVarianteByBarcode(barcode: string) {
+    return await db.productosVariantes
+      .where("codigoBarras")
+      .equals(barcode)
+      .first();
+  },
+  
+  async countVariantes() {
+    return await db.productosVariantes.count();
+  },
+
+  // Items Reposición
+  async getItemsReposicion() {
+    return await db.itemsReposicion.toArray();
+  },
+  
+  async countItemsReposicion() {
+    return await db.itemsReposicion.count();
+  },
+
+  // Items Vencimiento
+  async getItemsVencimiento() {
+    return await db.itemsVencimiento.toArray();
+  },
+  
+  async countItemsVencimiento() {
+    return await db.itemsVencimiento.count();
+  },
+
+  // Listas Historial
+  async getListasHistorial() {
+    return await db.listasHistorial.toArray();
+  },
+  
+  async countListasHistorial() {
+    return await db.listasHistorial.count();
+  },
+
+  // Operaciones transaccionales (para casos especiales)
+  async transaction<T>(
+    mode: "r" | "rw" | "r?" | "rw?",
+    tables: string[],
+    callback: () => Promise<T>
+  ): Promise<T> {
+    return await db.transaction(mode, tables as any, callback);
+  },
+};
+
+// ✅ Para componentes que ABSOLUTAMENTE necesitan acceso directo
+// (temporal, durante la migración)
+export const __unsafeDirectDbAccess = db;
+
+// ✅ Re-exportar la clase para IndexedDBProductRepository
+export { db as _internalDb };

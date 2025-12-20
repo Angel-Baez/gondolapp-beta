@@ -1,6 +1,6 @@
 "use client";
 
-import { db } from "@/lib/db";
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
 import { useVencimientoStore } from "@/store/vencimiento";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import {

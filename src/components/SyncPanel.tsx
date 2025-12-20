@@ -71,7 +71,7 @@ export function SyncPanel() {
       setSyncResults(null);
 
       // Obtener datos de IndexedDB (usar tu implementación de Dexie)
-      const { db } = await import("@/lib/db");
+      const { __unsafeDirectDbAccess: db } = await import("@/lib/db");
 
       const [productosBase, variantes, reposicion, vencimientos] =
         await Promise.all([
@@ -117,7 +117,7 @@ export function SyncPanel() {
       const data = await response.json();
 
       if (data.success) {
-        const { db } = await import("@/lib/db");
+        const { __unsafeDirectDbAccess: db } = await import("@/lib/db");
 
         // Limpiar datos locales (opcional)
         const confirmar = await confirmAsync({

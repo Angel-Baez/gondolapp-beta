@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
 import { calcularNivelAlerta, generarUUID } from "@/lib/utils";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import { create } from "zustand";
