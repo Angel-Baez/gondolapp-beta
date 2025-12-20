@@ -1,27 +1,12 @@
 import { ProductoBase, ProductoVariante } from "@/types";
-import { ProductService } from "@/core/services/ProductService";
 import {
-  getProductRepository,
-  getDataSourceManager,
-  getNormalizerChain,
+  getProductService,
 } from "@/core/container/serviceConfig";
 import { deprecationWarning } from "@/lib/deprecation-warnings";
 
 export interface ProductoCompleto {
   base: ProductoBase;
   variante: ProductoVariante;
-}
-
-/**
- * Obtiene instancia de ProductService desde el contenedor IoC
- * ✅ Usa el contenedor para gestión del ciclo de vida
- */
-function getProductService(): ProductService {
-  return new ProductService(
-    getProductRepository(),
-    getDataSourceManager(),
-    getNormalizerChain()
-  );
 }
 
 /**

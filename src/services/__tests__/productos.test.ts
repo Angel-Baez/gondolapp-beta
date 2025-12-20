@@ -20,6 +20,8 @@ describe('Funciones Legacy (deprecated)', () => {
   let consoleWarnSpy: any;
 
   beforeEach(() => {
+    // Clear the WARNED_FUNCTIONS set by importing fresh
+    vi.resetModules();
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -48,10 +50,15 @@ describe('Funciones Legacy (deprecated)', () => {
     });
 
     it('debe mostrar warning solo una vez por sesión', async () => {
-      await obtenerOCrearProducto('123456789');
-      await obtenerOCrearProducto('987654321');
-
-      // Solo un warning (sistema singleton en deprecation-warnings.ts)
+      // Este test verifica que la misma función solo muestre warning una vez
+      // Necesitamos reimportar el módulo para resetear el Set
+      const { obtenerOCrearProducto: obtenerFn } = await import('../productos');
+      
+      await obtenerFn('123456789');
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      
+      await obtenerFn('987654321');
+      // Aún debe ser 1 porque la función ya mostró el warning
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     });
   });

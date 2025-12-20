@@ -39,7 +39,7 @@ describe('useProductService', () => {
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(result.current.error).toBeDefined();
+      expect(result.current.error).toBe('Producto con código invalid no encontrado.');
     });
 
     it('debe actualizar estado de loading correctamente', async () => {
@@ -126,6 +126,38 @@ describe('useProductService', () => {
       });
 
       expect(productos).toEqual([]);
+    });
+  });
+
+  describe('getVariants', () => {
+    it('debe obtener variantes de un producto base', async () => {
+      const { result } = renderHook(() => useProductService());
+
+      let variantes: any;
+      await act(async () => {
+        variantes = await result.current.getVariants('base-123456789');
+      });
+
+      expect(variantes).toBeDefined();
+      expect(Array.isArray(variantes)).toBe(true);
+    });
+  });
+
+  describe('createManualProduct', () => {
+    it('debe crear un producto manualmente', async () => {
+      const { result } = renderHook(() => useProductService());
+
+      let producto: any;
+      await act(async () => {
+        producto = await result.current.createManualProduct('999888777', {
+          nombreBase: 'Producto Manual',
+          marca: 'Test Brand',
+          tamano: '1L',
+        });
+      });
+
+      expect(producto).toBeDefined();
+      expect(producto?.base.nombre).toBe('Producto Manual');
     });
   });
 
