@@ -101,3 +101,16 @@ export function getNormalizerChain(): INormalizerChain {
 export function getDataSourceManager(): IDataSourceManager {
   return container.resolve<IDataSourceManager>(ServiceKeys.DataSourceManager);
 }
+
+/**
+ * Obtiene instancia de ProductService
+ * Usado por el hook useProductService
+ */
+export function getProductService() {
+  const { ProductService } = require('../services/ProductService');
+  return new ProductService(
+    getProductRepository(),
+    getDataSourceManager(),
+    getNormalizerChain()
+  );
+}

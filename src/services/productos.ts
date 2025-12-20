@@ -5,6 +5,7 @@ import {
   getDataSourceManager,
   getNormalizerChain,
 } from "@/core/container/serviceConfig";
+import { deprecationWarning } from "@/lib/deprecation-warnings";
 
 export interface ProductoCompleto {
   base: ProductoBase;
@@ -31,12 +32,21 @@ function getProductService(): ProductService {
  * - Delega a DataSourceManager (Strategy Pattern)
  * - Inversión de dependencias (DIP)
  * 
+ * @deprecated Usar useProductService().scanProduct() en su lugar
+ * Esta función será eliminada en v2.0
+ * 
  * Ya NO consulta Open Food Facts ni IA directamente
  * Mantiene compatibilidad con código existente
  */
 export async function obtenerOCrearProducto(
   ean: string
 ): Promise<ProductoCompleto | null> {
+  deprecationWarning(
+    "obtenerOCrearProducto",
+    "useProductService().scanProduct()",
+    "v2.0"
+  );
+
   try {
     const service = getProductService();
     return await service.getOrCreateProduct(ean);
@@ -49,11 +59,20 @@ export async function obtenerOCrearProducto(
 /**
  * Obtiene un producto completo por ID de variante
  * 
+ * @deprecated Usar useProductService().getProductById() en su lugar
+ * Esta función será eliminada en v2.0
+ * 
  * ✅ REFACTORIZADO CON PRINCIPIOS SOLID
  */
 export async function obtenerProductoCompleto(
   varianteId: string
 ): Promise<ProductoCompleto | null> {
+  deprecationWarning(
+    "obtenerProductoCompleto",
+    "useProductService().getProductById()",
+    "v2.0"
+  );
+
   try {
     const service = getProductService();
     return await service.getProductById(varianteId);
@@ -66,11 +85,20 @@ export async function obtenerProductoCompleto(
 /**
  * Busca productos base por nombre
  * 
+ * @deprecated Usar useProductService().searchProducts() en su lugar
+ * Esta función será eliminada en v2.0
+ * 
  * ✅ REFACTORIZADO CON PRINCIPIOS SOLID
  */
 export async function buscarProductosBase(
   termino: string
 ): Promise<ProductoBase[]> {
+  deprecationWarning(
+    "buscarProductosBase",
+    "useProductService().searchProducts()",
+    "v2.0"
+  );
+
   try {
     const service = getProductService();
     return await service.searchProducts(termino);
@@ -83,11 +111,20 @@ export async function buscarProductosBase(
 /**
  * Obtiene todas las variantes de un producto base
  * 
+ * @deprecated Usar useProductService().getVariants() en su lugar
+ * Esta función será eliminada en v2.0
+ * 
  * ✅ REFACTORIZADO CON PRINCIPIOS SOLID
  */
 export async function obtenerVariantesDeBase(
   productoBaseId: string
 ): Promise<ProductoVariante[]> {
+  deprecationWarning(
+    "obtenerVariantesDeBase",
+    "useProductService().getVariants()",
+    "v2.0"
+  );
+
   try {
     const service = getProductService();
     return await service.getVariants(productoBaseId);
@@ -100,6 +137,9 @@ export async function obtenerVariantesDeBase(
 /**
  * Crea un producto nuevo sin datos de Open Food Facts
  * (usado cuando el código no existe en la API externa)
+ * 
+ * @deprecated Usar useProductService().createManualProduct() en su lugar
+ * Esta función será eliminada en v2.0
  * 
  * ✅ REFACTORIZADO CON PRINCIPIOS SOLID
  */
@@ -114,6 +154,12 @@ export async function crearProductoManual(
     sabor?: string;
   }
 ): Promise<ProductoCompleto> {
+  deprecationWarning(
+    "crearProductoManual",
+    "useProductService().createManualProduct()",
+    "v2.0"
+  );
+
   try {
     const service = getProductService();
     return await service.createManualProduct(ean, datosProducto);
