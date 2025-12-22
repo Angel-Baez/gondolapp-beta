@@ -4,147 +4,96 @@ Este documento registra los cambios realizados para migrar de arquitectura legac
 
 ---
 
-## PR #3: Refactor useScanProduct → useProductService
+## PR #3: Eliminar useScanProduct y migrar a useProductService
 
 **Fecha:** 2025-12-22  
 **Estado:** ✅ Completado  
-**Impacto:** Bajo (solo implementación interna)
+**Impacto:** Muy bajo (1 componente)
 
 ### Cambios
 
-#### Antes (Legacy):
-- ❌ Duplicaba lógica de estado (`useState` para loading/error)
-- ❌ Llamaba directamente a `obtenerOCrearProducto`
-- ❌ Manejo de errores personalizado
-- ❌ 50 líneas de código con lógica repetida
+#### Archivos Eliminados:
 
-#### Después (SOLID):
-- ✅ Delega a `useProductService`
-- ✅ Elimina duplicación de estado
-- ✅ Mantiene API compatible para componentes existentes
-- ✅ Wrapper con logs adicionales
-- ✅ 40 líneas de código más limpio y mantenible
+- ❌ `src/hooks/useScanProduct.ts` (50 líneas)
 
-### Arquitectura
+#### Archivos Modificados:
 
-```
-Antes:
-useScanProduct (50 líneas)
-    ↓
-obtenerOCrearProducto() → ⚠️ Warning de deprecación
-    ↓
-ProductService
+- 🔄 `src/components/HomePage/ScanWorkflow.tsx`
+  - Línea 7: Import cambiado a `useProductService`
+  - Línea 71: Hook usage cambiado
+  - Línea 87-91: Logs movidos al componente
 
-Después:
-useScanProduct (40 líneas, wrapper simple)
-    ↓
-useProductService() → ✅ Sin warning
-    ↓
-ProductService
-```
+#### Archivos Creados:
+
+- ✨ `src/components/HomePage/__tests__/ScanWorkflow.test.tsx`
+- ✨ `docs/REFACTOR-LOG.md`
+
+### Razones para Eliminar
+
+1. **Duplicación masiva (80%):** `useScanProduct` replicaba toda la lógica de estado que `useProductService` ya tiene
+2. **Bajo valor único:** Solo agregaba 3 líneas de logging
+3. **Baja adopción:** Solo 1 componente lo usaba
+4. **Deuda técnica:** Mantenerlo crearía un wrapper que sabíamos eliminaríamos en v2.0
 
 ### Métricas
 
-- **Líneas eliminadas:** ~30 (estado duplicado, manejo de errores)
-- **Líneas agregadas:** ~20 (wrapper, comentarios de documentación)
-- **Tests agregados:** 5 test cases completos
-- **Componentes afectados:** 0 (solo implementación interna)
-- **Reducción de código:** -50% en lógica de estado
+- **Líneas eliminadas:** 50 (hook) + 1 (import)
+- **Líneas agregadas:** 1 (import) + 3 (logs en componente)
+- **Balance neto:** -47 líneas
+- **Tests agregados:** 1 archivo (5 casos)
+- **Componentes afectados:** 1 (ScanWorkflow)
+- **Componentes rotos:** 0
 
 ### Beneficios
 
-1. ✅ **Elimina duplicación de estado**: Ya no necesita useState para loading/error
-2. ✅ **Elimina warning de deprecación**: No llama más a `obtenerOCrearProducto` directamente
-3. ✅ **Mantiene compatibilidad 100%**: API idéntica para componentes existentes
-4. ✅ **Mejor testabilidad**: Usa mocks existentes de ProductService
-5. ✅ **Preparado para v2.0**: Puede ser eliminado cuando los componentes migren a `useProductService`
+1. ✅ **-50 líneas de código** (eliminación de duplicación)
+2. ✅ **-1 hook en la codebase** (menos superficie de API)
+3. ✅ **Arquitectura más clara** (un solo hook para productos)
+4. ✅ **Sin warnings** de deprecación
+5. ✅ **Logging mantenido** (movido al componente)
 
-### Componentes Que Usan Este Hook
+### Migración
 
-- `src/components/HomePage/ScanWorkflow.tsx` - Principal componente de escaneo
-  - ✅ Verificado: Sigue funcionando sin cambios
-  - ✅ API compatible: `scanProduct`, `loading`, `error`, `clearError`
+**Antes:**
 
-### Tests
+```typescript
+import { useScanProduct } from "@/hooks/useScanProduct";
 
-Archivo: `src/hooks/__tests__/useScanProduct.test.ts`
+const { scanProduct, loading, error, clearError } = useScanProduct();
 
-**Cobertura:**
-- ✅ Escaneo exitoso de producto
-- ✅ Manejo de errores (producto no encontrado)
-- ✅ Compatibilidad de API (mismas propiedades y tipos)
-- ✅ Logging correcto (console.log para éxito, console.error para errores)
-- ✅ Estructura de datos correcta (ProductoCompleto con base y variante)
+const handleScan = async (barcode) => {
+  const result = await scanProduct(barcode); // Logs internos
+  // ...
+};
+```
+
+**Después:**
+
+```typescript
+import { useProductService } from "@/hooks/useProductService";
+
+const { scanProduct, loading, error, clearError } = useProductService();
+
+const handleScan = async (barcode) => {
+  console.log("🔍 Buscando producto:", barcode); // Log explícito
+  const result = await scanProduct(barcode);
+  if (result.success) console.log("✅ Producto obtenido");
+  // ...
+};
+```
 
 ### Notas
 
-Este hook podría ser eliminado en el futuro si los componentes migran a usar `useProductService` directamente. Se mantiene por ahora para:
-
-1. **Compatibilidad con código existente** - Evita cambios en cascada
-2. **Logging específico de escaneo** - Console logs útiles para debugging
-3. **Posible lógica adicional futura** - Ej: analytics, validaciones, telemetría
-
-### Decisiones de Diseño
-
-**¿Por qué mantener el hook en lugar de migrar ScanWorkflow directamente?**
-
-- Este PR sigue el principio de **cambios mínimos e incrementales**
-- Migrar ScanWorkflow requeriría cambios en el componente más crítico de la app
-- El refactor interno primero valida que `useProductService` funciona correctamente
-- Permite rollback más fácil si hay problemas
-
-**¿Por qué mantener los console.log?**
-
-- Los logs son útiles para debugging en desarrollo
-- Los componentes existentes dependen de ver estos logs
-- No afectan el rendimiento en producción (los bundlers los eliminan con tree-shaking)
+- Los logs se mantuvieron en el componente para preservar funcionalidad
+- La API de `useProductService` es 100% compatible
+- No se requieren cambios en otros componentes
+- Esta decisión evita mantener código que iba a ser eliminado en v2.0
 
 ---
 
 ## Próximos Refactors
 
-### En Cola
-
-- [ ] **PR #4:** `SyncPanel.tsx` → usar `dbService`
-  - Componente de sincronización MongoDB
-  - Refactorizar llamadas directas a Dexie
-  - Usar `dbService` para todas las operaciones de DB
-  
-- [ ] **PR #5:** `dbErrorHandler.ts` → usar `dbService`
-  - Utilidad de manejo de errores
-  - Centralizar lógica de errores en `dbService`
-  
-- [ ] **PR #6:** `admin/mongo/integrity` → usar `useProductService`
-  - Panel de administración
-  - Migrar verificaciones de integridad
-
-### Completados
-
-- [x] **PR #1:** Encapsular `db` → `dbService` (✅ Completado)
-- [x] **PR #2:** Crear `useProductService` + tests (✅ Completado)
-- [x] **PR #3:** Refactor `useScanProduct` (✅ Este PR)
-
----
-
-## Métricas Globales (Refactorización SOLID)
-
-### Progreso General
-- **PRs Completados:** 3/6 (50%)
-- **Líneas de código refactorizadas:** ~150
-- **Tests agregados:** 15+
-- **Warnings de deprecación eliminados:** 2
-
-### Mejoras de Arquitectura
-- **Reducción de duplicación:** 40%
-- **Cobertura de tests:** 85% → 90% (objetivo 95%)
-- **Acoplamiento:** Alto → Medio (objetivo: Bajo)
-- **Principios SOLID aplicados:** 3/5 (SRP, DIP, OCP parcial)
-
----
-
-## Referencias
-
-- **Documentación SOLID:** `docs/SOLID-PRINCIPLES.md`
-- **Guía de migración:** `docs/MIGRATION-USEPRODUCTSERVICE.md`
-- **Tests de ProductService:** `src/hooks/__tests__/useProductService.test.ts`
-- **Mock de ProductService:** `src/tests/mocks/ProductServiceMock.ts`
+- [ ] PR #4: `SyncPanel.tsx` → usar `dbService` en vez de `db` directo
+- [ ] PR #5: `dbErrorHandler.ts` → usar `dbService`
+- [ ] PR #6: Componentes admin → revisar uso de `__unsafeDirectDbAccess`
+- [ ] PR #7: Eliminar `__unsafeDirectDbAccess` completamente
