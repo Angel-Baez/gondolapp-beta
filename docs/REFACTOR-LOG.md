@@ -13,15 +13,18 @@ Este documento registra los cambios realizados para migrar de arquitectura legac
 ### Cambios
 
 #### Archivos Eliminados:
+
 - ❌ `src/hooks/useScanProduct.ts` (50 líneas)
 
 #### Archivos Modificados:
+
 - 🔄 `src/components/HomePage/ScanWorkflow.tsx`
   - Línea 7: Import cambiado a `useProductService`
   - Línea 71: Hook usage cambiado
   - Línea 87-91: Logs movidos al componente
 
 #### Archivos Creados:
+
 - ✨ `src/components/HomePage/__tests__/ScanWorkflow.test.tsx`
 - ✨ `docs/REFACTOR-LOG.md`
 
@@ -52,6 +55,7 @@ Este documento registra los cambios realizados para migrar de arquitectura legac
 ### Migración
 
 **Antes:**
+
 ```typescript
 import { useScanProduct } from "@/hooks/useScanProduct";
 
@@ -64,6 +68,7 @@ const handleScan = async (barcode) => {
 ```
 
 **Después:**
+
 ```typescript
 import { useProductService } from "@/hooks/useProductService";
 
