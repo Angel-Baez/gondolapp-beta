@@ -148,6 +148,17 @@ async function networkFirstWithCache(request, cacheName, timeout = 5000) {
     }
     return response;
   } catch (error) {
+    // Check if error is due to abort/timeout
+    const isAbortError = error.name === 'AbortError';
+    const isNetworkError = error.name === 'TypeError' || error.message.includes('Failed to fetch');
+    
+    if (isAbortError) {
+      console.log("[SW] Request timed out:", request.url);
+    } else if (isNetworkError) {
+      console.log("[SW] Network error:", request.url);
+    }
+    
+    // Try to serve from cache
     const cached = await cache.match(request);
     if (cached) {
       console.log("[SW] Serving from cache (network failed):", request.url);
@@ -165,6 +176,19 @@ async function networkFirstWithCache(request, cacheName, timeout = 5000) {
       );
     }
     
+    // For timeout errors without cache, return a generic error response
+    if (isAbortError) {
+      console.log("[SW] No cached version available for timed out request:", request.url);
+      return new Response(
+        JSON.stringify({ error: "Request timed out", timeout: true }),
+        {
+          status: 504,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    
+    // For other errors, throw so they can be handled by the caller
     throw error;
   }
 }
