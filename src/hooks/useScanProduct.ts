@@ -8,9 +8,25 @@ import { ProductoCompleto } from "@/services/productos";
  * ✅ Elimina duplicación de lógica de estado
  * ✅ Mantiene compatibilidad con componentes existentes
  * 
- * @deprecated Considerar usar useProductService directamente
- * Este hook se mantiene por compatibilidad pero puede ser eliminado
- * en versiones futuras si no agrega valor adicional.
+ * @deprecated Migrar a useProductService directamente en v2.0
+ * 
+ * Ruta de migración:
+ * ```ts
+ * // Antes:
+ * const { scanProduct, loading, error } = useScanProduct();
+ * 
+ * // Después (v2.0):
+ * const { scanProduct, loading, error } = useProductService();
+ * ```
+ * 
+ * Este hook se mantiene temporalmente para:
+ * - Compatibilidad con código existente (ScanWorkflow.tsx)
+ * - Logging específico de escaneo (útil para debugging)
+ * - Permitir migración gradual sin breaking changes
+ * 
+ * Timeline:
+ * - v1.x: Hook disponible pero marcado como deprecated
+ * - v2.0: Hook será eliminado, usar useProductService directamente
  */
 export function useScanProduct() {
   const { scanProduct, loading, error, clearError } = useProductService();

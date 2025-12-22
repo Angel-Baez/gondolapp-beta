@@ -7,28 +7,36 @@ import { MockProductService } from '@/tests/mocks/ProductServiceMock';
 vi.mock('@/hooks/useProductService', () => ({
   useProductService: () => {
     const service = new MockProductService();
-    let loading = false;
-    let error: string | null = null;
+    
+    // Estado que se mantendrá entre llamadas
+    const state = {
+      loading: false,
+      error: null as string | null,
+    };
     
     return {
       scanProduct: async (barcode: string) => {
-        loading = true;
-        error = null;
+        state.loading = true;
+        state.error = null;
         
         try {
           const producto = await service.getOrCreateProduct(barcode);
-          loading = false;
+          state.loading = false;
           return { success: true, producto };
         } catch (err: any) {
-          error = err.message;
-          loading = false;
+          state.error = err.message;
+          state.loading = false;
           return { success: false, error: err.message };
         }
       },
-      loading,
-      error,
+      get loading() {
+        return state.loading;
+      },
+      get error() {
+        return state.error;
+      },
       clearError: () => {
-        error = null;
+        state.error = null;
       },
     };
   },
