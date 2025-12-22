@@ -118,6 +118,40 @@ export const dbService = {
     return await db.listasHistorial.count();
   },
 
+  // Clear operations
+  async clearProductosBase() {
+    return await db.productosBase.clear();
+  },
+
+  async clearVariantes() {
+    return await db.productosVariantes.clear();
+  },
+
+  async clearItemsReposicion() {
+    return await db.itemsReposicion.clear();
+  },
+
+  async clearItemsVencimiento() {
+    return await db.itemsVencimiento.clear();
+  },
+
+  // BulkPut operations
+  async bulkPutProductosBase(items: ProductoBase[]) {
+    return await db.productosBase.bulkPut(items);
+  },
+
+  async bulkPutVariantes(items: ProductoVariante[]) {
+    return await db.productosVariantes.bulkPut(items);
+  },
+
+  async bulkPutItemsReposicion(items: ItemReposicion[]) {
+    return await db.itemsReposicion.bulkPut(items);
+  },
+
+  async bulkPutItemsVencimiento(items: ItemVencimiento[]) {
+    return await db.itemsVencimiento.bulkPut(items);
+  },
+
   // Operaciones transaccionales (para casos especiales)
   async transaction<T>(
     mode: "r" | "rw" | "r?" | "rw?",

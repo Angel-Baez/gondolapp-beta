@@ -70,15 +70,15 @@ export function SyncPanel() {
       setLoading(true);
       setSyncResults(null);
 
-      // Obtener datos de IndexedDB (usar tu implementación de Dexie)
-      const { __unsafeDirectDbAccess: db } = await import("@/lib/db");
+      // ✅ Usar dbService
+      const { dbService } = await import("@/lib/db");
 
       const [productosBase, variantes, reposicion, vencimientos] =
         await Promise.all([
-          db.productosBase.toArray(),
-          db.productosVariantes.toArray(),
-          db.itemsReposicion.toArray(),
-          db.itemsVencimiento.toArray(),
+          dbService.getProductosBase(),
+          dbService.getVariantes(),
+          dbService.getItemsReposicion(),
+          dbService.getItemsVencimiento(),
         ]);
 
       // Enviar a MongoDB
@@ -98,6 +98,7 @@ export function SyncPanel() {
       if (data.success) {
         setSyncResults(data.results);
         await fetchStats(); // Actualizar estadísticas
+        toast.success("✅ Datos sincronizados correctamente");
       } else {
         toast.error(`Error: ${data.error}`);
       }
@@ -117,7 +118,8 @@ export function SyncPanel() {
       const data = await response.json();
 
       if (data.success) {
-        const { __unsafeDirectDbAccess: db } = await import("@/lib/db");
+        // ✅ Usar dbService
+        const { dbService } = await import("@/lib/db");
 
         // Limpiar datos locales (opcional)
         const confirmar = await confirmAsync({
@@ -128,38 +130,36 @@ export function SyncPanel() {
           cancelLabel: "Cancelar",
           variant: "danger",
         });
+        
         if (confirmar) {
-          await db.transaction(
-            "rw",
-            [
-              db.productosBase,
-              db.productosVariantes,
-              db.itemsReposicion,
-              db.itemsVencimiento,
-            ],
-            async () => {
-              await db.productosBase.clear();
-              await db.productosVariantes.clear();
-              await db.itemsReposicion.clear();
-              await db.itemsVencimiento.clear();
+          // ✅ Clear todas las tablas
+          await Promise.all([
+            dbService.clearProductosBase(),
+            dbService.clearVariantes(),
+            dbService.clearItemsReposicion(),
+            dbService.clearItemsVencimiento(),
+          ]);
 
-              // Usar bulkPut en vez de bulkAdd para manejar correctamente los IDs
-              if (data.data.productosBase?.length) {
-                await db.productosBase.bulkPut(data.data.productosBase);
-              }
-              if (data.data.variantes?.length) {
-                await db.productosVariantes.bulkPut(data.data.variantes);
-              }
-              if (data.data.reposicion?.length) {
-                await db.itemsReposicion.bulkPut(data.data.reposicion);
-              }
-              if (data.data.vencimientos?.length) {
-                await db.itemsVencimiento.bulkPut(data.data.vencimientos);
-              }
-            }
-          );
+          // ✅ BulkPut datos nuevos
+          const putOperations = [];
+          
+          if (data.data.productosBase?.length) {
+            putOperations.push(dbService.bulkPutProductosBase(data.data.productosBase));
+          }
+          if (data.data.variantes?.length) {
+            putOperations.push(dbService.bulkPutVariantes(data.data.variantes));
+          }
+          if (data.data.reposicion?.length) {
+            putOperations.push(dbService.bulkPutItemsReposicion(data.data.reposicion));
+          }
+          if (data.data.vencimientos?.length) {
+            putOperations.push(dbService.bulkPutItemsVencimiento(data.data.vencimientos));
+          }
+
+          await Promise.all(putOperations);
 
           toast.success("✅ Datos descargados correctamente");
+          await fetchStats(); // Actualizar estadísticas
         }
       }
     } catch (error) {
