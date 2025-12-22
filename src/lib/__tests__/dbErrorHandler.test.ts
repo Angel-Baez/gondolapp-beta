@@ -48,16 +48,16 @@ describe('dbErrorHandler (refactorizado con dbService)', () => {
 
       // Mock items antiguos
       vi.mocked(dbService.getItemsReposicion).mockResolvedValue([
-        { id: '1', repuesto: true, agregadoAt: oldDate.toISOString(), actualizadoAt: null } as any,
-        { id: '2', repuesto: false, agregadoAt: oldDate.toISOString(), actualizadoAt: null } as any,
+        { id: '1', repuesto: true, agregadoAt: oldDate, actualizadoAt: null } as any,
+        { id: '2', repuesto: false, agregadoAt: oldDate, actualizadoAt: null } as any,
       ]);
 
       vi.mocked(dbService.getItemsVencimiento).mockResolvedValue([
-        { id: '3', fechaVencimiento: oldDate.toISOString() } as any,
+        { id: '3', fechaVencimiento: oldDate } as any,
       ]);
 
       vi.mocked(dbService.getListasHistorial).mockResolvedValue([
-        { id: '4', fechaGuardado: oldDate.toISOString() } as any,
+        { id: '4', fechaGuardado: oldDate } as any,
       ]);
 
       vi.mocked(dbService.deleteItemReposicion).mockResolvedValue(undefined);
