@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Plus, X } from "lucide-react";
 import { motion as m } from "framer-motion";
-import { useScanProduct } from "@/hooks/useScanProduct";
+import { useProductService } from "@/hooks/useProductService";
 import { useProductSync } from "@/hooks/useProductSync";
 import { useReposicionStore } from "@/store/reposicion";
 import { useVencimientoStore } from "@/store/vencimiento";
@@ -68,7 +68,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   const [pendingEAN, setPendingEAN] = useState<string | null>(null);
   const [codigoNoEncontrado, setCodigoNoEncontrado] = useState<string | null>(null);
 
-  const { scanProduct, loading, error, clearError } = useScanProduct();
+  const { scanProduct, loading, error, clearError } = useProductService();
   const { syncProductToIndexedDB } = useProductSync();
   const { agregarItem: agregarReposicion } = useReposicionStore();
   const { agregarItem: agregarVencimiento } = useVencimientoStore();
@@ -84,9 +84,14 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   }, [showManualProductModal, productoSeleccionado]);
 
   const handleScan = async (codigoBarras: string) => {
+    // ✅ Logs movidos al componente (antes estaban en el hook)
+    console.log("🔍 Buscando producto con código:", codigoBarras);
+    
     const result = await scanProduct(codigoBarras);
     
     if (result.success && result.producto) {
+      console.log("✅ Producto obtenido:", result.producto);
+      
       // Guardar la variante completa con info del base
       setProductoSeleccionado({
         id: result.producto.variante.id,
@@ -104,6 +109,8 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         setShowExpiryModal(true);
       }
     } else {
+      console.error("❌ Error al procesar código:", result.error);
+      
       // Producto no encontrado → Ofrecer registro manual
       setCodigoNoEncontrado(codigoBarras);
       setPendingEAN(codigoBarras);
