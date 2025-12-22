@@ -41,7 +41,8 @@ export class MockProductService {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     if (barcode === 'invalid') {
-      return null; // Producto no encontrado
+      // Producto no encontrado: simulamos error específico de producto inexistente
+      throw new Error(`Producto con código ${barcode} no encontrado.`);
     }
 
     if (barcode === 'network-error') {

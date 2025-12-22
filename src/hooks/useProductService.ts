@@ -178,8 +178,26 @@ export function useProductService() {
     // Estado
     loading,
     error,
-    
-    // Servicio directo (para casos avanzados)
-    service,
   };
+}
+
+/**
+ * Hook avanzado para obtener el ProductService sin gestión de estado.
+ *
+ * ⚠️ ATENCIÓN:
+ * - No gestiona `loading` ni `error`.
+ * - Úsalo solo en casos muy específicos donde controles tú mismo el estado.
+ *
+ * Para la mayoría de los casos, usa `useProductService`.
+ * 
+ * @example
+ * ```tsx
+ * // Solo para casos avanzados donde necesitas control total
+ * const service = useRawProductService();
+ * const resultado = await service.getOrCreateProduct(barcode);
+ * ```
+ */
+export function useRawProductService() {
+  const service = useMemo(() => getProductService(), []);
+  return service;
 }

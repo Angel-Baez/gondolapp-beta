@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useProductService } from '../useProductService';
+import { useProductService, useRawProductService } from '../useProductService';
 import { MockProductService } from '@/tests/mocks/ProductServiceMock';
 
 // Mock del service container
@@ -178,18 +178,27 @@ describe('useProductService', () => {
       expect(result.current.error).toBeNull();
     });
   });
+});
 
-  describe('service singleton', () => {
-    it('debe mantener la misma instancia de service en re-renders', () => {
-      const { result, rerender } = renderHook(() => useProductService());
+describe('useRawProductService', () => {
+  it('debe mantener la misma instancia de service en re-renders', () => {
+    const { result, rerender } = renderHook(() => useRawProductService());
 
-      const service1 = result.current.service;
-      
-      rerender();
-      
-      const service2 = result.current.service;
+    const service1 = result.current;
+    
+    rerender();
+    
+    const service2 = result.current;
 
-      expect(service1).toBe(service2);
-    });
+    expect(service1).toBe(service2);
+  });
+
+  it('debe retornar un servicio funcional', async () => {
+    const { result } = renderHook(() => useRawProductService());
+
+    const producto = await result.current.getOrCreateProduct('123456789');
+
+    expect(producto).toBeDefined();
+    expect(producto?.variante.codigoBarras).toBe('123456789');
   });
 });
