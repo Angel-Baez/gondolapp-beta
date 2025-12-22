@@ -13,6 +13,7 @@ import { NormalizerChain } from "../normalizers/NormalizerChain";
 import { LocalDataSource } from "../datasources/LocalDataSource";
 import { MongoDBDataSource } from "../datasources/MongoDBDataSource";
 import { DataSourceManager } from "../datasources/DataSourceManager";
+import { ProductService } from "../services/ProductService";
 import { IProductRepository } from "../interfaces/IProductRepository";
 import { INormalizerChain } from "../interfaces/INormalizer";
 import { IDataSourceManager } from "../interfaces/IDataSource";
@@ -100,4 +101,16 @@ export function getNormalizerChain(): INormalizerChain {
  */
 export function getDataSourceManager(): IDataSourceManager {
   return container.resolve<IDataSourceManager>(ServiceKeys.DataSourceManager);
+}
+
+/**
+ * Obtiene instancia de ProductService
+ * Usado por el hook useProductService
+ */
+export function getProductService(): ProductService {
+  return new ProductService(
+    getProductRepository(),
+    getDataSourceManager(),
+    getNormalizerChain()
+  );
 }

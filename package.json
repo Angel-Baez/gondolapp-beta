@@ -6,11 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@tanstack/react-query": "^5.17.0",
+    "@testing-library/dom": "^10.4.1",
     "@types/node": "^24.10.1",
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.35.6",
@@ -33,18 +38,25 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.0.4",
+    "@vitest/ui": "^1.0.4",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.8",
+    "jsdom": "^23.0.1",
     "next-pwa": "^5.6.0",
     "tailwindcss": "^3.4.18",
     "typescript-eslint": "^8.47.0",
     "vite-plugin-pwa": "^0.17.0",
+    "vitest": "^1.0.4",
     "workbox-webpack-plugin": "^7.0.0"
   }
 }
