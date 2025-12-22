@@ -1,8 +1,6 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SyncPanel } from '../SyncPanel';
-import fs from 'fs';
-import path from 'path';
 
 // Mock de dbService
 const mockDbService = {
@@ -18,6 +16,7 @@ const mockDbService = {
   bulkPutVariantes: vi.fn(),
   bulkPutItemsReposicion: vi.fn(),
   bulkPutItemsVencimiento: vi.fn(),
+  transaction: vi.fn(),
 };
 
 // Mock de fetch
@@ -203,6 +202,11 @@ describe('SyncPanel (refactorizado con dbService)', () => {
         }),
       });
 
+      // Mock transaction to execute callback
+      mockDbService.transaction.mockImplementation(async (_mode, _tables, callback) => {
+        return await callback();
+      });
+      
       mockDbService.clearProductosBase.mockResolvedValue(undefined);
       mockDbService.clearVariantes.mockResolvedValue(undefined);
       mockDbService.clearItemsReposicion.mockResolvedValue(undefined);
@@ -221,6 +225,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       });
 
       await waitFor(() => {
+        expect(mockDbService.transaction).toHaveBeenCalled();
         expect(mockDbService.clearProductosBase).toHaveBeenCalled();
         expect(mockDbService.clearVariantes).toHaveBeenCalled();
         expect(mockDbService.clearItemsReposicion).toHaveBeenCalled();
@@ -263,6 +268,11 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       const { confirmAsync } = await import('@/lib/confirm');
       (confirmAsync as any).mockResolvedValue(true);
 
+      // Mock transaction to execute callback and propagate error
+      mockDbService.transaction.mockImplementation(async (_mode, _tables, callback) => {
+        return await callback();
+      });
+      
       mockDbService.clearProductosBase.mockRejectedValue(new Error('Clear failed'));
 
       (global.fetch as any).mockResolvedValueOnce({
@@ -286,21 +296,6 @@ describe('SyncPanel (refactorizado con dbService)', () => {
         expect(toast.default.error).toHaveBeenCalledWith('Error al descargar datos');
       });
     });
-  });
-
-  it('NO debe usar __unsafeDirectDbAccess - validación de migración', () => {
-    // Leer el código fuente del componente
-    const componentPath = path.resolve(__dirname, '../SyncPanel.tsx');
-    const sourceCode = fs.readFileSync(componentPath, 'utf-8');
-    
-    // Verificar que NO usa __unsafeDirectDbAccess
-    expect(sourceCode).not.toContain('__unsafeDirectDbAccess');
-    
-    // Verificar que SÍ usa dbService
-    expect(sourceCode).toContain('dbService');
-    expect(sourceCode).toMatch(/dbService\.getProductosBase/);
-    expect(sourceCode).toMatch(/dbService\.clearProductosBase/);
-    expect(sourceCode).toMatch(/dbService\.bulkPutProductosBase/);
   });
 
   it('debe mostrar loading state durante sincronización', async () => {

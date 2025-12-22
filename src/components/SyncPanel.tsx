@@ -132,31 +132,38 @@ export function SyncPanel() {
         });
         
         if (confirmar) {
-          // ✅ Clear todas las tablas
-          await Promise.all([
-            dbService.clearProductosBase(),
-            dbService.clearVariantes(),
-            dbService.clearItemsReposicion(),
-            dbService.clearItemsVencimiento(),
-          ]);
+          // ✅ Usar transacción para garantizar atomicidad (all-or-nothing)
+          await dbService.transaction(
+            "rw",
+            ["productosBase", "productosVariantes", "itemsReposicion", "itemsVencimiento"],
+            async () => {
+              // Clear todas las tablas
+              await Promise.all([
+                dbService.clearProductosBase(),
+                dbService.clearVariantes(),
+                dbService.clearItemsReposicion(),
+                dbService.clearItemsVencimiento(),
+              ]);
 
-          // ✅ BulkPut datos nuevos
-          const putOperations = [];
-          
-          if (data.data.productosBase?.length) {
-            putOperations.push(dbService.bulkPutProductosBase(data.data.productosBase));
-          }
-          if (data.data.variantes?.length) {
-            putOperations.push(dbService.bulkPutVariantes(data.data.variantes));
-          }
-          if (data.data.reposicion?.length) {
-            putOperations.push(dbService.bulkPutItemsReposicion(data.data.reposicion));
-          }
-          if (data.data.vencimientos?.length) {
-            putOperations.push(dbService.bulkPutItemsVencimiento(data.data.vencimientos));
-          }
+              // BulkPut datos nuevos
+              const putOperations = [];
+              
+              if (data.data.productosBase?.length) {
+                putOperations.push(dbService.bulkPutProductosBase(data.data.productosBase));
+              }
+              if (data.data.variantes?.length) {
+                putOperations.push(dbService.bulkPutVariantes(data.data.variantes));
+              }
+              if (data.data.reposicion?.length) {
+                putOperations.push(dbService.bulkPutItemsReposicion(data.data.reposicion));
+              }
+              if (data.data.vencimientos?.length) {
+                putOperations.push(dbService.bulkPutItemsVencimiento(data.data.vencimientos));
+              }
 
-          await Promise.all(putOperations);
+              await Promise.all(putOperations);
+            }
+          );
 
           toast.success("✅ Datos descargados correctamente");
           await fetchStats(); // Actualizar estadísticas
