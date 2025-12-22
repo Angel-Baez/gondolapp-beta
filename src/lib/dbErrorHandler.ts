@@ -1,4 +1,4 @@
-import { __unsafeDirectDbAccess as db } from "./db";
+import { dbService } from "./db";
 import toast from "react-hot-toast";
 
 /**
@@ -92,15 +92,14 @@ export async function handleQuotaExceeded(): Promise<boolean> {
     let deletedCount = 0;
     
     // Clean old reposicion items that have been marked as repuesto (restocked)
-    const oldReposicionItems = await db.itemsReposicion
-      .filter((item) => 
-        item.repuesto === true && 
-        new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
-      )
-      .toArray();
+    const allReposicionItems = await dbService.getItemsReposicion();
+    const oldReposicionItems = allReposicionItems.filter((item) => 
+      item.repuesto === true && 
+      new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
+    );
     
     for (const item of oldReposicionItems) {
-      await db.itemsReposicion.delete(item.id);
+      await dbService.deleteItemReposicion(item.id);
       deletedCount++;
     }
     
@@ -108,22 +107,24 @@ export async function handleQuotaExceeded(): Promise<boolean> {
     const expiredCutoff = new Date();
     expiredCutoff.setDate(expiredCutoff.getDate() - 30);
     
-    const oldVencimientoItems = await db.itemsVencimiento
-      .filter((item) => new Date(item.fechaVencimiento) < expiredCutoff)
-      .toArray();
+    const allVencimientoItems = await dbService.getItemsVencimiento();
+    const oldVencimientoItems = allVencimientoItems.filter((item) => 
+      new Date(item.fechaVencimiento) < expiredCutoff
+    );
     
     for (const item of oldVencimientoItems) {
-      await db.itemsVencimiento.delete(item.id);
+      await dbService.deleteItemVencimiento(item.id);
       deletedCount++;
     }
     
     // Clean old historical lists
-    const oldHistorialItems = await db.listasHistorial
-      .filter((item) => new Date(item.fechaGuardado) < cutoffDate)
-      .toArray();
+    const allHistorialItems = await dbService.getListasHistorial();
+    const oldHistorialItems = allHistorialItems.filter((item) => 
+      new Date(item.fechaGuardado) < cutoffDate
+    );
     
     for (const item of oldHistorialItems) {
-      await db.listasHistorial.delete(item.id);
+      await dbService.deleteListaHistorial(item.id);
       deletedCount++;
     }
     
@@ -304,11 +305,11 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
     itemsVencimiento,
     listasHistorial,
   ] = await Promise.all([
-    db.productosBase.count(),
-    db.productosVariantes.count(),
-    db.itemsReposicion.count(),
-    db.itemsVencimiento.count(),
-    db.listasHistorial.count(),
+    dbService.countProductosBase(),
+    dbService.countVariantes(),
+    dbService.countItemsReposicion(),
+    dbService.countItemsVencimiento(),
+    dbService.countListasHistorial(),
   ]);
   
   return {
@@ -332,11 +333,11 @@ export async function getDatabaseStats(): Promise<DatabaseStats> {
 export async function clearAllData(): Promise<boolean> {
   try {
     await Promise.all([
-      db.productosBase.clear(),
-      db.productosVariantes.clear(),
-      db.itemsReposicion.clear(),
-      db.itemsVencimiento.clear(),
-      db.listasHistorial.clear(),
+      dbService.clearProductosBase(),
+      dbService.clearVariantes(),
+      dbService.clearItemsReposicion(),
+      dbService.clearItemsVencimiento(),
+      dbService.clearListasHistorial(),
     ]);
     
     toast.success("Todos los datos han sido eliminados", { duration: 3000 });

@@ -100,6 +100,10 @@ export const dbService = {
     return await db.itemsReposicion.count();
   },
 
+  async deleteItemReposicion(id: string) {
+    return await db.itemsReposicion.delete(id);
+  },
+
   // Items Vencimiento
   async getItemsVencimiento() {
     return await db.itemsVencimiento.toArray();
@@ -109,6 +113,10 @@ export const dbService = {
     return await db.itemsVencimiento.count();
   },
 
+  async deleteItemVencimiento(id: string) {
+    return await db.itemsVencimiento.delete(id);
+  },
+
   // Listas Historial
   async getListasHistorial() {
     return await db.listasHistorial.toArray();
@@ -116,6 +124,10 @@ export const dbService = {
   
   async countListasHistorial() {
     return await db.listasHistorial.count();
+  },
+
+  async deleteListaHistorial(id: string) {
+    return await db.listasHistorial.delete(id);
   },
 
   // Clear operations
@@ -133,6 +145,10 @@ export const dbService = {
 
   async clearItemsVencimiento() {
     return await db.itemsVencimiento.clear();
+  },
+
+  async clearListasHistorial() {
+    return await db.listasHistorial.clear();
   },
 
   // BulkPut operations
