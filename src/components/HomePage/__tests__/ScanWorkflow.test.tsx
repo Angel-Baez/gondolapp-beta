@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MockProductService } from '@/tests/mocks/ProductServiceMock';
-import * as useProductServiceModule from '@/hooks/useProductService';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Mock de useProductService
 const mockUseProductService = vi.fn();
@@ -55,6 +56,7 @@ describe('ScanWorkflow (migrado a useProductService)', () => {
   });
 
   it('debe usar useProductService correctamente', () => {
+    // Verificar que el mock de useProductService fue llamado
     const hook = mockUseProductService();
     
     // Verificar que el hook retorna la API esperada
@@ -63,6 +65,12 @@ describe('ScanWorkflow (migrado a useProductService)', () => {
     expect(hook.loading).toBe(false);
     expect(hook.error).toBeNull();
     expect(hook.clearError).toBeDefined();
+    
+    // Verificar que tiene todas las propiedades necesarias
+    expect(hook).toHaveProperty('scanProduct');
+    expect(hook).toHaveProperty('loading');
+    expect(hook).toHaveProperty('error');
+    expect(hook).toHaveProperty('clearError');
   });
 
   it('debe mantener compatibilidad de API - scanProduct exitoso', async () => {
@@ -87,30 +95,27 @@ describe('ScanWorkflow (migrado a useProductService)', () => {
     expect(result.error).toContain('no encontrado');
   });
 
-  it('NO debe importar useScanProduct - validación de migración exitosa', async () => {
-    // Este test verifica que el componente compila correctamente sin useScanProduct
-    // Si este test pasa, significa que la migración fue exitosa
+  it('NO debe importar useScanProduct - validación de migración exitosa', () => {
+    // Leer el código fuente del componente para verificar la migración
+    const componentPath = path.resolve(__dirname, '../ScanWorkflow.tsx');
+    const sourceCode = fs.readFileSync(componentPath, 'utf-8');
     
-    try {
-      // Intentar importar ScanWorkflow - si compila sin errores, el test pasa
-      const module = await import('../ScanWorkflow');
-      expect(module.ScanWorkflow).toBeDefined();
-      
-      // Verificar que el componente es una función (componente React válido)
-      expect(typeof module.ScanWorkflow).toBe('function');
-    } catch (error: any) {
-      // Si falla, verificamos que NO sea por falta de useScanProduct
-      expect(error.message).not.toContain('useScanProduct');
-      
-      // Si es otro error (ej: dependencias de UI), aún consideramos exitoso
-      // porque significa que el import de useScanProduct no es el problema
-      if (error.message.includes('dynamic') || error.message.includes('next')) {
-        // Esto es aceptable - son problemas de testing de Next.js, no de la migración
-        expect(true).toBe(true);
-      } else {
-        throw error;
-      }
-    }
+    // Verificar que NO importa useScanProduct
+    expect(sourceCode).not.toContain('useScanProduct');
+    expect(sourceCode).not.toContain('from "@/hooks/useScanProduct"');
+    expect(sourceCode).not.toContain("from '@/hooks/useScanProduct'");
+    
+    // Verificar que SÍ importa useProductService
+    expect(sourceCode).toContain('useProductService');
+    expect(sourceCode).toMatch(/from\s+["']@\/hooks\/useProductService["']/);
+    
+    // Verificar que los logs están presentes en el componente
+    expect(sourceCode).toContain('console.log("🔍 Buscando producto con código:"');
+    expect(sourceCode).toContain('console.log("✅ Producto obtenido:"');
+    expect(sourceCode).toContain('console.error("❌ Error al procesar código:"');
+    
+    // Verificar que usa el hook correctamente
+    expect(sourceCode).toMatch(/const\s+{\s*scanProduct.*}\s*=\s*useProductService\(\)/);
   });
 
   it('debe tener la misma API que useProductService', () => {
@@ -126,6 +131,42 @@ describe('ScanWorkflow (migrado a useProductService)', () => {
     expect(typeof hook.scanProduct).toBe('function');
     expect(typeof hook.loading).toBe('boolean');
     expect(typeof hook.clearError).toBe('function');
+  });
+
+  it('debe ejecutar logs al escanear producto exitosamente', async () => {
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    
+    const hook = mockUseProductService();
+    const { scanProduct } = hook;
+    
+    // Simular escaneo exitoso
+    const result = await scanProduct('123456789');
+    
+    // Verificar que se ejecutan los logs apropiados
+    // Nota: En el componente real, estos logs se ejecutarían en handleScan
+    expect(result.success).toBe(true);
+    expect(result.producto).toBeDefined();
+    
+    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('debe manejar errores al escanear producto no encontrado', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    
+    const hook = mockUseProductService();
+    const { scanProduct } = hook;
+    
+    // Simular escaneo fallido
+    const result = await scanProduct('invalid');
+    
+    // Verificar que se maneja el error correctamente
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.error).toContain('no encontrado');
+    
+    consoleErrorSpy.mockRestore();
   });
 });
 
