@@ -91,8 +91,23 @@ export const dbService = {
     return await db.productosVariantes.count();
   },
 
+  async addProductoBase(base: ProductoBase) {
+    return await db.productosBase.add(base);
+  },
+
+  async addVariante(variante: ProductoVariante) {
+    return await db.productosVariantes.add(variante);
+  },
+
   // Items Reposición
-  async getItemsReposicion() {
+  async getItemsReposicion(options?: { orderBy?: string; reverse?: boolean }) {
+    if (options?.orderBy) {
+      let query = db.itemsReposicion.orderBy(options.orderBy);
+      if (options.reverse) {
+        query = query.reverse();
+      }
+      return await query.toArray();
+    }
     return await db.itemsReposicion.toArray();
   },
   
@@ -100,12 +115,42 @@ export const dbService = {
     return await db.itemsReposicion.count();
   },
 
+  async getItemReposicionById(id: string) {
+    return await db.itemsReposicion.get(id);
+  },
+
+  async getItemReposicionByVarianteId(
+    varianteId: string,
+    filters: { repuesto: boolean; sinStock: boolean }
+  ) {
+    return await db.itemsReposicion
+      .where("varianteId")
+      .equals(varianteId)
+      .and((item) => item.repuesto === filters.repuesto && item.sinStock === filters.sinStock)
+      .first();
+  },
+
+  async getAllItemsReposicion() {
+    return await db.itemsReposicion.toArray();
+  },
+
+  async addItemReposicion(item: ItemReposicion) {
+    return await db.itemsReposicion.add(item);
+  },
+
+  async updateItemReposicion(id: string, changes: Partial<ItemReposicion>) {
+    return await db.itemsReposicion.update(id, changes);
+  },
+
   async deleteItemReposicion(id: string) {
     return await db.itemsReposicion.delete(id);
   },
 
   // Items Vencimiento
-  async getItemsVencimiento() {
+  async getItemsVencimiento(options?: { orderBy?: string }) {
+    if (options?.orderBy) {
+      return await db.itemsVencimiento.orderBy(options.orderBy).toArray();
+    }
     return await db.itemsVencimiento.toArray();
   },
   
@@ -113,17 +158,58 @@ export const dbService = {
     return await db.itemsVencimiento.count();
   },
 
+  async getItemVencimientoById(id: string) {
+    return await db.itemsVencimiento.get(id);
+  },
+
+  async getAllItemsVencimiento() {
+    return await db.itemsVencimiento.toArray();
+  },
+
+  async addItemVencimiento(item: ItemVencimiento) {
+    return await db.itemsVencimiento.add(item);
+  },
+
+  async updateItemVencimiento(id: string, changes: Partial<ItemVencimiento>) {
+    return await db.itemsVencimiento.update(id, changes);
+  },
+
   async deleteItemVencimiento(id: string) {
     return await db.itemsVencimiento.delete(id);
   },
 
   // Listas Historial
-  async getListasHistorial() {
-    return await db.listasHistorial.toArray();
+  async getListasHistorial(options?: { 
+    orderBy?: string; 
+    reverse?: boolean; 
+    limit?: number 
+  }) {
+    let query = db.listasHistorial.orderBy(options?.orderBy || "fechaGuardado");
+    
+    if (options?.reverse) {
+      query = query.reverse();
+    }
+    
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+    
+    return await query.toArray();
   },
   
   async countListasHistorial() {
     return await db.listasHistorial.count();
+  },
+
+  async addListaHistorial(lista: ListaReposicionHistorial) {
+    return await db.listasHistorial.add(lista);
+  },
+
+  async getListasHistorialByDateRange(desde: Date, hasta: Date) {
+    return await db.listasHistorial
+      .where("fechaGuardado")
+      .between(desde, hasta)
+      .toArray();
   },
 
   async deleteListaHistorial(id: string) {
