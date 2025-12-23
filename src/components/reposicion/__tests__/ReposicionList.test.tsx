@@ -18,7 +18,6 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-// Mock de store
 vi.mock('@/store/reposicion', () => ({
   useReposicionStore: () => mockReposicionStore,
 }));
@@ -58,6 +57,7 @@ describe('ReposicionList', () => {
       marca: 'Coca-Cola',
       categoria: 'Bebidas',
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     mockDbService.getVarianteById.mockResolvedValue(mockVariante);
@@ -125,6 +125,7 @@ describe('ReposicionList', () => {
       marca: 'Coca-Cola',
       categoria: 'Bebidas',
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     mockDbService.getVarianteById.mockResolvedValue(mockVariante);

@@ -18,7 +18,6 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
-// Mock de store
 vi.mock('@/store/vencimiento', () => ({
   useVencimientoStore: () => mockVencimientoStore,
 }));
