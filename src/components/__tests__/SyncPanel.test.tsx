@@ -46,8 +46,13 @@ describe('SyncPanel (refactorizado con dbService)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
+    // Suppress expected console errors in tests
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    
     // Setup default fetch responses
     (global.fetch as any).mockResolvedValue({
+      ok: true,
       json: async () => ({
         success: true,
         pagination: {
@@ -104,6 +109,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       mockDbService.getItemsVencimiento.mockResolvedValue([{ id: '1', lote: 'A1' }]);
 
       (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           results: {
@@ -175,6 +181,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       (confirmAsync as any).mockResolvedValue(true); // Usuario confirma
 
       (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           data: {
@@ -188,6 +195,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
 
       // Mock successful fetch for stats
       (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           pagination: {
@@ -241,6 +249,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       (confirmAsync as any).mockResolvedValue(false); // Usuario cancela
 
       (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           data: { productosBase: [], variantes: [], reposicion: [], vencimientos: [] },
@@ -276,6 +285,7 @@ describe('SyncPanel (refactorizado con dbService)', () => {
       mockDbService.clearProductosBase.mockRejectedValue(new Error('Clear failed'));
 
       (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
         json: async () => ({
           success: true,
           data: { productosBase: [{ id: '1' }], variantes: [], reposicion: [], vencimientos: [] },
@@ -316,9 +326,8 @@ describe('SyncPanel (refactorizado con dbService)', () => {
     
     const syncButton = screen.getByText(/Subir Datos/i);
     
-    act(() => {
-      fireEvent.click(syncButton);
-    });
+    // Don't await here - we want to check the loading state
+    fireEvent.click(syncButton);
 
     // Verificar que muestra "Sincronizando" durante la operación
     await waitFor(() => {
@@ -326,10 +335,28 @@ describe('SyncPanel (refactorizado con dbService)', () => {
     });
 
     // Resolver la promesa
-    act(() => {
+    await act(async () => {
       resolvePromise({
-        json: async () => ({ success: true, results: { inserted: {}, updated: {}, errors: [] } })
+        ok: true,
+        json: async () => ({ 
+          success: true, 
+          results: { inserted: {}, updated: {}, errors: [] },
+          pagination: {
+            total: {
+              productosBase: 0,
+              variantes: 0,
+              reposicion: 0,
+              vencimientos: 0,
+            },
+          },
+          timestamp: new Date().toISOString(),
+        })
       });
+    });
+
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.queryByText(/Sincronizando/i)).not.toBeInTheDocument();
     });
   });
 });
