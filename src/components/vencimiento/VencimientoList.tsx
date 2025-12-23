@@ -1,6 +1,6 @@
 "use client";
 
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { useVencimientoStore } from "@/store/vencimiento";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import {
@@ -47,7 +47,7 @@ export function VencimientoList() {
       setLoading(true);
       const itemsCompletos = await Promise.all(
         items.map(async (item) => {
-          const variante = await db.productosVariantes.get(item.varianteId);
+          const variante = await dbService.getVarianteById(item.varianteId);
           if (!variante) return null;
           return { item, variante };
         })
