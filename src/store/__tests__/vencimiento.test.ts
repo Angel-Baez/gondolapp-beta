@@ -38,16 +38,6 @@ describe('vencimiento store (refactorizado con dbService)', () => {
     alertaNivel: 'normal',
   };
 
-  const mockVariante: ProductoVariante = {
-    id: 'var-123',
-    productoBaseId: 'base-123',
-    codigoBarras: '123456789',
-    nombreCompleto: 'Coca-Cola 2L',
-    tipo: 'Regular',
-    tamano: '2L',
-    createdAt: new Date(),
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset store state

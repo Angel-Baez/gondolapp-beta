@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useReposicionStore } from '../reposicion';
 import { dbService } from '@/lib/db';
 import { ItemReposicion, ProductoVariante, ProductoBase } from '@/types';
-import * as utils from '@/lib/utils';
 
 // Mock dbService
 vi.mock('@/lib/db', () => ({

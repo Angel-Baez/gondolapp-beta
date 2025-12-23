@@ -70,12 +70,22 @@ describe('useProductVerification (refactorizado con dbService)', () => {
 
       expect(result.current.checking).toBe(false);
 
-      const checkPromise = act(async () => {
-        await result.current.checkExists('123456789');
+      // Start the async operation and verify loading state
+      let checkPromise: Promise<any>;
+      await act(async () => {
+        checkPromise = result.current.checkExists('123456789');
+        // Wait a tiny bit to allow the state update to occur
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+      
+      expect(result.current.checking).toBe(true);
+
+      // Wait for completion
+      await act(async () => {
+        await checkPromise!;
       });
 
-      // Durante la ejecución, checking eventualmente será false
-      await checkPromise;
+      // Verify checking is false after completion
       expect(result.current.checking).toBe(false);
     });
   });

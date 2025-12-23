@@ -547,7 +547,7 @@ Completar la migración de accesos directos a Dexie (`__unsafeDirectDbAccess`) e
 
 - 🔄 `src/lib/db.ts`
   - **Productos:**
-    - `addProductoBase(base: ProductoBase)` - Ya existía como `getVarianteByBarcode` ✓
+    - `addProductoBase(base: ProductoBase)` - Nuevo método para agregar registros de `ProductoBase`
     - `addVariante(variante: ProductoVariante)`
   
   - **Vencimiento (6 métodos):**
