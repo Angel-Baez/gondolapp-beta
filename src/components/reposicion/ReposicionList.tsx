@@ -1,6 +1,6 @@
 "use client";
 
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { useReposicionStore } from "@/store/reposicion";
 import { ProductoBase, ProductoVariante } from "@/types";
 import {
@@ -95,10 +95,10 @@ export function ReposicionList() {
 
           if (!productoData) {
             // Si no está en cache, cargar desde DB
-            const variante = await db.productosVariantes.get(item.varianteId);
+            const variante = await dbService.getVarianteById(item.varianteId);
             if (!variante) return null;
 
-            const base = await db.productosBase.get(variante.productoBaseId);
+            const base = await dbService.getProductoBaseById(variante.productoBaseId);
             if (!base) return null;
 
             productoData = { variante, base };
