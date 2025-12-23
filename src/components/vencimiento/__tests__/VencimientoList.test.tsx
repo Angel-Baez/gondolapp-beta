@@ -1,10 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { VencimientoList } from '../VencimientoList';
+import { ItemVencimiento } from '@/types';
 
 // Mock de store
 const mockVencimientoStore = {
-  items: [],
+  items: [] as ItemVencimiento[],
   cargarItems: vi.fn(),
   actualizarFecha: vi.fn(),
   recalcularAlertas: vi.fn(),

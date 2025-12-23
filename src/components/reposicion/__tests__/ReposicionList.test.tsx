@@ -1,10 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReposicionList } from '../ReposicionList';
+import { ItemReposicion } from '@/types';
 
 // Mock de store
 const mockReposicionStore = {
-  items: [],
+  items: [] as ItemReposicion[],
   cargarItems: vi.fn(),
   guardarListaActual: vi.fn(),
 };
