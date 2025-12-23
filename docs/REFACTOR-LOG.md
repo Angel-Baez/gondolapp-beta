@@ -251,9 +251,169 @@ const handleScan = async (barcode) => {
 
 ---
 
+## PR #5+6 (Combinado): Refactorizar dbErrorHandler y componentes admin
+
+**Fecha:** 2025-12-22  
+**Estado:** ✅ Completado  
+**Impacto:** Bajo-Medio (utilidades y admin)
+
+### Cambios
+
+#### Archivos Modificados:
+
+- 🔄 `src/lib/db.ts`
+  - Agregados 4 métodos nuevos para dbErrorHandler:
+    - `deleteItemReposicion(id: string)` - Eliminar item de reposición
+    - `deleteItemVencimiento(id: string)` - Eliminar item de vencimiento
+    - `deleteListaHistorial(id: string)` - Eliminar lista del historial
+    - `clearListasHistorial()` - Limpiar todas las listas del historial
+  - Total: +20 líneas nuevas
+
+- 🔄 `src/lib/dbErrorHandler.ts`
+  - Línea 1: Import de `dbService` en lugar de `__unsafeDirectDbAccess`
+  - Líneas 95-105: Limpieza de itemsReposicion usando `dbService.getItemsReposicion()` + `deleteItemReposicion()`
+  - Líneas 110-117: Limpieza de itemsVencimiento usando `dbService.getItemsVencimiento()` + `deleteItemVencimiento()`
+  - Líneas 120-127: Limpieza de listasHistorial usando `dbService.getListasHistorial()` + `deleteListaHistorial()`
+  - Líneas 305-313: Estadísticas usando `dbService.count*()` métodos
+  - Líneas 335-341: clearAllData usando `dbService.clear*()` métodos
+  - Total: 6 funciones refactorizadas, 1 import cambiado
+
+#### Archivos Creados:
+
+- ✨ `src/lib/__tests__/dbErrorHandler.test.ts` (6 test cases)
+
+### Razones para Refactorizar
+
+1. **Encapsulación:** Eliminar último acceso directo en utilities críticas
+2. **Consistencia:** Alinear con arquitectura SOLID de PRs anteriores (#1-4)
+3. **Preparación:** Penúltimo paso antes de eliminar `__unsafeDirectDbAccess`
+4. **Testabilidad:** dbService es fácil de mockear para tests unitarios
+
+### Estrategia de Filtrado
+
+**Dexie queries vs Filtrado manual:**
+
+```typescript
+// ❌ Antes: Query Dexie (encadenado)
+const items = await db.table
+  .filter(item => condition)
+  .toArray();
+
+// ✅ Después: Filtrado manual (más simple)
+const allItems = await dbService.getTable();
+const filtered = allItems.filter(item => condition);
+```
+
+**Razón:**
+- dbService no expone queries Dexie (by design)
+- Filtrado manual es suficiente para cleanup scenarios
+- Performance aceptable (tablas tienen pocos registros antiguos en escenarios de cuota excedida)
+
+### Componentes Admin
+
+**Resultado de búsqueda:** ✅ **Componentes admin ya están limpios**
+
+```bash
+$ grep -r "__unsafeDirectDbAccess" src/app/admin/
+# No resultados encontrados
+```
+
+Todos los componentes en `src/app/admin/` ya fueron migrados a `dbService` en PRs anteriores.
+
+### Métricas
+
+- **Métodos agregados a dbService:** 4
+- **Accesos directos eliminados:** 1 (dbErrorHandler.ts)
+- **Funciones refactorizadas:** 6 (handleQuotaExceeded x3, getDatabaseStats, clearAllData)
+- **Tests creados:** 6 casos
+- **Tests totales del proyecto:** 43 (37 + 6) ✅ todos pasan
+
+### Beneficios
+
+1. ✅ **dbErrorHandler completamente encapsulado**
+2. ✅ **Preparado para eliminar export inseguro**
+3. ✅ **Tests de utilidades críticas de limpieza**
+4. ✅ **Sin breaking changes**
+5. ✅ **Build exitoso** (TypeScript sin errores)
+6. ✅ **Componentes admin verificados** (ya limpios)
+
+### Migración
+
+**Antes (handleQuotaExceeded):**
+
+```typescript
+import { __unsafeDirectDbAccess as db } from "./db";
+
+const oldReposicionItems = await db.itemsReposicion
+  .filter((item) => 
+    item.repuesto === true && 
+    new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
+  )
+  .toArray();
+
+for (const item of oldReposicionItems) {
+  await db.itemsReposicion.delete(item.id);
+  deletedCount++;
+}
+```
+
+**Después (handleQuotaExceeded):**
+
+```typescript
+import { dbService } from "./db";
+
+const allReposicionItems = await dbService.getItemsReposicion();
+const oldReposicionItems = allReposicionItems.filter((item) => 
+  item.repuesto === true && 
+  new Date(item.actualizadoAt || item.agregadoAt) < cutoffDate
+);
+
+for (const item of oldReposicionItems) {
+  await dbService.deleteItemReposicion(item.id);
+  deletedCount++;
+}
+```
+
+**Antes (getDatabaseStats):**
+
+```typescript
+const [productosBase, variantes, ...] = await Promise.all([
+  db.productosBase.count(),
+  db.productosVariantes.count(),
+  // ...
+]);
+```
+
+**Después (getDatabaseStats):**
+
+```typescript
+const [productosBase, variantes, ...] = await Promise.all([
+  dbService.countProductosBase(),
+  dbService.countVariantes(),
+  // ...
+]);
+```
+
+### Tests Creados
+
+1. ✅ `handleQuotaExceeded()` - limpieza exitosa de items antiguos
+2. ✅ `handleQuotaExceeded()` - retorna false si no hay items antiguos
+3. ✅ `handleQuotaExceeded()` - manejo de errores durante cleanup
+4. ✅ `getDatabaseStats()` - obtener estadísticas usando dbService.count
+5. ✅ `clearAllData()` - limpiar todas las tablas usando dbService
+6. ✅ `clearAllData()` - manejo de errores al limpiar
+
+### Notas
+
+- dbErrorHandler usa filtrado manual en memoria (más simple que queries Dexie)
+- Performance aceptable (tablas pequeñas en cleanup scenarios)
+- Componentes admin ya estaban limpios (no se requirieron cambios)
+- Este es el **penúltimo paso** antes de eliminar `__unsafeDirectDbAccess` completamente
+
+---
+
 ## Próximos Refactors
 
 - [x] PR #4: `SyncPanel.tsx` → usar `dbService` en vez de `db` directo ✅
-- [ ] PR #5: `dbErrorHandler.ts` → usar `dbService`
-- [ ] PR #6: Componentes admin → revisar uso de `__unsafeDirectDbAccess`
+- [x] PR #5+6: `dbErrorHandler.ts` y componentes admin → usar `dbService` ✅
 - [ ] PR #7: Eliminar `__unsafeDirectDbAccess` completamente
