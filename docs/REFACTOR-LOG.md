@@ -412,8 +412,121 @@ const [productosBase, variantes, ...] = await Promise.all([
 
 ---
 
+## PR #7: Refactorizar UI Components (VencimientoList + ReposicionList)
+
+**Fecha:** 2025-12-23  
+**Estado:** ✅ Completado  
+**Impacto:** Bajo (UI components)
+
+### Cambios
+
+#### Archivos Modificados:
+
+- 🔄 `src/components/vencimiento/VencimientoList.tsx`
+  - Línea 3: Import de `dbService` en lugar de `__unsafeDirectDbAccess`
+  - Línea 50: Usar `dbService.getVarianteById()` en lugar de `db.productosVariantes.get()`
+
+- 🔄 `src/components/reposicion/ReposicionList.tsx`
+  - Línea 3: Import de `dbService` en lugar de `__unsafeDirectDbAccess`
+  - Línea 98: Usar `dbService.getVarianteById()` en lugar de `db.productosVariantes.get()`
+  - Línea 101: Usar `dbService.getProductoBaseById()` en lugar de `db.productosBase.get()`
+
+#### Archivos Creados:
+
+- ✨ `src/components/vencimiento/__tests__/VencimientoList.test.tsx` (4 test cases)
+- ✨ `src/components/reposicion/__tests__/ReposicionList.test.tsx` (4 test cases)
+
+### Razones para Refactorizar
+
+1. **Encapsulación:** Componentes UI no deben acceder directamente a Dexie
+2. **Consistencia:** Alinear con arquitectura SOLID de PRs anteriores
+3. **Testabilidad:** dbService es fácil de mockear en tests de componentes
+4. **Preparación:** Continuar eliminando usos de `__unsafeDirectDbAccess`
+
+### Métricas
+
+- **Métodos agregados a dbService:** 0 (ya existían `getVarianteById` y `getProductoBaseById`)
+- **Accesos directos eliminados:** 2 (VencimientoList + ReposicionList)
+- **Componentes refactorizados:** 2
+- **Tests creados:** 8 casos (4 por componente)
+- **Tests totales del proyecto:** 51 (43 + 8) ✅
+
+### Beneficios
+
+1. ✅ **Componentes UI completamente encapsulados**
+2. ✅ **Tests de UI con mocks de dbService**
+3. ✅ **Sin breaking changes**
+4. ✅ **Build exitoso**
+
+### Migración
+
+**Antes (VencimientoList):**
+
+```typescript
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
+
+const variante = await db.productosVariantes.get(item.varianteId);
+```
+
+**Después (VencimientoList):**
+
+```typescript
+import { dbService } from "@/lib/db";
+
+const variante = await dbService.getVarianteById(item.varianteId);
+```
+
+**Antes (ReposicionList):**
+
+```typescript
+import { __unsafeDirectDbAccess as db } from "@/lib/db";
+
+const variante = await db.productosVariantes.get(item.varianteId);
+if (!variante) return null;
+
+const base = await db.productosBase.get(variante.productoBaseId);
+if (!base) return null;
+```
+
+**Después (ReposicionList):**
+
+```typescript
+import { dbService } from "@/lib/db";
+
+const variante = await dbService.getVarianteById(item.varianteId);
+if (!variante) return null;
+
+const base = await dbService.getProductoBaseById(variante.productoBaseId);
+if (!base) return null;
+```
+
+### Tests Creados
+
+**VencimientoList (4 casos):**
+1. ✅ Mostrar mensaje cuando no hay items
+2. ✅ Cargar variantes usando dbService
+3. ✅ Manejar variantes no encontradas
+4. ✅ Agrupar items por nivel de alerta
+
+**ReposicionList (4 casos):**
+1. ✅ Mostrar mensaje cuando no hay items
+2. ✅ Cargar variante + base usando dbService
+3. ✅ Manejar variante no encontrada
+4. ✅ Agrupar items por sección (pendiente, repuesto, sinStock)
+
+### Notas
+
+- Ambos componentes usan cache local (Map) para productos
+- Cache sigue funcionando igual (no afectado por el cambio)
+- Performance sin cambios (mismo número de queries)
+- Los métodos `getVarianteById()` y `getProductoBaseById()` ya existían en dbService desde PRs anteriores
+
+---
+
 ## Próximos Refactors
 
 - [x] PR #4: `SyncPanel.tsx` → usar `dbService` en vez de `db` directo ✅
 - [x] PR #5+6: `dbErrorHandler.ts` y componentes admin → usar `dbService` ✅
-- [ ] PR #7: Eliminar `__unsafeDirectDbAccess` completamente
+- [x] PR #7: `VencimientoList.tsx` y `ReposicionList.tsx` → usar `dbService` ✅
+- [ ] PR #8: Hooks + Services → usar `dbService`
+- [ ] PR #9: Stores + Cleanup Final → eliminar `__unsafeDirectDbAccess`
