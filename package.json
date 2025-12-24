@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "validate-db-access": "node scripts/validate-db-access.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",

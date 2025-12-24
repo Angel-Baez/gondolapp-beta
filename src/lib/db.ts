@@ -264,9 +264,58 @@ export const dbService = {
   },
 };
 
-// ✅ Para componentes que ABSOLUTAMENTE necesitan acceso directo
-// (temporal, durante la migración)
-export const __unsafeDirectDbAccess = db;
-
-// ✅ Re-exportar la clase para IndexedDBProductRepository
+/**
+ * ⚠️ INTERNAL USE ONLY
+ * 
+ * Export para uso EXCLUSIVO en la capa de Repository Pattern.
+ * Este export permite a IndexedDBProductRepository acceder directamente
+ * a Dexie para implementar el patrón Repository de arquitectura limpia.
+ * 
+ * ❌ NO USAR en:
+ * - Componentes React
+ * - Hooks
+ * - Services
+ * - Stores (Zustand)
+ * 
+ * ✅ USAR SOLO en:
+ * - src/core/repositories/*
+ * 
+ * @internal
+ */
 export { db as _internalDb };
+
+/**
+ * ⚠️ DEPRECATED - Will be removed in v2.0
+ * 
+ * Direct access to Dexie database instance.
+ * This export is DEPRECATED and will be removed in version 2.0.
+ * 
+ * Migration path:
+ * 1. Replace with 'dbService' methods (see docs/MIGRATION-DB-SERVICE.md)
+ * 2. If you need a method not in dbService, add it to dbService first
+ * 3. For Repository Pattern implementations, use '_internalDb' instead
+ * 
+ * Current legitimate uses:
+ * - src/core/repositories/IndexedDBProductRepository.ts (via _internalDb)
+ * 
+ * @deprecated Use 'dbService' instead
+ * @see {@link dbService}
+ */
+export const __unsafeDirectDbAccess = new Proxy(db, {
+  get(target, prop, receiver) {
+    // Obtener información del caller (stack trace)
+    const stack = new Error().stack || '';
+    const callerLine = stack.split('\n')[2] || 'unknown';
+    
+    console.warn(
+      `⚠️ DEPRECATED: Direct Dexie access via '__unsafeDirectDbAccess'\n` +
+      `   Property: '${String(prop)}'\n` +
+      `   Called from: ${callerLine.trim()}\n` +
+      `   → Use 'dbService' instead\n` +
+      `   → This export will be REMOVED in v2.0\n` +
+      `   → See: docs/MIGRATION-DB-SERVICE.md`
+    );
+    
+    return Reflect.get(target, prop, receiver);
+  }
+});
