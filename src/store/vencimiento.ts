@@ -1,4 +1,4 @@
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { calcularNivelAlerta, generarUUID } from "@/lib/utils";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import { create } from "zustand";
@@ -33,9 +33,9 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
   cargarItems: async () => {
     set({ loading: true, error: null });
     try {
-      const items = await db.itemsVencimiento
-        .orderBy("fechaVencimiento")
-        .toArray();
+      const items = await dbService.getItemsVencimiento({ 
+        orderBy: "fechaVencimiento" 
+      });
       set({ items, loading: false });
     } catch (error) {
       set({ error: "Error al cargar items de vencimiento", loading: false });
@@ -61,7 +61,7 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
         alertaNivel,
       };
 
-      await db.itemsVencimiento.add(nuevoItem);
+      await dbService.addItemVencimiento(nuevoItem);
       await get().cargarItems();
     } catch (error) {
       set({ error: "Error al agregar item de vencimiento" });
@@ -71,7 +71,7 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
   actualizarFecha: async (id: string, fechaVencimiento: Date) => {
     try {
       const alertaNivel = calcularNivelAlerta(fechaVencimiento);
-      await db.itemsVencimiento.update(id, {
+      await dbService.updateItemVencimiento(id, {
         fechaVencimiento,
         alertaNivel,
       });
@@ -83,7 +83,7 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
 
   actualizarCantidad: async (id: string, cantidad: number) => {
     try {
-      await db.itemsVencimiento.update(id, { cantidad });
+      await dbService.updateItemVencimiento(id, { cantidad });
       await get().cargarItems();
     } catch (error) {
       set({ error: "Error al actualizar cantidad" });
@@ -92,7 +92,7 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
 
   eliminarItem: async (id: string) => {
     try {
-      await db.itemsVencimiento.delete(id);
+      await dbService.deleteItemVencimiento(id);
       await get().cargarItems();
     } catch (error) {
       set({ error: "Error al eliminar item" });
@@ -101,10 +101,10 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
 
   obtenerItemConVariante: async (id: string) => {
     try {
-      const item = await db.itemsVencimiento.get(id);
+      const item = await dbService.getItemVencimientoById(id);
       if (!item) return null;
 
-      const variante = await db.productosVariantes.get(item.varianteId);
+      const variante = await dbService.getVarianteById(item.varianteId);
       if (!variante) return null;
 
       return { item, variante };
@@ -115,12 +115,12 @@ export const useVencimientoStore = create<VencimientoStore>((set, get) => ({
 
   recalcularAlertas: async () => {
     try {
-      const items = await db.itemsVencimiento.toArray();
+      const items = await dbService.getAllItemsVencimiento();
 
       for (const item of items) {
         const nuevoNivel = calcularNivelAlerta(item.fechaVencimiento);
         if (nuevoNivel !== item.alertaNivel) {
-          await db.itemsVencimiento.update(item.id, {
+          await dbService.updateItemVencimiento(item.id, {
             alertaNivel: nuevoNivel,
           });
         }

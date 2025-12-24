@@ -1,4 +1,4 @@
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { ProductoCompleto } from "./productos";
 
 /**
@@ -20,8 +20,8 @@ export class ProductSyncService {
     try {
       // Verificar existencia de ambos registros en paralelo
       const [baseExistente, varianteExistente] = await Promise.all([
-        db.productosBase.get(producto.base.id),
-        db.productosVariantes.get(producto.variante.id),
+        dbService.getProductoBaseById(producto.base.id),
+        dbService.getVarianteById(producto.variante.id),
       ]);
 
       // Preparar operaciones de inserción
@@ -30,7 +30,7 @@ export class ProductSyncService {
       // Sincronizar ProductoBase con IndexedDB si no existe
       if (!baseExistente) {
         insertOperations.push(
-          db.productosBase.add({
+          dbService.addProductoBase({
             id: producto.base.id,
             nombre: producto.base.nombre,
             marca: producto.base.marca,
@@ -46,7 +46,7 @@ export class ProductSyncService {
       // Sincronizar ProductoVariante con IndexedDB si no existe
       if (!varianteExistente) {
         insertOperations.push(
-          db.productosVariantes.add({
+          dbService.addVariante({
             id: producto.variante.id,
             productoBaseId: producto.base.id,
             codigoBarras: producto.variante.codigoBarras,
@@ -81,10 +81,7 @@ export class ProductSyncService {
    */
   static async productExists(ean: string): Promise<boolean> {
     try {
-      const variante = await db.productosVariantes
-        .where("codigoBarras")
-        .equals(ean)
-        .first();
+      const variante = await dbService.getVarianteByBarcode(ean);
       return !!variante;
     } catch (error) {
       console.error("❌ Error verificando existencia de producto:", error);
@@ -100,10 +97,10 @@ export class ProductSyncService {
    */
   static async getProductById(varianteId: string): Promise<ProductoCompleto | null> {
     try {
-      const variante = await db.productosVariantes.get(varianteId);
+      const variante = await dbService.getVarianteById(varianteId);
       if (!variante) return null;
 
-      const base = await db.productosBase.get(variante.productoBaseId);
+      const base = await dbService.getProductoBaseById(variante.productoBaseId);
       if (!base) return null;
 
       return { base, variante };

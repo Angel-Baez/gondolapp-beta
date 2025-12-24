@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { ProductoVariante } from "@/types";
 
 /**
@@ -17,10 +17,7 @@ export function useProductVerification() {
   ): Promise<{ exists: boolean; variante?: ProductoVariante }> => {
     setChecking(true);
     try {
-      const variante = await db.productosVariantes
-        .where("codigoBarras")
-        .equals(barcode)
-        .first();
+      const variante = await dbService.getVarianteByBarcode(barcode);
 
       return { exists: !!variante, variante };
     } finally {

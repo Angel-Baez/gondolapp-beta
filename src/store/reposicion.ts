@@ -1,4 +1,4 @@
-import { __unsafeDirectDbAccess as db } from "@/lib/db";
+import { dbService } from "@/lib/db";
 import { generarUUID } from "@/lib/utils";
 import {
   EstadisticasReposicion,
@@ -47,10 +47,10 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
   cargarItems: async () => {
     set({ loading: true, error: null });
     try {
-      const items = await db.itemsReposicion
-        .orderBy("agregadoAt")
-        .reverse()
-        .toArray();
+      const items = await dbService.getItemsReposicion({ 
+        orderBy: "agregadoAt", 
+        reverse: true 
+      });
       set({ items, loading: false });
     } catch (error) {
       set({ error: "Error al cargar items de reposición", loading: false });
@@ -60,11 +60,10 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
   agregarItem: async (varianteId: string, cantidad: number) => {
     try {
       // Verificar si ya existe un item pendiente para esta variante
-      const existente = await db.itemsReposicion
-        .where("varianteId")
-        .equals(varianteId)
-        .and((item) => !item.repuesto && !item.sinStock)
-        .first();
+      const existente = await dbService.getItemReposicionByVarianteId(varianteId, {
+        repuesto: false,
+        sinStock: false
+      });
 
       if (existente) {
         const updatedItem = {
@@ -80,7 +79,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
           ),
         }));
 
-        await db.itemsReposicion.update(existente.id, {
+        await dbService.updateItemReposicion(existente.id, {
           cantidad: existente.cantidad + cantidad,
           actualizadoAt: new Date(),
         });
@@ -101,7 +100,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
           items: [nuevoItem, ...state.items],
         }));
 
-        await db.itemsReposicion.add(nuevoItem);
+        await dbService.addItemReposicion(nuevoItem);
       }
     } catch (error) {
       set({ error: "Error al agregar item" });
@@ -123,7 +122,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
     }));
 
     try {
-      await db.itemsReposicion.update(id, {
+      await dbService.updateItemReposicion(id, {
         cantidad: cantidadFinal,
         actualizadoAt: new Date(),
       });
@@ -142,7 +141,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
     }));
 
     try {
-      await db.itemsReposicion.update(id, {
+      await dbService.updateItemReposicion(id, {
         repuesto,
         actualizadoAt: new Date(),
       });
@@ -161,7 +160,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
     }));
 
     try {
-      await db.itemsReposicion.update(id, {
+      await dbService.updateItemReposicion(id, {
         sinStock,
         actualizadoAt: new Date(),
       });
@@ -178,7 +177,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
     }));
 
     try {
-      await db.itemsReposicion.delete(id);
+      await dbService.deleteItemReposicion(id);
     } catch (error) {
       set({ error: "Error al eliminar item" });
       await get().cargarItems();
@@ -187,10 +186,10 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
 
   obtenerItemConVariante: async (id: string) => {
     try {
-      const item = await db.itemsReposicion.get(id);
+      const item = await dbService.getItemReposicionById(id);
       if (!item) return null;
 
-      const variante = await db.productosVariantes.get(item.varianteId);
+      const variante = await dbService.getVarianteById(item.varianteId);
       if (!variante) return null;
 
       return { item, variante };
@@ -201,7 +200,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
 
   guardarListaActual: async () => {
     try {
-      const items = await db.itemsReposicion.toArray();
+      const items = await dbService.getAllItemsReposicion();
       if (items.length === 0) {
         throw new Error("No hay items para guardar");
       }
@@ -209,9 +208,9 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
       // Obtener datos completos de cada item
       const itemsHistorial: ItemHistorial[] = await Promise.all(
         items.map(async (item) => {
-          const variante = await db.productosVariantes.get(item.varianteId);
+          const variante = await dbService.getVarianteById(item.varianteId);
           const base = variante
-            ? await db.productosBase.get(variante.productoBaseId)
+            ? await dbService.getProductoBaseById(variante.productoBaseId)
             : null;
 
           let estado: "repuesto" | "sinStock" | "pendiente" = "pendiente";
@@ -252,7 +251,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
       };
 
       // Guardar en IndexedDB
-      await db.listasHistorial.add(listaHistorial);
+      await dbService.addListaHistorial(listaHistorial);
 
       // Limpiar lista actual
       await get().limpiarListaActual();
@@ -265,7 +264,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
   limpiarListaActual: async () => {
     try {
       // Eliminar todos los items de reposición
-      await db.itemsReposicion.clear();
+      await dbService.clearItemsReposicion();
       set({ items: [] });
     } catch (error) {
       console.error("Error al limpiar lista:", error);
@@ -279,17 +278,15 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
     limite?: number;
   }) => {
     try {
-      let query = db.listasHistorial.orderBy("fechaGuardado").reverse();
-
-      if (filtros?.limite) {
-        query = query.limit(filtros.limite);
-      }
-
-      let listas = await query.toArray();
+      const listas = await dbService.getListasHistorial({
+        orderBy: "fechaGuardado",
+        reverse: true,
+        limit: filtros?.limite,
+      });
 
       // Filtrar por rango de fechas si se especifica
       if (filtros?.desde || filtros?.hasta) {
-        listas = listas.filter((lista) => {
+        return listas.filter((lista) => {
           const fecha = new Date(lista.fechaGuardado);
           if (filtros.desde && fecha < filtros.desde) return false;
           if (filtros.hasta && fecha > filtros.hasta) return false;
@@ -306,7 +303,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
 
   eliminarListaHistorial: async (id: string) => {
     try {
-      await db.listasHistorial.delete(id);
+      await dbService.deleteListaHistorial(id);
     } catch (error) {
       console.error("Error al eliminar lista del historial:", error);
       throw error;
@@ -332,10 +329,7 @@ export const useReposicionStore = create<ReposicionStore>((set, get) => ({
       }
 
       // Obtener listas del periodo
-      const listas = await db.listasHistorial
-        .where("fechaGuardado")
-        .between(fechaInicio, ahora)
-        .toArray();
+      const listas = await dbService.getListasHistorialByDateRange(fechaInicio, ahora);
 
       if (listas.length === 0) {
         return {
