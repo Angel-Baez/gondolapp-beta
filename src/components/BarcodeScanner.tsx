@@ -364,14 +364,13 @@ export default function BarcodeScanner({
                   className="w-full p-4 border-2 border-white/20 bg-white/10 text-white rounded-xl focus:border-neon-cyan outline-none text-lg text-center font-mono transition-colors backdrop-blur-md placeholder:text-white/40"
                   autoFocus
                 />
-                <GlassPill
-                  onClick={handleManualSubmit as any}
+                <button
+                  type="submit"
                   disabled={!manualCode.trim()}
-                  variant="cyan"
-                  className="w-full mt-4"
+                  className="w-full mt-4 px-8 py-4 rounded-full border-2 backdrop-blur-xl font-bold text-lg transition-all duration-200 bg-neon-cyan/20 border-neon-cyan/30 text-neon-cyan shadow-[0_0_20px_rgba(0,240,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                 >
                   Buscar Producto
-                </GlassPill>
+                </button>
               </form>
               <p className="text-xs text-white/50 mt-4 text-center">
                 💡 Tip: Puedes encontrar el código en el paquete del producto
@@ -520,7 +519,7 @@ export default function BarcodeScanner({
             <GlassPill
               onClick={startScanning}
               variant="cyan"
-              className="mt-3 w-full py-2 text-base"
+              className="mt-3 w-full"
             >
               Reintentar
             </GlassPill>
