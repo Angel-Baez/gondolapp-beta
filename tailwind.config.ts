@@ -14,6 +14,18 @@ const config: Config = {
         surface: "#000000",
         "text-primary": "#000000",
         "text-secondary": "#FFFFFF",
+        // Deep Glass palette
+        "deep-navy": "#0a0e17",
+        glass: {
+          light: "rgba(255, 255, 255, 0.05)",
+          medium: "rgba(255, 255, 255, 0.1)",
+          strong: "rgba(255, 255, 255, 0.15)",
+        },
+        neon: {
+          cyan: "#00f0ff",
+          lime: "#ccff00",
+          purple: "#b47aff",
+        },
         accent: {
           primary: "#00bcd4",
           secondary: "#FF0000",
@@ -32,6 +44,22 @@ const config: Config = {
           card: "#334155",
           border: "#475569",
         },
+      },
+      borderRadius: {
+        xl: "16px",
+        "2xl": "24px",
+        "3xl": "32px",
+        "4xl": "40px",
+      },
+      backdropBlur: {
+        xs: "2px",
+        sm: "4px",
+        DEFAULT: "8px",
+        md: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "32px",
       },
     },
   },

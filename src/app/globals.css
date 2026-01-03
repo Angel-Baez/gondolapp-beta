@@ -189,3 +189,95 @@ html {
 .safe-area-top {
   padding-top: max(0.5rem, env(safe-area-inset-top));
 }
+
+/* ======================================
+   Deep Glass Background
+   ====================================== */
+
+body {
+  position: relative;
+  background: #0a0e17;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 188, 212, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(180, 122, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%);
+  animation: floatOrbs 20s ease-in-out infinite;
+}
+
+@keyframes floatOrbs {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1); 
+  }
+  33% { 
+    transform: translate(30px, -30px) scale(1.1); 
+  }
+  66% { 
+    transform: translate(-30px, 30px) scale(0.9); 
+  }
+}
+
+/* Glass Glow Effect */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 188, 212, 0.6), 0 0 60px rgba(0, 188, 212, 0.3);
+  }
+}
+
+.glow-cyan {
+  animation: glow 3s ease-in-out infinite;
+}
+
+/* Glass Highlight */
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ======================================
+   One UI Typography
+   ====================================== */
+
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+}
+
+/* Text with glow effect */
+.text-glow-cyan {
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+.text-glow-purple {
+  text-shadow: 0 0 20px rgba(180, 122, 255, 0.5);
+}
