@@ -138,19 +138,20 @@ export function VencimientoList() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-3 sm:mb-4">
-        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-            Control de Vencimientos
-          </h2>
-          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
-            {totalItems} producto{totalItems !== 1 ? "s" : ""}
-          </span>
+      {/* Header - One UI Style */}
+      <div className="pt-12 pb-6 px-4">
+        <h1 className="text-5xl font-bold text-white mb-4 text-glow-purple">
+          Control de Vencimientos
+        </h1>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                      bg-neon-purple/20 backdrop-blur-xl border border-neon-purple/30
+                      text-neon-purple font-semibold shadow-[0_0_20px_rgba(180,122,255,0.3)]">
+          <span>{totalItems} producto{totalItems !== 1 ? "s" : ""}</span>
         </div>
-
+        
+        {/* Alert badge para productos críticos */}
         {itemsCriticos > 0 && (
-          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
+          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 border-2 border-alert-critico rounded-xl mt-4">
             {/* ✨ Icono con pulso constante */}
             <m.div
               animate={{
