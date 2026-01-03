@@ -4,6 +4,8 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Camera, Keyboard, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { GlassCard } from "./ui/GlassCard";
+import { GlassPill } from "./ui/GlassPill";
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -315,9 +317,9 @@ export default function BarcodeScanner({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-deep-navy/95 backdrop-blur-xl flex flex-col">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/90 to-transparent">
+      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-deep-navy/90 to-transparent">
         <div className="flex items-center gap-2 text-white">
           {showManualInput ? <Keyboard size={24} /> : <Camera size={24} />}
           <h2 className="font-bold text-lg">
@@ -327,14 +329,14 @@ export default function BarcodeScanner({
         <div className="flex items-center gap-2">
           <button
             onClick={handleToggleInputMode}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition backdrop-blur-sm text-white"
+            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/10 text-white"
             aria-label={showManualInput ? "Usar cámara" : "Entrada manual"}
           >
             {showManualInput ? <Camera size={20} /> : <Keyboard size={20} />}
           </button>
           <button
             onClick={handleClose}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition backdrop-blur-sm text-white"
+            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/10 text-white"
             aria-label="Cerrar"
           >
             <X size={20} />
@@ -346,11 +348,11 @@ export default function BarcodeScanner({
       <div className="flex items-center justify-center h-full p-4 pt-20">
         {showManualInput ? (
           <div className="w-full max-w-md">
-            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-2xl transition-colors">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <GlassCard variant="strong" className="p-6">
+              <h3 className="text-xl font-bold text-white mb-4">
                 Ingresar Código Manualmente
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-white/70 mb-4">
                 Ingresa el código de barras del producto:
               </p>
               <form onSubmit={handleManualSubmit}>
@@ -359,164 +361,177 @@ export default function BarcodeScanner({
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Ej: 7501234567890"
-                  className="w-full p-4 border-2 border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 rounded-xl focus:border-accent-primary outline-none text-lg text-center font-mono transition-colors"
+                  className="w-full p-4 border-2 border-white/20 bg-white/10 text-white rounded-xl focus:border-neon-cyan outline-none text-lg text-center font-mono transition-colors backdrop-blur-md placeholder:text-white/40"
                   autoFocus
                 />
-                <button
-                  type="submit"
+                <GlassPill
+                  onClick={handleManualSubmit as any}
                   disabled={!manualCode.trim()}
-                  className="w-full mt-4 py-3 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-gray-300 dark:disabled:bg-dark-border disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
+                  variant="cyan"
+                  className="w-full mt-4"
                 >
                   Buscar Producto
-                </button>
+                </GlassPill>
               </form>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+              <p className="text-xs text-white/50 mt-4 text-center">
                 💡 Tip: Puedes encontrar el código en el paquete del producto
               </p>
-            </div>
+            </GlassCard>
           </div>
         ) : (
-          <div className="relative w-full max-w-md">
-            {/* Contenedor del escáner */}
-            <div
-              ref={readerElementRef}
-              id={scannerElementId}
-              className="mx-auto rounded-lg overflow-hidden bg-black"
-              style={{
-                width: "100%",
-                minHeight: "400px",
-              }}
-            />
+          <div className="relative w-full max-w-2xl">
+            <GlassCard variant="strong" className="w-full" glow>
+              {/* Efecto de lente */}
+              <div 
+                className="absolute inset-0 rounded-3xl border-4 border-neon-cyan/30 pointer-events-none z-10" 
+                style={{
+                  boxShadow: 'inset 0 0 60px rgba(0, 240, 255, 0.2), 0 0 60px rgba(0, 240, 255, 0.2)'
+                }} 
+              />
+              
+              {/* Contenedor del escáner */}
+              <div
+                ref={readerElementRef}
+                id={scannerElementId}
+                className="w-full rounded-3xl overflow-hidden"
+                style={{
+                  minHeight: "400px",
+                }}
+              />
 
-            {/* Loading Overlay */}
-            {isLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 rounded-lg z-20">
-                <Loader2 className="h-12 w-12 text-cyan-400 animate-spin mb-3" />
-                <p className="text-white text-base font-medium">
-                  Cargando cámara...
-                </p>
-              </div>
-            )}
+              {/* Loading Overlay */}
+              {isLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-deep-navy/90 rounded-3xl z-20 backdrop-blur-xl">
+                  <Loader2 className="h-12 w-12 text-neon-cyan animate-spin mb-3" />
+                  <p className="text-white text-base font-medium">
+                    Cargando cámara...
+                  </p>
+                </div>
+              )}
 
             {/* Último código escaneado */}
             {lastScannedCode && isScanning && (
-              <div className="absolute top-0 left-0 right-0 p-4">
-                <div className="bg-green-600/90 border border-green-400 rounded-lg p-3 animate-fade-in">
+              <div className="absolute top-4 left-4 right-4 z-20">
+                <GlassCard variant="medium" className="p-3 border-2 border-neon-cyan/30">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-white/80 text-xs">Último código:</p>
-                      <p className="font-mono font-bold text-white mt-1 text-sm break-all">
+                      <p className="font-mono font-bold text-neon-cyan mt-1 text-sm break-all">
                         {lastScannedCode}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
-                      <span className="text-xs text-white font-medium">✓</span>
+                      <div className="h-2 w-2 bg-neon-cyan rounded-full animate-pulse" />
+                      <span className="text-xs text-neon-cyan font-medium">✓</span>
                     </div>
                   </div>
-                </div>
+                </GlassCard>
               </div>
             )}
 
             {/* Instrucciones cuando está escaneando */}
             {isScanning && !isLoading && (
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className="bg-accent-primary/20 border border-accent-primary/30 rounded-lg p-3 backdrop-blur-sm">
+              <div className="absolute bottom-4 left-4 right-4 z-20">
+                <GlassCard variant="light" className="p-3 border border-neon-cyan/20">
                   <p className="text-white text-center text-sm font-medium">
-                    📸 Mantén el código dentro del recuadro verde
+                    📸 Mantén el código dentro del recuadro
                   </p>
                   <p className="text-white/70 text-center text-xs mt-1">
                     El escaneo es automático
                   </p>
-                </div>
+                </GlassCard>
               </div>
             )}
+            </GlassCard>
           </div>
         )}
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="absolute bottom-20 left-4 right-4 p-4 bg-alert-critico/90 backdrop-blur-sm text-white rounded-xl shadow-lg z-10">
-          <p className="text-sm font-semibold mb-2">⚠️ {error}</p>
-          {error.includes("HTTPS") && (
-            <p className="text-xs opacity-90 mt-2">
-              💡 Para usar la cámara en móvil, la app debe estar en HTTPS.
-            </p>
-          )}
-          {error.includes("denegado") && (
-            <div className="mt-3 space-y-2">
-              <p className="text-xs opacity-90">
-                💡 Para habilitar el permiso de cámara:
+        <div className="absolute bottom-20 left-4 right-4 z-30">
+          <GlassCard variant="strong" className="p-4 border-2 border-red-500/30">
+            <p className="text-sm font-semibold mb-2 text-white">⚠️ {error}</p>
+            {error.includes("HTTPS") && (
+              <p className="text-xs opacity-90 mt-2 text-white/80">
+                💡 Para usar la cámara en móvil, la app debe estar en HTTPS.
               </p>
-              <ul className="text-xs opacity-80 list-disc list-inside space-y-1">
-                <li>Toca el icono de candado/info en la barra de direcciones</li>
-                <li>Busca "Cámara" o "Permisos del sitio"</li>
-                <li>Cambia el permiso a "Permitir"</li>
-                <li>Recarga la página</li>
-              </ul>
-              <button
-                onClick={() => {
-                  // Try to open site settings (works on some browsers)
-                  if ("permissions" in navigator) {
-                    navigator.permissions
-                      .query({ name: "camera" as PermissionName })
-                      .then((result) => {
-                        if (result.state === "denied") {
-                          toast.error(
-                            "Debes cambiar el permiso en la configuración del navegador",
-                            { duration: 4000 }
+            )}
+            {error.includes("denegado") && (
+              <div className="mt-3 space-y-2">
+                <p className="text-xs opacity-90 text-white/80">
+                  💡 Para habilitar el permiso de cámara:
+                </p>
+                <ul className="text-xs opacity-80 list-disc list-inside space-y-1 text-white/70">
+                  <li>Toca el icono de candado/info en la barra de direcciones</li>
+                  <li>Busca "Cámara" o "Permisos del sitio"</li>
+                  <li>Cambia el permiso a "Permitir"</li>
+                  <li>Recarga la página</li>
+                </ul>
+                <button
+                  onClick={() => {
+                    // Try to open site settings (works on some browsers)
+                    if ("permissions" in navigator) {
+                      navigator.permissions
+                        .query({ name: "camera" as PermissionName })
+                        .then((result) => {
+                          if (result.state === "denied") {
+                            toast.error(
+                              "Debes cambiar el permiso en la configuración del navegador",
+                              { duration: 4000 }
+                            );
+                          } else {
+                            startScanning();
+                          }
+                        })
+                        .catch((err) => {
+                          console.warn(
+                            "[BarcodeScanner] Permission query failed:",
+                            err
                           );
-                        } else {
+                          toast(
+                            "No se puede verificar permisos. Intentando acceder a la cámara...",
+                            { duration: 2000 }
+                          );
                           startScanning();
-                        }
-                      })
-                      .catch((err) => {
-                        console.warn(
-                          "[BarcodeScanner] Permission query failed:",
-                          err
-                        );
-                        toast(
-                          "No se puede verificar permisos. Intentando acceder a la cámara...",
-                          { duration: 2000 }
-                        );
-                        startScanning();
-                      });
-                  } else {
-                    startScanning();
-                  }
-                }}
-                className="mt-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium w-full transition"
-              >
-                Verificar Permisos
-              </button>
-            </div>
-          )}
-          {error.includes("usada por otra") && (
-            <p className="text-xs opacity-90 mt-2">
-              💡 Cierra otras aplicaciones que puedan estar usando la cámara
-              (WhatsApp, Instagram, etc.) y vuelve a intentar.
-            </p>
-          )}
-          {error.includes("No se encontró") && (
-            <p className="text-xs opacity-90 mt-2">
-              💡 Asegúrate de que tu dispositivo tenga una cámara conectada y
-              funcionando correctamente.
-            </p>
-          )}
-          <button
-            onClick={startScanning}
-            className="mt-3 px-4 py-2 bg-white text-alert-critico rounded-lg text-sm font-bold w-full hover:bg-gray-100 transition"
-          >
-            Reintentar
-          </button>
+                        });
+                    } else {
+                      startScanning();
+                    }
+                  }}
+                  className="mt-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium w-full transition backdrop-blur-md"
+                >
+                  Verificar Permisos
+                </button>
+              </div>
+            )}
+            {error.includes("usada por otra") && (
+              <p className="text-xs opacity-90 mt-2 text-white/80">
+                💡 Cierra otras aplicaciones que puedan estar usando la cámara
+                (WhatsApp, Instagram, etc.) y vuelve a intentar.
+              </p>
+            )}
+            {error.includes("No se encontró") && (
+              <p className="text-xs opacity-90 mt-2 text-white/80">
+                💡 Asegúrate de que tu dispositivo tenga una cámara conectada y
+                funcionando correctamente.
+              </p>
+            )}
+            <GlassPill
+              onClick={startScanning}
+              variant="cyan"
+              className="mt-3 w-full py-2 text-base"
+            >
+              Reintentar
+            </GlassPill>
+          </GlassCard>
         </div>
       )}
 
       {/* Consejos de uso */}
       {!isScanning && !isLoading && !error && !showManualInput && (
-        <div className="absolute bottom-8 left-0 right-0 px-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto">
+        <div className="absolute bottom-8 left-4 right-4">
+          <GlassCard variant="light" className="p-4 max-w-md mx-auto">
             <p className="text-white text-sm font-medium mb-2">
               💡 Consejos para mejor escaneo:
             </p>
@@ -526,7 +541,7 @@ export default function BarcodeScanner({
               <li>Evita reflejos o brillos en el código</li>
               <li>Mantén el dispositivo estable</li>
             </ul>
-          </div>
+          </GlassCard>
         </div>
       )}
 
@@ -537,10 +552,10 @@ export default function BarcodeScanner({
         }
         #${scannerElementId} video {
           width: 100% !important;
-          border-radius: 1rem;
+          border-radius: 1.5rem;
         }
         #${scannerElementId}__scan_region {
-          border-radius: 1rem !important;
+          border-radius: 1.5rem !important;
         }
         #${scannerElementId}__dashboard_section_csr {
           display: none !important;

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Badge, IconButton } from "../ui";
+import { GlassCard } from "../ui/GlassCard";
 
 interface ReposicionCardProps {
   productoBase: ProductoBase;
@@ -41,30 +42,31 @@ export function ReposicionCard({
 
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
 
-  // Colores según sección
+  // Colores según sección con neon accents
   const sectionColors = {
     pendiente: {
-      border: "border-cyan-200 dark:border-cyan-800",
-      badge: "bg-cyan-500",
-      hover: "hover:bg-cyan-50 dark:hover:bg-cyan-900/30",
+      border: "border-neon-cyan/30",
+      badge: "bg-neon-cyan/20 border-2 border-neon-cyan/30 text-neon-cyan shadow-[0_0_20px_rgba(0,240,255,0.3)]",
+      hover: "hover:bg-neon-cyan/5",
     },
     repuesto: {
-      border: "border-emerald-200 dark:border-emerald-800",
-      badge: "bg-emerald-500",
-      hover: "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
+      border: "border-emerald-400/30",
+      badge: "bg-emerald-500/20 border-2 border-emerald-400/30 text-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.3)]",
+      hover: "hover:bg-emerald-500/5",
     },
     sinStock: {
-      border: "border-red-200 dark:border-red-800",
-      badge: "bg-red-500",
-      hover: "hover:bg-red-50 dark:hover:bg-red-900/30",
+      border: "border-red-400/30",
+      badge: "bg-red-500/20 border-2 border-red-400/30 text-red-400 shadow-[0_0_20px_rgba(248,113,113,0.3)]",
+      hover: "hover:bg-red-500/5",
     },
   };
 
   const colors = sectionColors[seccion];
 
   return (
-    <div
-      className={`bg-white dark:bg-dark-surface rounded-xl shadow-md overflow-hidden border-2 ${colors.border} transition-colors`}
+    <GlassCard
+      variant="medium"
+      className={`border-2 ${colors.border} transition-all`}
     >
       {/* Header */}
       <div
@@ -76,16 +78,16 @@ export function ReposicionCard({
             <img
               src={productoBase.imagen}
               alt={productoBase.nombre}
-              className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
+              className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0 ring-2 ring-white/10"
             />
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg leading-tight truncate">
+            <h3 className="font-bold text-white text-base sm:text-lg leading-tight truncate">
               {productoBase.nombre}
             </h3>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               {productoBase.marca && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <span className="text-xs text-white/60 truncate">
                   {productoBase.marca}
                 </span>
               )}
@@ -97,20 +99,20 @@ export function ReposicionCard({
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
           {cantidadTotal > 0 && (
             <div
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 ${colors.badge} text-white rounded-lg font-bold text-sm sm:text-base`}
+              className={`flex h-14 w-14 items-center justify-center rounded-full ${colors.badge}`}
             >
-              x{cantidadTotal}
+              <span className="font-bold text-lg">x{cantidadTotal}</span>
             </div>
           )}
           {isExpanded ? (
             <ChevronUp
               size={20}
-              className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0"
+              className="sm:w-6 sm:h-6 text-white/70 flex-shrink-0"
             />
           ) : (
             <ChevronDown
               size={20}
-              className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0"
+              className="sm:w-6 sm:h-6 text-white/70 flex-shrink-0"
             />
           )}
         </div>
@@ -124,9 +126,9 @@ export function ReposicionCard({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-gray-100 dark:border-dark-border"
+            className="border-t border-white/10"
           >
-            <div className="divide-y divide-gray-100 dark:divide-dark-border">
+            <div className="divide-y divide-white/10">
               {variantes.map(({ item, variante }) => (
                 <div key={item.id} className="p-3 sm:p-4">
                   <div className="space-y-3">
@@ -136,16 +138,16 @@ export function ReposicionCard({
                         <img
                           src={variante.imagen}
                           alt={variante.nombreCompleto}
-                          className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                          className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0 ring-2 ring-white/10"
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight">
+                        <p className="font-semibold text-white text-sm sm:text-base leading-tight">
                           {variante.nombreCompleto}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {variante.tamano && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-xs text-white/60">
                               {variante.tamano}
                             </span>
                           )}
@@ -163,33 +165,33 @@ export function ReposicionCard({
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-dark-border">
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
                       {/* Quantity Control */}
                       <div className="flex items-center gap-3">
                         {!item.repuesto && !item.sinStock && (
-                          <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-card rounded-lg p-1">
-                            {/* ✨ Botón MENOS animado */}
+                          <div className="flex items-center justify-between rounded-2xl bg-black/20 backdrop-blur-md p-1 border border-white/10">
+                            {/* ✨ Botón MENOS minimalista */}
                             <m.button
                               whileTap={{ scale: 0.85 }}
                               whileHover={{ scale: 1.05 }}
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad - 1)
                               }
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
+                              className="h-10 w-12 text-2xl text-white/70 hover:text-white transition-colors"
                             >
                               -
                             </m.button>
-                            <span className="w-12 text-center font-bold text-base text-gray-900 dark:text-gray-100">
+                            <span className="text-white font-mono text-lg px-2">
                               {item.cantidad}
                             </span>
-                            {/* ✨ Botón MÁS animado */}
+                            {/* ✨ Botón MÁS minimalista */}
                             <m.button
                               whileTap={{ scale: 0.85 }}
                               whileHover={{ scale: 1.05 }}
                               onClick={() =>
                                 actualizarCantidad(item.id, item.cantidad + 1)
                               }
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
+                              className="h-10 w-12 text-2xl text-white/70 hover:text-white transition-colors"
                             >
                               +
                             </m.button>
@@ -197,7 +199,7 @@ export function ReposicionCard({
                         )}
 
                         {(item.repuesto || item.sinStock) && (
-                          <span className="px-3 py-1.5 bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-200 rounded-lg font-bold text-sm">
+                          <span className="px-3 py-1.5 bg-white/10 text-white rounded-lg font-bold text-sm backdrop-blur-md">
                             x{item.cantidad}
                           </span>
                         )}
@@ -405,6 +407,6 @@ export function ReposicionCard({
           </m.div>
         )}
       </AnimatePresence>
-    </div>
+    </GlassCard>
   );
 }
