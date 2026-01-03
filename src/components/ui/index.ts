@@ -6,3 +6,6 @@ export { Input } from "./Input";
 export { Badge } from "./Badge";
 export { Header } from "./Header";
 export type { HeaderProps } from "./Header";
+export { GlassCard } from "./GlassCard";
+export { GlassPill } from "./GlassPill";
+export { BentoGrid, BentoItem } from "./BentoGrid";

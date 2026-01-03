@@ -5,6 +5,7 @@ import { useVencimientoStore } from "@/store/vencimiento";
 import { ItemVencimiento, ProductoVariante } from "@/types";
 import { Calendar, Edit2, Trash2 } from "lucide-react";
 import { Badge, IconButton } from "../ui";
+import { GlassCard } from "../ui/GlassCard";
 import { motion as m } from "framer-motion";
 import { useHaptics } from "@/hooks/useHaptics";
 import { toast } from "react-hot-toast";
@@ -37,7 +38,7 @@ export function VencimientoItem({
   };
 
   return (
-    <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-3 sm:p-4 mb-3 transition-colors">
+    <GlassCard variant="medium" className="p-3 sm:p-4 mb-3 border-2 border-neon-purple/20">
       <div className="space-y-3">
         {/* Info Section */}
         <div className="flex items-start gap-3">
@@ -45,15 +46,15 @@ export function VencimientoItem({
             <img
               src={variante.imagen}
               alt={variante.nombreCompleto}
-              className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+              className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0 ring-2 ring-white/10"
             />
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight">
+            <p className="font-bold text-white text-sm sm:text-base leading-tight">
               {variante.nombreCompleto}
             </p>
             {variante.tamano && (
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+              <p className="text-xs sm:text-sm text-white/60 mt-0.5 truncate">
                 {variante.tamano}
               </p>
             )}
@@ -66,7 +67,7 @@ export function VencimientoItem({
             {getMensajeVencimiento()}
           </Badge>
 
-          <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-xs sm:text-sm text-white/70">
             <div className="flex items-center gap-1">
               <Calendar size={14} className="flex-shrink-0" />
               <span>{formatearFecha(item.fechaVencimiento)}</span>
@@ -77,13 +78,13 @@ export function VencimientoItem({
             )}
 
             {item.lote && (
-              <span className="text-gray-500 dark:text-gray-400">Lote: {item.lote}</span>
+              <span className="text-white/50">Lote: {item.lote}</span>
             )}
           </div>
         </div>
 
         {/* Actions - En fila completa */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-dark-border">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
           <IconButton
             onClick={() => {
               haptic(50);
@@ -144,6 +145,6 @@ export function VencimientoItem({
           </IconButton>
         </div>
       </div>
-    </div>
+    </GlassCard>
   );
 }
