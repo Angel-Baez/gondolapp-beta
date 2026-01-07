@@ -6,13 +6,12 @@
  * Servicio de alto nivel que orquesta las operaciones de productos
  */
 
-import { ProductoCompleto } from "@/services/productos";
-import { ProductoBase, ProductoVariante } from "@/types";
+import { ProductoBase, ProductoVariante, ProductoCompleto } from "@/types";
 import { v4 as uuidv4 } from "uuid";
-import { generarIdBase } from "../utils/productUtils";
-import { IProductRepository } from "../interfaces/IProductRepository";
-import { IDataSourceManager } from "../interfaces/IDataSource";
-import { INormalizerChain } from "../interfaces/INormalizer";
+import { generarIdBase } from "../../utils/productUtils";
+import { IProductRepository } from "../../interfaces/IProductRepository";
+import { IDataSourceManager } from "../../interfaces/IDataSource";
+import { INormalizerChain } from "../../interfaces/INormalizer";
 
 /**
  * Servicio de productos que implementa principios SOLID

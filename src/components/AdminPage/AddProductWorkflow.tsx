@@ -5,15 +5,15 @@ import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import { useProductVerification } from "@/hooks/useProductVerification";
 import { useProductSync } from "@/hooks/useProductSync";
-import { ProductoCompleto } from "@/services/productos";
+import { ProductoCompleto } from "@/types";
 
 // Lazy loading para optimización
-const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
+const BarcodeScanner = dynamic(() => import("@/components/shared/BarcodeScanner"), {
   ssr: false,
 });
 
 const FormularioProductoManual = dynamic(
-  () => import("@/components/FormularioProductoManual"),
+  () => import("@/components/shared/FormularioProductoManual"),
   { ssr: false }
 );
 

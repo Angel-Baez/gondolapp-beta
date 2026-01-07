@@ -1,5 +1,5 @@
 import { dbService } from "@/lib/db";
-import { ProductoCompleto } from "./productos";
+import { ProductoCompleto } from "@/types";
 
 /**
  * Servicio centralizado para sincronización con IndexedDB

@@ -1,13 +1,11 @@
-import { ProductoBase, ProductoVariante } from "@/types";
 import {
   getProductService,
 } from "@/core/container/serviceConfig";
 import { deprecationWarning } from "@/lib/deprecation-warnings";
 
-export interface ProductoCompleto {
-  base: ProductoBase;
-  variante: ProductoVariante;
-}
+// Re-export ProductoCompleto from types for backward compatibility
+// @deprecated Import directly from '@/types' instead
+export type { ProductoCompleto } from "@/types";
 
 /**
  * FLUJO PRINCIPAL: Escaneo → Cache Local (IndexedDB) → MongoDB → Manual

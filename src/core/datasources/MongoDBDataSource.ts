@@ -4,7 +4,7 @@
  */
 
 import { IDataSource } from "../interfaces/IDataSource";
-import { ProductoCompleto } from "@/services/productos";
+import { ProductoCompleto } from "@/types";
 import { IProductRepository } from "../interfaces/IProductRepository";
 
 export class MongoDBDataSource implements IDataSource {

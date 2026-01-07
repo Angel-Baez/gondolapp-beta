@@ -32,6 +32,12 @@ export interface ProductoVariante {
   createdAt: Date;
 }
 
+// Producto Completo (Base + Variante)
+export interface ProductoCompleto {
+  base: ProductoBase;
+  variante: ProductoVariante;
+}
+
 // Item de Reposición
 export interface ItemReposicion {
   id: string; // UUID

@@ -11,7 +11,7 @@
 
 import { ProductoBase, ProductoVariante } from "@/types";
 import { create } from "zustand";
-import { ProductService } from "@/core/services/ProductService";
+import { ProductService } from "@/core/services/product";
 import {
   getProductRepository,
   getDataSourceManager,

@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductSyncService } from '../ProductSyncService';
 import { dbService } from '@/lib/db';
-import { ProductoCompleto } from '../productos';
-import { ProductoBase, ProductoVariante } from '@/types';
+import { ProductoBase, ProductoVariante, ProductoCompleto } from '@/types';
 
 // Mock dbService
 vi.mock('@/lib/db', () => ({

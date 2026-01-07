@@ -1,5 +1,4 @@
-import { ProductoCompleto } from "@/services/productos";
-import { ProductoBase, ProductoVariante } from "@/types";
+import { ProductoBase, ProductoVariante, ProductoCompleto } from "@/types";
 
 /**
  * Mock de ProductService para tests

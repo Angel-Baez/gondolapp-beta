@@ -5,7 +5,7 @@
  */
 
 import { IDataSource, IDataSourceManager } from "../interfaces/IDataSource";
-import { ProductoCompleto } from "@/services/productos";
+import { ProductoCompleto } from "@/types";
 
 export class DataSourceManager implements IDataSourceManager {
   private sources: IDataSource[] = [];

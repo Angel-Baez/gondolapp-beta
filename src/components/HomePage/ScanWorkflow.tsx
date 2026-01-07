@@ -11,11 +11,10 @@ import { useVencimientoStore } from "@/store/vencimiento";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { ScanMode } from "@/types";
-import { ProductoCompleto } from "@/services/productos";
+import { ScanMode, ProductoCompleto } from "@/types";
 
 // 🚀 Lazy load del scanner para reducir bundle inicial
-const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
+const BarcodeScanner = dynamic(() => import("@/components/shared/BarcodeScanner"), {
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
@@ -28,7 +27,7 @@ const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
 });
 
 const FormularioProductoManual = dynamic(
-  () => import("@/components/FormularioProductoManual"),
+  () => import("@/components/shared/FormularioProductoManual"),
   { ssr: false }
 );
 

@@ -3,7 +3,7 @@
  * Open/Closed Principle - Nuevas fuentes sin modificar código existente
  */
 
-import { ProductoCompleto } from "@/services/productos";
+import { ProductoCompleto } from "@/types";
 
 /**
  * Interface para fuentes de datos de productos

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ProductSyncService } from "@/services/ProductSyncService";
-import { ProductoCompleto } from "@/services/productos";
+import { ProductSyncService } from "@/core/services/sync";
+import { ProductoCompleto } from "@/types";
 
 /**
  * Hook personalizado para manejar la sincronización de productos con IndexedDB

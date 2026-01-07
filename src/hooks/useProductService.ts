@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { getProductService } from "@/core/container/serviceConfig";
-import { ProductoCompleto } from "@/services/productos";
-import { ProductoBase, ProductoVariante } from "@/types";
+import { ProductoBase, ProductoVariante, ProductoCompleto } from "@/types";
 
 /**
  * Hook SOLID para interactuar con ProductService

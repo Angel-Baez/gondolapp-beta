@@ -33,4 +33,4 @@ export * from "./container/ServiceContainer";
 export * from "./container/serviceConfig";
 
 // ==================== Servicios ====================
-export * from "./services/ProductService";
+export * from "./services";
