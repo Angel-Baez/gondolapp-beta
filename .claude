@@ -1,0 +1,14 @@
+Language: Español
+Always respond in Spanish unless code comments require English
+
+Stack: MERN + TypeScript + Next.js 14+ (App Router) + React Native/Expo
+Environment: MacBook Air 2015, VSCode
+Preferences:
+- Use functional components with TypeScript
+- Prefer composition over inheritance
+- Follow Airbnb style guide
+- Use Zustand for state management
+- Use React Query for server state
+- Prioritize performance (device constraints)
+- Avoid heavy dependencies
+
