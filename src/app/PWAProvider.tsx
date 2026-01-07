@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import InstallBanner from "@/components/InstallBanner";
+import { InstallBanner } from "@/components/shared";
 import { initializeServices } from "@/core/container/serviceConfig";
 
 export default function PWAProvider() {

@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import PWAProvider from "./PWAProvider";
 import { FeedbackProvider } from "@/components/feedback";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/shared";
 
 export const metadata: Metadata = {
   title: "GondolApp - Gestor de Inventario",

@@ -2,15 +2,12 @@
 
 import { useState } from "react";
 import { Database, ArrowLeft } from "lucide-react";
-import CrearConPreset from "@/components/CrearConPreset";
-import ImportarExcel from "@/components/ImportarExcel";
-import { SyncPanel } from "@/components/SyncPanel";
+import { CrearConPreset, ImportarExcel, SyncPanel, ThemeToggle } from "@/components/shared";
 import { Button, Header } from "@/components/ui";
 import { ToolSelector } from "@/components/AdminPage/ToolSelector";
 import { AddProductWorkflow } from "@/components/AdminPage/AddProductWorkflow";
 import { useProductSync } from "@/hooks/useProductSync";
 import { ProductoCompleto } from "@/services/productos";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import toast from "react-hot-toast";
 
 type ActiveTool = "import" | "preset" | "sync" | "addProducts" | null;

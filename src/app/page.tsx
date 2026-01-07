@@ -4,7 +4,7 @@ import { MainContent } from "@/components/HomePage/MainContent";
 import { NavigationTabs } from "@/components/HomePage/NavigationTabs";
 import { ScanButton } from "@/components/HomePage/ScanButton";
 import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/shared";
 import { Header } from "@/components/ui";
 import { ScanMode } from "@/types";
 import { motion as m } from "framer-motion";
