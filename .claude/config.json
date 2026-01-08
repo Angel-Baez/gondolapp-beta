@@ -1,0 +1,134 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+  "project": {
+    "name": "MERN Agents Framework",
+    "type": "mern-stack",
+    "stack": {
+      "frontend": ["Next.js 14+", "React 18+", "TypeScript 5.0+", "Tailwind CSS"],
+      "backend": ["Next.js API Routes", "MongoDB", "Mongoose"],
+      "testing": ["Vitest", "Playwright"],
+      "deployment": ["Vercel", "MongoDB Atlas"]
+    }
+  },
+  "agents": {
+    "orchestrator": {
+      "file": ".claude/agents/orchestrator.md",
+      "role": "coordinator",
+      "description": "Punto de entrada y coordinador principal",
+      "triggers": ["analiza", "necesito", "quiero", "coordina", "ayuda"],
+      "priority": 1
+    },
+    "backend-architect": {
+      "file": ".claude/agents/backend-architect.md",
+      "role": "implementer",
+      "description": "Especialista en APIs y lógica de negocio",
+      "triggers": ["endpoint", "API", "servicio", "backend", "route"],
+      "priority": 2
+    },
+    "frontend-architect": {
+      "file": ".claude/agents/frontend-architect.md",
+      "role": "implementer",
+      "description": "Especialista en componentes React y UI",
+      "triggers": ["componente", "React", "UI", "Tailwind", "frontend"],
+      "priority": 2
+    },
+    "data-engineer": {
+      "file": ".claude/agents/data-engineer.md",
+      "role": "implementer",
+      "description": "Especialista en MongoDB y modelado de datos",
+      "triggers": ["esquema", "MongoDB", "Mongoose", "índices", "datos"],
+      "priority": 2
+    },
+    "security-guardian": {
+      "file": ".claude/agents/security-guardian.md",
+      "role": "reviewer",
+      "description": "Especialista en seguridad OWASP",
+      "triggers": ["seguridad", "OWASP", "autenticación", "JWT", "vulnerabilidad"],
+      "priority": 3
+    },
+    "test-engineer": {
+      "file": ".claude/agents/test-engineer.md",
+      "role": "implementer",
+      "description": "Especialista en testing",
+      "triggers": ["test", "Jest", "Vitest", "E2E", "Playwright"],
+      "priority": 3
+    },
+    "qa-lead": {
+      "file": ".claude/agents/qa-lead.md",
+      "role": "reviewer",
+      "description": "Líder de calidad y testing manual",
+      "triggers": ["QA", "calidad", "checklist", "release", "validación"],
+      "priority": 3
+    },
+    "solution-architect": {
+      "file": ".claude/agents/solution-architect.md",
+      "role": "planner",
+      "description": "Arquitecto de soluciones y decisiones técnicas",
+      "triggers": ["arquitectura", "ADR", "decisión", "diseño", "C4"],
+      "priority": 2
+    },
+    "code-reviewer": {
+      "file": ".claude/agents/code-reviewer.md",
+      "role": "reviewer",
+      "description": "Revisor de código y mejores prácticas",
+      "triggers": ["review", "revisar", "PR", "mejoras"],
+      "priority": 3
+    },
+    "devops-engineer": {
+      "file": ".claude/agents/devops-engineer.md",
+      "role": "operations",
+      "description": "Especialista en CI/CD y deployment",
+      "triggers": ["CI/CD", "deploy", "GitHub Actions", "Vercel"],
+      "priority": 3
+    },
+    "observability-engineer": {
+      "file": ".claude/agents/observability-engineer.md",
+      "role": "analyst",
+      "description": "Especialista en monitoring y performance",
+      "triggers": ["performance", "monitoring", "Lighthouse", "métricas"],
+      "priority": 3
+    },
+    "release-manager": {
+      "file": ".claude/agents/release-manager.md",
+      "role": "coordinator",
+      "description": "Gestor de releases y versiones",
+      "triggers": ["release", "versión", "changelog", "tag"],
+      "priority": 3
+    },
+    "documentation-engineer": {
+      "file": ".claude/agents/documentation-engineer.md",
+      "role": "documenter",
+      "description": "Especialista en documentación",
+      "triggers": ["documentación", "docs", "README", "OpenAPI"],
+      "priority": 3
+    },
+    "product-manager": {
+      "file": ".claude/agents/product-manager.md",
+      "role": "planner",
+      "description": "Gestor de producto y requisitos",
+      "triggers": ["user story", "requisitos", "feature", "producto"],
+      "priority": 2
+    },
+    "ai-integration-engineer": {
+      "file": ".claude/agents/ai-integration-engineer.md",
+      "role": "implementer",
+      "description": "Especialista en integración de IA",
+      "triggers": ["IA", "OpenAI", "prompts", "LLM", "embeddings"],
+      "priority": 2
+    }
+  },
+  "handoffProtocol": {
+    "enabled": true,
+    "format": "🛑 HANDOFF REQUERIDO\n\n@{agent}, {instruction}\n\nContexto: {context}\n\nYO NO {forbidden_action}."
+  },
+  "scopeEnforcement": {
+    "enabled": true,
+    "level": "strict",
+    "autoVerification": true
+  }
+}

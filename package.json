@@ -10,7 +10,12 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "claude:setup": "./scripts/setup-claude-agents.sh",
+    "claude:verify": "./scripts/verify-setup.sh",
+    "claude:convert": "./scripts/convert-agent.sh",
+    "claude:convert-all": "./scripts/convert-all-agents.sh",
+    "claude:aliases": "source .claude/aliases.sh"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
