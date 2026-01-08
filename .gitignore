@@ -6,6 +6,9 @@
 # Testing
 /coverage
 
+# Lighthouse reports (generated files)
+lighthouse-reports/
+
 # Next.js
 /.next/
 /out/
