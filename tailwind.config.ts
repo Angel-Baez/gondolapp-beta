@@ -20,9 +20,10 @@ const config: Config = {
           tertiary: "#10B981",
         },
         alert: {
+          vencido: "#991B1B",
           critico: "#EF4444",
-          advertencia: "#FBBF24",
-          precaucion: "#F97316",
+          advertencia: "#F97316",
+          precaucion: "#FBBF24",
           normal: "#6B7280",
         },
         // Dark mode specific colors

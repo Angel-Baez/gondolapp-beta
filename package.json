@@ -13,7 +13,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.45.4",
     "@tanstack/react-query": "^5.17.0",
     "@testing-library/dom": "^10.4.1",
     "@types/node": "^24.10.1",
