@@ -1,10 +1,10 @@
 "use client";
 
-import { HistorialCard } from "@/components/reposicion/HistorialCard";
 import { SkeletonCard } from "@/components/lists/SkeletonCard";
-import { useHistorialReposicion } from "@/hooks/useReposicion";
+import { useHistorialVencimiento } from "@/hooks/useVencimiento";
 import { motion as m } from "framer-motion";
 import { History } from "lucide-react";
+import { HistorialCard } from "./HistorialCard";
 
 interface HistorialListProps {
   filtros?: {
@@ -15,7 +15,7 @@ interface HistorialListProps {
 }
 
 export function HistorialList({ filtros }: HistorialListProps) {
-  const { data: listas = [], isLoading } = useHistorialReposicion(filtros);
+  const { data: retirados = [], isLoading } = useHistorialVencimiento(filtros);
 
   if (isLoading) {
     return (
@@ -27,7 +27,7 @@ export function HistorialList({ filtros }: HistorialListProps) {
     );
   }
 
-  if (listas.length === 0) {
+  if (retirados.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
         <m.div
@@ -36,18 +36,20 @@ export function HistorialList({ filtros }: HistorialListProps) {
         >
           <History size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
         </m.div>
-        <p className="text-base sm:text-lg font-semibold text-center">No hay listas guardadas</p>
+        <p className="text-base sm:text-lg font-semibold text-center">
+          No hay productos retirados
+        </p>
         <p className="text-xs sm:text-sm text-center mt-1">
-          Las listas que guardes aparecerán aquí
+          Los productos que retires aparecerán aquí
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {listas.map((lista) => (
-        <HistorialCard key={lista.id} lista={lista} />
+    <div className="space-y-3">
+      {retirados.map((item) => (
+        <HistorialCard key={item.id} item={item} />
       ))}
     </div>
   );

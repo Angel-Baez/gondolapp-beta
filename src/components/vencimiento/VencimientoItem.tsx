@@ -49,7 +49,7 @@ export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps
   };
 
   return (
-    <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-3 sm:p-4 mb-3 transition-colors">
+    <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-3 sm:p-4 transition-colors">
       <div className="space-y-3">
         <div className="flex items-start gap-3">
           {variante.imagen && (

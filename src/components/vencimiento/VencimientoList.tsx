@@ -1,6 +1,11 @@
 "use client";
 
+import { CollapsibleSection } from "@/components/lists/CollapsibleSection";
+import { SearchSortBar } from "@/components/lists/SearchSortBar";
+import { SectionHeader } from "@/components/lists/SectionHeader";
+import { SkeletonCard } from "@/components/lists/SkeletonCard";
 import { Button, Input, Modal } from "@/components/ui";
+import { useListFilters } from "@/hooks/useListFilters";
 import { useProductosDeItems } from "@/hooks/useProductosDeItems";
 import {
   useActualizarFechaVencimiento,
@@ -17,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { VencimientoHeader } from "./VencimientoHeader";
 import { VencimientoItem } from "./VencimientoItem";
 
 interface ItemConVariante {
@@ -30,12 +36,30 @@ const SECCIONES: Array<{
   icon: any;
   colorClass: string;
 }> = [
-  { nivel: "vencido", titulo: "Vencidos", icon: Skull, colorClass: "text-alert-vencido" },
-  { nivel: "critico", titulo: "Críticos (0-15 días)", icon: AlertCircle, colorClass: "text-alert-critico" },
-  { nivel: "advertencia", titulo: "Advertencia (15-30 días)", icon: AlertTriangle, colorClass: "text-alert-advertencia" },
-  { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "text-alert-precaucion" },
-  { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "text-gray-600 dark:text-gray-400" },
+  { nivel: "vencido", titulo: "Vencidos", icon: Skull, colorClass: "bg-gradient-to-r from-red-800 to-red-900" },
+  { nivel: "critico", titulo: "Críticos (0-15 días)", icon: AlertCircle, colorClass: "bg-gradient-to-r from-red-500 to-red-600" },
+  { nivel: "advertencia", titulo: "Advertencia (15-30 días)", icon: AlertTriangle, colorClass: "bg-gradient-to-r from-orange-500 to-orange-600" },
+  { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "bg-gradient-to-r from-amber-400 to-amber-500" },
+  { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "bg-gradient-to-r from-gray-500 to-gray-600" },
 ];
+
+const OPCIONES_ORDEN = [
+  { value: "vencimiento", label: "Por vencer primero" },
+  { value: "nombre", label: "Nombre (A-Z)" },
+  { value: "recientes", label: "Más recientes" },
+];
+
+function ordenar(items: ItemConVariante[], orden: string): ItemConVariante[] {
+  const copia = [...items];
+  switch (orden) {
+    case "nombre":
+      return copia.sort((a, b) => a.variante.nombreCompleto.localeCompare(b.variante.nombreCompleto));
+    case "recientes":
+      return copia.sort((a, b) => b.item.agregadoAt.getTime() - a.item.agregadoAt.getTime());
+    default:
+      return copia.sort((a, b) => a.item.fechaVencimiento.getTime() - b.item.fechaVencimiento.getTime());
+  }
+}
 
 export function VencimientoList() {
   const { data: items = [], isLoading: loadingItems } = useVencimientoItems();
@@ -43,9 +67,20 @@ export function VencimientoList() {
     items.map((i) => i.varianteId)
   );
   const actualizarFecha = useActualizarFechaVencimiento();
+  const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("vencimiento");
 
   const [editingItem, setEditingItem] = useState<ItemVencimientoConAlerta | null>(null);
   const [newDate, setNewDate] = useState("");
+  const [expandedSections, setExpandedSections] = useState<Set<AlertaNivel>>(new Set());
+
+  const toggleSection = (nivel: AlertaNivel) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(nivel)) next.delete(nivel);
+      else next.add(nivel);
+      return next;
+    });
+  };
 
   const itemsConVariantes = useMemo<ItemConVariante[]>(() => {
     if (!productosPorVariante) return [];
@@ -55,8 +90,9 @@ export function VencimientoList() {
         if (!producto) return null;
         return { item, variante: producto.variante };
       })
-      .filter((v): v is ItemConVariante => v !== null);
-  }, [items, productosPorVariante]);
+      .filter((v): v is ItemConVariante => v !== null)
+      .filter((v) => coincide(v.variante.nombreCompleto));
+  }, [items, productosPorVariante, coincide]);
 
   const itemsByAlertLevel = useMemo(() => {
     const grouped: Record<AlertaNivel, ItemConVariante[]> = {
@@ -69,8 +105,11 @@ export function VencimientoList() {
     itemsConVariantes.forEach((itemCompleto) => {
       grouped[itemCompleto.item.alertaNivel].push(itemCompleto);
     });
+    for (const nivel of Object.keys(grouped) as AlertaNivel[]) {
+      grouped[nivel] = ordenar(grouped[nivel], orden);
+    }
     return grouped;
-  }, [itemsConVariantes]);
+  }, [itemsConVariantes, orden]);
 
   const handleEditClick = (item: ItemVencimientoConAlerta) => {
     setEditingItem(item);
@@ -89,86 +128,107 @@ export function VencimientoList() {
   };
 
   const totalItems = items.length;
-  const itemsUrgentes = itemsByAlertLevel.vencido.length + itemsByAlertLevel.critico.length;
+  const itemsUrgentes = items.filter((i) => i.alertaNivel === "vencido" || i.alertaNivel === "critico").length;
   const loading = loadingItems || (items.length > 0 && loadingProductos);
 
   if (loading) {
     return (
       <div className="space-y-4 py-10 px-4">
-        <div className="flex items-center justify-center py-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-secondary" />
-        </div>
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
-        <m.div
-          animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
-        </m.div>
-        <p className="text-base sm:text-lg font-semibold text-center">
-          No hay productos con vencimiento registrado
-        </p>
-        <p className="text-xs sm:text-sm text-center mt-1">
-          Escanea productos para rastrear sus fechas de vencimiento
-        </p>
-      </div>
+      <>
+        <VencimientoHeader />
+        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
+          <m.div
+            animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
+          </m.div>
+          <p className="text-base sm:text-lg font-semibold text-center">
+            No hay productos con vencimiento registrado
+          </p>
+          <p className="text-xs sm:text-sm text-center mt-1">
+            Escanea productos para rastrear sus fechas de vencimiento
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div>
-      <div className="mb-3 sm:mb-4">
-        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-            Control de Vencimientos
-          </h2>
-          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
-            {totalItems} producto{totalItems !== 1 ? "s" : ""}
-          </span>
+    <div className="pb-8">
+      <VencimientoHeader />
+
+      {itemsUrgentes > 0 && (
+        <div className="mx-4 sm:mx-0 mb-4 flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
+          <AlertTriangle size={18} className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+          <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
+            {itemsUrgentes} producto{itemsUrgentes > 1 ? "s" : ""} urgente
+            {itemsUrgentes > 1 ? "s" : ""} (vencido{itemsUrgentes > 1 ? "s" : ""} o por vencer)
+          </p>
         </div>
+      )}
 
-        {itemsUrgentes > 0 && (
-          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
-            <AlertTriangle size={18} className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
-            <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
-              {itemsUrgentes} producto{itemsUrgentes > 1 ? "s" : ""} urgente
-              {itemsUrgentes > 1 ? "s" : ""} (vencido{itemsUrgentes > 1 ? "s" : ""} o por vencer)
-            </p>
-          </div>
-        )}
-      </div>
+      <SearchSortBar
+        busqueda={busqueda}
+        onBusquedaChange={setBusqueda}
+        orden={orden}
+        onOrdenChange={setOrden}
+        opcionesOrden={OPCIONES_ORDEN}
+      />
 
-      <div className="space-y-4 sm:space-y-6">
-        {SECCIONES.map(({ nivel, titulo, icon: Icon, colorClass }) => {
-          const itemsSeccion = itemsByAlertLevel[nivel];
-          if (itemsSeccion.length === 0) return null;
+      {itemsConVariantes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-center">No hay productos que coincidan con la búsqueda</p>
+        </div>
+      ) : (
+        <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+          {SECCIONES.map(({ nivel, titulo, icon, colorClass }) => {
+            const itemsSeccion = itemsByAlertLevel[nivel];
+            if (itemsSeccion.length === 0) return null;
+            const isExpanded = expandedSections.has(nivel);
 
-          return (
-            <div key={nivel}>
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <Icon size={18} className={`${colorClass} flex-shrink-0 sm:w-5 sm:h-5`} />
-                <h3 className={`text-xs sm:text-sm font-bold ${colorClass} uppercase tracking-wider`}>
-                  {titulo}
-                </h3>
-              </div>
-              {itemsSeccion.map(({ item, variante }) => (
-                <VencimientoItem
-                  key={item.id}
-                  item={item}
-                  variante={variante}
-                  onEdit={() => handleEditClick(item)}
+            return (
+              <div
+                key={nivel}
+                className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors"
+              >
+                <SectionHeader
+                  title={titulo}
+                  count={itemsSeccion.length}
+                  icon={icon}
+                  colorClass={colorClass}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleSection(nivel)}
+                  showToggleButton={itemsSeccion.length >= 10}
                 />
-              ))}
-            </div>
-          );
-        })}
-      </div>
+                <CollapsibleSection
+                  isExpanded={isExpanded}
+                  itemCount={itemsSeccion.length}
+                  bgColor="bg-gray-50/30 dark:bg-dark-bg/40"
+                >
+                  {itemsSeccion.map(({ item, variante }) => (
+                    <VencimientoItem
+                      key={item.id}
+                      item={item}
+                      variante={variante}
+                      onEdit={() => handleEditClick(item)}
+                    />
+                  ))}
+                </CollapsibleSection>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <Modal
         isOpen={!!editingItem}
