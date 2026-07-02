@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/Modal";
-import { useReposicionStore } from "@/store/reposicion";
+import { useEliminarListaHistorial } from "@/hooks/useReposicion";
 import { ItemHistorial, ListaReposicionHistorial } from "@/types";
 import { motion as m } from "framer-motion";
 import {
@@ -17,27 +17,20 @@ import toast from "react-hot-toast";
 
 interface HistorialCardProps {
   lista: ListaReposicionHistorial;
-  onDeleted: () => void;
 }
 
-export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
+export function HistorialCard({ lista }: HistorialCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const { eliminarListaHistorial } = useReposicionStore();
+  const eliminarLista = useEliminarListaHistorial();
 
   const handleDelete = async () => {
-    setDeleting(true);
     try {
-      await eliminarListaHistorial(lista.id);
+      await eliminarLista.mutateAsync(lista.id);
       toast.success("Lista eliminada correctamente");
       setShowDeleteModal(false);
-      onDeleted();
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar la lista");
-      console.error(error);
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -53,14 +46,12 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
 
   const porcentajeRepuestos =
     lista.resumen.totalProductos > 0
-      ? Math.round(
-          (lista.resumen.totalRepuestos / lista.resumen.totalProductos) * 100
-        )
+      ? Math.round((lista.resumen.totalRepuestos / lista.resumen.totalProductos) * 100)
       : 0;
 
   const itemsPorEstado = {
     repuesto: lista.items.filter((i) => i.estado === "repuesto"),
-    sinStock: lista.items.filter((i) => i.estado === "sinStock"),
+    sin_stock: lista.items.filter((i) => i.estado === "sin_stock"),
     pendiente: lista.items.filter((i) => i.estado === "pendiente"),
   };
 
@@ -91,20 +82,20 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
           {items.map((item, idx) => (
             <div
               key={idx}
-              className="bg-gray-50 p-3 rounded-lg text-sm border border-gray-200"
+              className="bg-gray-50 dark:bg-dark-card p-3 rounded-lg text-sm border border-gray-200 dark:border-dark-border"
             >
-              <div className="font-semibold text-gray-900">
+              <div className="font-semibold text-gray-900 dark:text-gray-100">
                 {item.productoNombre}
                 {item.productoMarca && (
-                  <span className="text-gray-500 font-normal ml-2">
+                  <span className="text-gray-500 dark:text-gray-400 font-normal ml-2">
                     ({item.productoMarca})
                   </span>
                 )}
               </div>
-              <div className="text-gray-600 text-xs mt-1">
+              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1">
                 {item.varianteNombre}
               </div>
-              <div className="text-gray-500 text-xs mt-1">
+              <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                 Cantidad: {item.cantidad}
               </div>
             </div>
@@ -120,67 +111,64 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow"
+        className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-dark-border hover:shadow-xl transition-shadow"
       >
-        {/* Header */}
         <div
-          className="p-4 cursor-pointer bg-gradient-to-r from-slate-50 to-slate-100"
+          className="p-4 cursor-pointer bg-gradient-to-r from-slate-50 to-slate-100 dark:from-dark-card dark:to-dark-surface"
           onClick={() => setExpanded(!expanded)}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="text-sm text-gray-600 mb-1">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                 {formatearFecha(lista.fechaGuardado)}
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-semibold">
+                <div className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg text-xs font-semibold">
                   {lista.resumen.totalProductos} productos
                 </div>
                 {lista.resumen.totalRepuestos > 0 && (
-                  <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-semibold">
-                    {lista.resumen.totalRepuestos} repuestos ({porcentajeRepuestos}
-                    %)
+                  <div className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-lg text-xs font-semibold">
+                    {lista.resumen.totalRepuestos} repuestos ({porcentajeRepuestos}%)
                   </div>
                 )}
                 {lista.resumen.totalSinStock > 0 && (
-                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-semibold">
+                  <div className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-3 py-1 rounded-lg text-xs font-semibold">
                     {lista.resumen.totalSinStock} sin stock
                   </div>
                 )}
                 {lista.resumen.totalPendientes > 0 && (
-                  <div className="bg-cyan-100 text-cyan-700 px-3 py-1 rounded-lg text-xs font-semibold">
+                  <div className="bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 px-3 py-1 rounded-lg text-xs font-semibold">
                     {lista.resumen.totalPendientes} pendientes
                   </div>
                 )}
               </div>
             </div>
             <button
-              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-dark-border rounded-lg transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded(!expanded);
               }}
             >
               {expanded ? (
-                <ChevronUp size={20} className="text-gray-600" />
+                <ChevronUp size={20} className="text-gray-600 dark:text-gray-400" />
               ) : (
-                <ChevronDown size={20} className="text-gray-600" />
+                <ChevronDown size={20} className="text-gray-600 dark:text-gray-400" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Detalle expandible */}
         {expanded && (
           <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-gray-200"
+            className="border-t border-gray-200 dark:border-dark-border"
           >
             <div className="p-4">
-              <h4 className="font-bold text-gray-900 mb-4 text-sm">
+              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-sm">
                 Detalle de productos
               </h4>
 
@@ -193,7 +181,7 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
 
               <SeccionItems
                 titulo="Sin Stock"
-                items={itemsPorEstado.sinStock}
+                items={itemsPorEstado.sin_stock}
                 colorClass="bg-gradient-to-r from-red-500 to-red-600"
                 icon={XCircle}
               />
@@ -205,10 +193,9 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
                 icon={Package}
               />
 
-              {/* Botón eliminar */}
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full mt-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-4 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Trash2 size={18} />
                 <span>Eliminar esta lista</span>
@@ -218,31 +205,25 @@ export function HistorialCard({ lista, onDeleted }: HistorialCardProps) {
         )}
       </m.div>
 
-      {/* Modal de confirmación de eliminación */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Eliminar lista"
-      >
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Eliminar lista">
         <div className="space-y-4">
-          <p className="text-gray-600">
-            ¿Estás seguro de que deseas eliminar esta lista? Esta acción no se
-            puede deshacer.
+          <p className="text-gray-600 dark:text-gray-400">
+            ¿Estás seguro de que deseas eliminar esta lista? Esta acción no se puede deshacer.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setShowDeleteModal(false)}
-              disabled={deleting}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-colors"
+              disabled={eliminarLista.isPending}
+              className="flex-1 bg-gray-100 dark:bg-dark-card hover:bg-gray-200 dark:hover:bg-dark-border text-gray-700 dark:text-gray-200 font-semibold py-3 px-4 rounded-xl transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={eliminarLista.isPending}
               className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
             >
-              {deleting ? "Eliminando..." : "Eliminar"}
+              {eliminarLista.isPending ? "Eliminando..." : "Eliminar"}
             </button>
           </div>
         </div>

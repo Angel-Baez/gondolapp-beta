@@ -1,6 +1,7 @@
 "use client";
 
 import { HistorialList } from "@/components/reposicion/HistorialList";
+import { ReposicionEstadisticas } from "@/components/reposicion/ReposicionEstadisticas";
 import { Calendar, History } from "lucide-react";
 import { Header } from "@/components/ui";
 import { useState } from "react";
@@ -43,6 +44,8 @@ export default function HistorialPage() {
 
         {/* Filtros */}
         <div className="p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
+          <ReposicionEstadisticas />
+
           <button
             onClick={() => setShowFiltros(!showFiltros)}
             className="w-full bg-white dark:bg-dark-surface rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border flex items-center justify-between hover:shadow-md transition-all"

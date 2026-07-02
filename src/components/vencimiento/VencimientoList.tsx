@@ -1,329 +1,235 @@
 "use client";
 
-import { dbService } from "@/lib/db";
-import { useVencimientoStore } from "@/store/vencimiento";
-import { ItemVencimiento, ProductoVariante } from "@/types";
+import { CollapsibleSection } from "@/components/lists/CollapsibleSection";
+import { SearchSortBar } from "@/components/lists/SearchSortBar";
+import { SectionHeader } from "@/components/lists/SectionHeader";
+import { SkeletonCard } from "@/components/lists/SkeletonCard";
+import { Button, Input, Modal } from "@/components/ui";
+import { useListFilters } from "@/hooks/useListFilters";
+import { useProductosDeItems } from "@/hooks/useProductosDeItems";
+import {
+  useActualizarFechaVencimiento,
+  useVencimientoItems,
+} from "@/hooks/useVencimiento";
+import { AlertaNivel, ItemVencimientoConAlerta, ProductoVariante } from "@/types";
+import { motion as m } from "framer-motion";
 import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Skull,
   Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Modal, Input, Button } from "../ui";
+import { useMemo, useState } from "react";
+import { VencimientoHeader } from "./VencimientoHeader";
 import { VencimientoItem } from "./VencimientoItem";
-import { motion as m } from "framer-motion";
 
 interface ItemConVariante {
-  item: ItemVencimiento;
+  item: ItemVencimientoConAlerta;
   variante: ProductoVariante;
 }
 
+const SECCIONES: Array<{
+  nivel: AlertaNivel;
+  titulo: string;
+  icon: any;
+  colorClass: string;
+}> = [
+  { nivel: "vencido", titulo: "Vencidos", icon: Skull, colorClass: "bg-gradient-to-r from-red-800 to-red-900" },
+  { nivel: "critico", titulo: "Críticos (0-15 días)", icon: AlertCircle, colorClass: "bg-gradient-to-r from-red-500 to-red-600" },
+  { nivel: "advertencia", titulo: "Advertencia (15-30 días)", icon: AlertTriangle, colorClass: "bg-gradient-to-r from-orange-500 to-orange-600" },
+  { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "bg-gradient-to-r from-amber-400 to-amber-500" },
+  { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "bg-gradient-to-r from-gray-500 to-gray-600" },
+];
+
+const OPCIONES_ORDEN = [
+  { value: "vencimiento", label: "Por vencer primero" },
+  { value: "nombre", label: "Nombre (A-Z)" },
+  { value: "recientes", label: "Más recientes" },
+];
+
+function ordenar(items: ItemConVariante[], orden: string): ItemConVariante[] {
+  const copia = [...items];
+  switch (orden) {
+    case "nombre":
+      return copia.sort((a, b) => a.variante.nombreCompleto.localeCompare(b.variante.nombreCompleto));
+    case "recientes":
+      return copia.sort((a, b) => b.item.agregadoAt.getTime() - a.item.agregadoAt.getTime());
+    default:
+      return copia.sort((a, b) => a.item.fechaVencimiento.getTime() - b.item.fechaVencimiento.getTime());
+  }
+}
+
 export function VencimientoList() {
-  const { items, cargarItems, actualizarFecha, recalcularAlertas } =
-    useVencimientoStore();
-  const [itemsConVariantes, setItemsConVariantes] = useState<ItemConVariante[]>(
-    []
+  const { data: items = [], isLoading: loadingItems } = useVencimientoItems();
+  const { data: productosPorVariante, isLoading: loadingProductos } = useProductosDeItems(
+    items.map((i) => i.varianteId)
   );
-  const [loading, setLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState<ItemVencimiento | null>(null);
+  const actualizarFecha = useActualizarFechaVencimiento();
+  const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("vencimiento");
+
+  const [editingItem, setEditingItem] = useState<ItemVencimientoConAlerta | null>(null);
   const [newDate, setNewDate] = useState("");
+  const [expandedSections, setExpandedSections] = useState<Set<AlertaNivel>>(new Set());
 
-  useEffect(() => {
-    cargarItems();
+  const toggleSection = (nivel: AlertaNivel) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(nivel)) next.delete(nivel);
+      else next.add(nivel);
+      return next;
+    });
+  };
 
-    // Recalcular alertas diariamente
-    const interval = setInterval(() => {
-      recalcularAlertas();
-    }, 1000 * 60 * 60 * 24); // 24 horas
+  const itemsConVariantes = useMemo<ItemConVariante[]>(() => {
+    if (!productosPorVariante) return [];
+    return items
+      .map((item) => {
+        const producto = productosPorVariante.get(item.varianteId);
+        if (!producto) return null;
+        return { item, variante: producto.variante };
+      })
+      .filter((v): v is ItemConVariante => v !== null)
+      .filter((v) => coincide(v.variante.nombreCompleto));
+  }, [items, productosPorVariante, coincide]);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // Cargar variantes para cada item
-  useEffect(() => {
-    const cargarVariantes = async () => {
-      setLoading(true);
-      const itemsCompletos = await Promise.all(
-        items.map(async (item) => {
-          const variante = await dbService.getVarianteById(item.varianteId);
-          if (!variante) return null;
-          return { item, variante };
-        })
-      );
-
-      setItemsConVariantes(
-        itemsCompletos.filter((item) => item !== null) as ItemConVariante[]
-      );
-      setLoading(false);
-    };
-
-    if (items.length > 0) {
-      cargarVariantes();
-    } else {
-      setLoading(false);
-    }
-  }, [items]);
-
-  // Agrupar por nivel de alerta
   const itemsByAlertLevel = useMemo(() => {
-    const grouped = {
-      critico: [] as ItemConVariante[],
-      advertencia: [] as ItemConVariante[],
-      precaucion: [] as ItemConVariante[],
-      normal: [] as ItemConVariante[],
+    const grouped: Record<AlertaNivel, ItemConVariante[]> = {
+      vencido: [],
+      critico: [],
+      advertencia: [],
+      precaucion: [],
+      normal: [],
     };
-
     itemsConVariantes.forEach((itemCompleto) => {
       grouped[itemCompleto.item.alertaNivel].push(itemCompleto);
     });
-
+    for (const nivel of Object.keys(grouped) as AlertaNivel[]) {
+      grouped[nivel] = ordenar(grouped[nivel], orden);
+    }
     return grouped;
-  }, [itemsConVariantes]);
+  }, [itemsConVariantes, orden]);
 
-  const handleEditClick = (item: ItemVencimiento) => {
+  const handleEditClick = (item: ItemVencimientoConAlerta) => {
     setEditingItem(item);
     setNewDate(item.fechaVencimiento.toISOString().split("T")[0]);
   };
 
-  const handleSaveDate = () => {
+  const handleSaveDate = async () => {
     if (editingItem && newDate) {
-      actualizarFecha(editingItem.id, new Date(newDate));
+      await actualizarFecha.mutateAsync({
+        id: editingItem.id,
+        fechaVencimiento: new Date(newDate),
+      });
       setEditingItem(null);
       setNewDate("");
     }
   };
 
   const totalItems = items.length;
-  const itemsCriticos = itemsByAlertLevel.critico.length;
+  const itemsUrgentes = items.filter((i) => i.alertaNivel === "vencido" || i.alertaNivel === "critico").length;
+  const loading = loadingItems || (items.length > 0 && loadingProductos);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-secondary" />
+      <div className="space-y-4 py-10 px-4">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
-        {/* ✨ Icono con animación flotante */}
-        <m.div
-          animate={{
-            y: [0, -10, 0],
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          <Clock
-            size={48}
-            className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16"
-          />
-        </m.div>
-        <p className="text-base sm:text-lg font-semibold text-center">
-          No hay productos con vencimiento registrado
-        </p>
-        <p className="text-xs sm:text-sm text-center mt-1">
-          Escanea productos para rastrear sus fechas de vencimiento
-        </p>
-      </div>
+      <>
+        <VencimientoHeader />
+        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
+          <m.div
+            animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
+          </m.div>
+          <p className="text-base sm:text-lg font-semibold text-center">
+            No hay productos con vencimiento registrado
+          </p>
+          <p className="text-xs sm:text-sm text-center mt-1">
+            Escanea productos para rastrear sus fechas de vencimiento
+          </p>
+        </div>
+      </>
     );
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-3 sm:mb-4">
-        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
-            Control de Vencimientos
-          </h2>
-          <span className="px-2.5 sm:px-3 py-1 bg-accent-primary text-white rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap">
-            {totalItems} producto{totalItems !== 1 ? "s" : ""}
-          </span>
+    <div className="pb-8">
+      <VencimientoHeader />
+
+      {itemsUrgentes > 0 && (
+        <div className="mx-4 sm:mx-0 mb-4 flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
+          <AlertTriangle size={18} className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
+          <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
+            {itemsUrgentes} producto{itemsUrgentes > 1 ? "s" : ""} urgente
+            {itemsUrgentes > 1 ? "s" : ""} (vencido{itemsUrgentes > 1 ? "s" : ""} o por vencer)
+          </p>
         </div>
+      )}
 
-        {itemsCriticos > 0 && (
-          <div className="flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
-            {/* ✨ Icono con pulso constante */}
-            <m.div
-              animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, -5, 5, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <AlertTriangle
-                size={18}
-                className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5"
-              />
-            </m.div>
-            <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
-              {itemsCriticos} producto{itemsCriticos > 1 ? "s" : ""} crítico
-              {itemsCriticos > 1 ? "s" : ""} (vencido
-              {itemsCriticos > 1 ? "s" : ""} o por vencer)
-            </p>
-          </div>
-        )}
-      </div>
+      <SearchSortBar
+        busqueda={busqueda}
+        onBusquedaChange={setBusqueda}
+        orden={orden}
+        onOrdenChange={setOrden}
+        opcionesOrden={OPCIONES_ORDEN}
+      />
 
-      {/* Lista de Items */}
-      <div className="space-y-4 sm:space-y-6">
-        {/* Críticos */}
-        {itemsByAlertLevel.critico.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              {/* ✨ Icono crítico con shake */}
-              <m.div
-                animate={{
-                  x: [-2, 2, -2, 2, 0],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 0.5,
-                  repeat: Infinity,
-                  repeatDelay: 2,
-                }}
+      {itemsConVariantes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-center">No hay productos que coincidan con la búsqueda</p>
+        </div>
+      ) : (
+        <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+          {SECCIONES.map(({ nivel, titulo, icon, colorClass }) => {
+            const itemsSeccion = itemsByAlertLevel[nivel];
+            if (itemsSeccion.length === 0) return null;
+            const isExpanded = expandedSections.has(nivel);
+
+            return (
+              <div
+                key={nivel}
+                className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors"
               >
-                <AlertCircle
-                  size={18}
-                  className="text-alert-critico flex-shrink-0 sm:w-5 sm:h-5"
+                <SectionHeader
+                  title={titulo}
+                  count={itemsSeccion.length}
+                  icon={icon}
+                  colorClass={colorClass}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleSection(nivel)}
+                  showToggleButton={itemsSeccion.length >= 10}
                 />
-              </m.div>
-              <h3 className="text-xs sm:text-sm font-bold text-alert-critico uppercase tracking-wider">
-                Críticos
-              </h3>
-            </div>
-            {itemsByAlertLevel.critico.map(({ item, variante }) => (
-              <VencimientoItem
-                key={item.id}
-                item={item}
-                variante={variante}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
-        )}
+                <CollapsibleSection
+                  isExpanded={isExpanded}
+                  itemCount={itemsSeccion.length}
+                  bgColor="bg-gray-50/30 dark:bg-dark-bg/40"
+                >
+                  {itemsSeccion.map(({ item, variante }) => (
+                    <VencimientoItem
+                      key={item.id}
+                      item={item}
+                      variante={variante}
+                      onEdit={() => handleEditClick(item)}
+                    />
+                  ))}
+                </CollapsibleSection>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-        {/* Advertencia */}
-        {itemsByAlertLevel.advertencia.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              {/* ✨ Icono advertencia con bounce */}
-              <m.div
-                animate={{
-                  y: [0, -5, 0],
-                  rotate: [0, 10, -10, 0],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <AlertTriangle
-                  size={18}
-                  className="text-alert-advertencia flex-shrink-0 sm:w-5 sm:h-5"
-                />
-              </m.div>
-              <h3 className="text-xs sm:text-sm font-bold text-alert-advertencia uppercase tracking-wider">
-                Advertencia (15-30 días)
-              </h3>
-            </div>
-            {itemsByAlertLevel.advertencia.map(({ item, variante }) => (
-              <VencimientoItem
-                key={item.id}
-                item={item}
-                variante={variante}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Precaución */}
-        {itemsByAlertLevel.precaucion.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              {/* ✨ Icono precaución con glow pulse */}
-              <m.div
-                animate={{
-                  scale: [1, 1.15, 1],
-                  opacity: [1, 0.7, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <Zap
-                  size={18}
-                  className="text-alert-precaucion flex-shrink-0 sm:w-5 sm:h-5"
-                />
-              </m.div>
-              <h3 className="text-xs sm:text-sm font-bold text-alert-precaucion uppercase tracking-wider">
-                Precaución (30-60 días)
-              </h3>
-            </div>
-            {itemsByAlertLevel.precaucion.map(({ item, variante }) => (
-              <VencimientoItem
-                key={item.id}
-                item={item}
-                variante={variante}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Normal */}
-        {itemsByAlertLevel.normal.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              {/* ✨ Icono normal con rotación suave */}
-              <m.div
-                animate={{
-                  rotate: [0, 360],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              >
-                <CheckCircle2
-                  size={18}
-                  className="text-gray-600 dark:text-gray-400 flex-shrink-0 sm:w-5 sm:h-5"
-                />
-              </m.div>
-              <h3 className="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                Normales (+60 días)
-              </h3>
-            </div>
-            {itemsByAlertLevel.normal.map(({ item, variante }) => (
-              <VencimientoItem
-                key={item.id}
-                item={item}
-                variante={variante}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Modal de Edición */}
       <Modal
         isOpen={!!editingItem}
         onClose={() => setEditingItem(null)}
@@ -342,8 +248,8 @@ export function VencimientoList() {
             label="Nueva fecha de vencimiento"
           />
 
-          <Button onClick={handleSaveDate} className="w-full">
-            Guardar Fecha
+          <Button onClick={handleSaveDate} disabled={actualizarFecha.isPending} className="w-full">
+            {actualizarFecha.isPending ? "Guardando..." : "Guardar Fecha"}
           </Button>
         </div>
       </Modal>

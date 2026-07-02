@@ -1,7 +1,9 @@
 import { AlertaNivel } from "@/types";
 
 /**
- * Calcula el nivel de alerta basado en la fecha de vencimiento
+ * Calcula el nivel de alerta basado en la fecha de vencimiento.
+ * Se recalcula siempre al leer (nunca se persiste), así que no hay
+ * riesgo de que quede desactualizado si la app queda abierta mucho tiempo.
  */
 export function calcularNivelAlerta(fechaVencimiento: Date): AlertaNivel {
   const hoy = new Date();
@@ -14,10 +16,10 @@ export function calcularNivelAlerta(fechaVencimiento: Date): AlertaNivel {
     (fechaVenc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  if (diasRestantes < 0) return "critico"; // Vencido
+  if (diasRestantes < 0) return "vencido"; // Ya pasó la fecha, sin retirar
   if (diasRestantes <= 15) return "critico"; // Rojo
-  if (diasRestantes <= 30) return "advertencia"; // Amarillo
-  if (diasRestantes <= 60) return "precaucion"; // Naranja
+  if (diasRestantes <= 30) return "advertencia"; // Naranja (antes amarillo: fix severidad)
+  if (diasRestantes <= 60) return "precaucion"; // Amarillo (antes naranja: fix severidad)
   return "normal"; // Verde/Gris
 }
 

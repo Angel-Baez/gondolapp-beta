@@ -9,37 +9,6 @@ const withPWA = require("next-pwa")({
   buildExcludes: [/middleware-manifest\.json$/],
   // Runtime caching strategies
   runtimeCaching: [
-    // Open Food Facts API - Network First with cache fallback
-    {
-      urlPattern: /^https:\/\/world\.openfoodfacts\.org\/api\/.*/i,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "openfoodfacts-api",
-        expiration: {
-          maxEntries: 200,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
-        },
-        networkTimeoutSeconds: 10,
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-    // Product images from Open Food Facts - Cache First
-    {
-      urlPattern: /^https:\/\/images\.openfoodfacts\.org\/.*/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "openfoodfacts-images",
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
     // Google Fonts - Cache First (long TTL)
     {
       urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
