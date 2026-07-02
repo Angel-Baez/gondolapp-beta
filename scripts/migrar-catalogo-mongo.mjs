@@ -44,7 +44,7 @@ async function main() {
   await mongo.connect();
   console.log("Conectado a MongoDB");
 
-  const db = mongo.db();
+  const db = mongo.db("gondolapp");
   const basesMongo = await db.collection("productos_base").find({}).toArray();
   const variantesMongo = await db.collection("productos_variantes").find({}).toArray();
 
