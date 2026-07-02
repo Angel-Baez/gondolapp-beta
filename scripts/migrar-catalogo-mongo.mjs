@@ -3,27 +3,33 @@
  * MongoDB a Supabase. Es un script de un solo uso para el corte a la nueva
  * arquitectura — correrlo una vez y listo.
  *
- * Uso:
+ * Uso (los tres son obligatorios; si .env.local ya tiene los de Supabase,
+ * alcanza con pasar MONGODB_URI):
  *   npm install --no-save mongodb
- *   MONGODB_URI="mongodb+srv://..." node scripts/migrar-catalogo-mongo.mjs
- *
- * Lee NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY desde .env.local.
+ *   MONGODB_URI="mongodb+srv://..." \
+ *   NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co" \
+ *   NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..." \
+ *   node scripts/migrar-catalogo-mongo.mjs
  */
 
 import { MongoClient } from "mongodb";
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 
 function cargarEnvLocal() {
   const dir = path.dirname(fileURLToPath(import.meta.url));
   const envPath = path.join(dir, "..", ".env.local");
+  if (!existsSync(envPath)) return;
+
   const contenido = readFileSync(envPath, "utf-8");
   for (const linea of contenido.split("\n")) {
-    const match = linea.match(/^([A-Z_]+)=(.*)$/);
-    if (match && !process.env[match[1]]) {
-      process.env[match[1]] = match[2].trim();
+    const match = linea.trim().match(/^([A-Z_]+)=(.*)$/);
+    if (!match) continue;
+    const valor = match[2].trim().replace(/^["']|["']$/g, "");
+    if (valor && !process.env[match[1]]) {
+      process.env[match[1]] = valor;
     }
   }
 }
@@ -36,7 +42,13 @@ async function main() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!mongoUri) throw new Error("Falta MONGODB_URI");
-  if (!supabaseUrl || !supabaseKey) throw new Error("Falta config de Supabase en .env.local");
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      "Falta NEXT_PUBLIC_SUPABASE_URL y/o NEXT_PUBLIC_SUPABASE_ANON_KEY. " +
+        "Agregalas a .env.local o pasalas como variables de entorno al correr el script."
+    );
+  }
+  console.log(`Usando Supabase en ${supabaseUrl}`);
 
   const mongo = new MongoClient(mongoUri);
   const supabase = createClient(supabaseUrl, supabaseKey);
