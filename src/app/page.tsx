@@ -7,9 +7,7 @@ import { ScanWorkflow } from "@/components/HomePage/ScanWorkflow";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Header } from "@/components/ui";
 import { ScanMode } from "@/types";
-import { motion as m } from "framer-motion";
-import { Archive, Loader2, Settings } from "lucide-react";
-import Link from "next/link";
+import { Archive, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
@@ -72,12 +70,6 @@ function HomePageContent() {
   const handleOpenScanner = () => {
     const newScanMode =
       activeView === "reposicion" ? "reposicion" : "vencimiento";
-    console.log(
-      "handleOpenScanner called. activeView:",
-      activeView,
-      "newScanMode:",
-      newScanMode
-    );
     setScanMode(newScanMode);
     setShowScanWorkflow(true);
   };
@@ -98,18 +90,6 @@ function HomePageContent() {
           rightContent={
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Link
-                href="/admin"
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-              >
-                <m.div
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Settings size={20} />
-                </m.div>
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
             </div>
           }
         />

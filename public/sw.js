@@ -92,18 +92,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Open Food Facts API - Network First con cache fallback
-  if (url.hostname === "world.openfoodfacts.org") {
-    event.respondWith(networkFirstWithCache(request, API_CACHE, 10000));
-    return;
-  }
-
-  // Open Food Facts Images - Cache First
-  if (url.hostname === "images.openfoodfacts.org") {
-    event.respondWith(cacheFirstWithNetwork(request, IMAGE_CACHE));
-    return;
-  }
-
   // API routes - Network First
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirstWithCache(request, API_CACHE, 5000));

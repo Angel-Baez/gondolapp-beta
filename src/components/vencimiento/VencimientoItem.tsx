@@ -1,26 +1,23 @@
 "use client";
 
 import { calcularDiasRestantes, formatearFecha } from "@/lib/utils";
-import { useVencimientoStore } from "@/store/vencimiento";
-import { ItemVencimiento, ProductoVariante } from "@/types";
-import { Calendar, Edit2, Trash2 } from "lucide-react";
+import { useEliminarVencimientoItem, useRetirarVencimientoItem } from "@/hooks/useVencimiento";
+import { ItemVencimientoConAlerta, ProductoVariante } from "@/types";
+import { Calendar, Edit2, PackageCheck, Trash2 } from "lucide-react";
 import { Badge, IconButton } from "../ui";
 import { motion as m } from "framer-motion";
 import { useHaptics } from "@/hooks/useHaptics";
 import { toast } from "react-hot-toast";
 
 interface VencimientoItemProps {
-  item: ItemVencimiento;
+  item: ItemVencimientoConAlerta;
   variante: ProductoVariante;
   onEdit: () => void;
 }
 
-export function VencimientoItem({
-  item,
-  variante,
-  onEdit,
-}: VencimientoItemProps) {
-  const { eliminarItem } = useVencimientoStore();
+export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps) {
+  const retirarItem = useRetirarVencimientoItem();
+  const eliminarItem = useEliminarVencimientoItem();
   const { haptic } = useHaptics();
   const diasRestantes = calcularDiasRestantes(item.fechaVencimiento);
 
@@ -36,10 +33,24 @@ export function VencimientoItem({
     }
   };
 
+  const handleRetirar = () => {
+    haptic([30, 30, 30]);
+    retirarItem.mutate(item.id, {
+      onSuccess: () => toast.success("Producto retirado de la góndola"),
+      onError: () => toast.error("Error al retirar el producto"),
+    });
+  };
+
+  const handleEliminar = () => {
+    haptic([50, 100, 50]);
+    eliminarItem.mutate(item.id, {
+      onSuccess: () => toast("Producto quitado de la lista", { icon: "🗑️" }),
+    });
+  };
+
   return (
     <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-3 sm:p-4 mb-3 transition-colors">
       <div className="space-y-3">
-        {/* Info Section */}
         <div className="flex items-start gap-3">
           {variante.imagen && (
             <img
@@ -60,7 +71,6 @@ export function VencimientoItem({
           </div>
         </div>
 
-        {/* Alert Badge y Metadata */}
         <div className="space-y-2">
           <Badge alert={item.alertaNivel} className="text-xs sm:text-sm">
             {getMensajeVencimiento()}
@@ -72,18 +82,22 @@ export function VencimientoItem({
               <span>{formatearFecha(item.fechaVencimiento)}</span>
             </div>
 
-            {item.cantidad && (
-              <span className="font-medium">Cantidad: {item.cantidad}</span>
-            )}
+            {item.cantidad && <span className="font-medium">Cantidad: {item.cantidad}</span>}
 
-            {item.lote && (
-              <span className="text-gray-500 dark:text-gray-400">Lote: {item.lote}</span>
-            )}
+            {item.lote && <span className="text-gray-500 dark:text-gray-400">Lote: {item.lote}</span>}
           </div>
         </div>
 
-        {/* Actions - En fila completa */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-dark-border">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 dark:border-dark-border">
+          <button
+            onClick={handleRetirar}
+            disabled={retirarItem.isPending}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg font-semibold text-sm transition-colors"
+          >
+            <PackageCheck size={16} />
+            Retirar
+          </button>
+
           <IconButton
             onClick={() => {
               haptic(50);
@@ -92,7 +106,6 @@ export function VencimientoItem({
             title="Editar fecha"
             className="w-10 h-10 sm:w-11 sm:h-11"
           >
-            {/* ✨ Icono con hover y tap animation */}
             <m.div
               whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -104,39 +117,12 @@ export function VencimientoItem({
 
           <IconButton
             variant="ghost"
-            onClick={() => {
-              haptic([50, 100, 50]);
-              eliminarItem(item.id);
-
-              toast.error(
-                <m.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex items-center gap-2"
-                >
-                  <m.div
-                    initial={{ y: 0 }}
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Trash2 className="text-red-500 w-5 h-5" />
-                  </m.div>
-                  <span>Producto eliminado</span>
-                </m.div>,
-                { duration: 2000 }
-              );
-            }}
-            title="Eliminar"
+            onClick={handleEliminar}
+            title="Quitar de la lista (sin registrar retiro)"
             className="w-10 h-10 sm:w-11 sm:h-11"
           >
-            {/* ✨ Icono con shake en hover */}
             <m.div
-              whileHover={{
-                rotate: [0, -10, 10, -10, 0],
-                transition: { duration: 0.5 },
-              }}
+              whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.5 } }}
               whileTap={{ scale: 0.85 }}
             >
               <Trash2 size={18} className="sm:w-5 sm:h-5" />

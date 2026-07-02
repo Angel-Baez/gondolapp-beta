@@ -45,7 +45,6 @@ const RATE_LIMITS = {
   api: parseInt(process.env.RATE_LIMIT_API || "30"),
   search: parseInt(process.env.RATE_LIMIT_SEARCH || "20"),
   create: parseInt(process.env.RATE_LIMIT_CREATE || "15"),
-  ai: parseInt(process.env.RATE_LIMIT_AI || "10"),
 };
 
 // Límites por tipo de endpoint
@@ -64,15 +63,6 @@ const searchLimiter = redis
       limiter: Ratelimit.slidingWindow(RATE_LIMITS.search, "1 m"),
       analytics: true,
       prefix: "@gondolapp/search",
-    })
-  : null;
-
-const aiLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(RATE_LIMITS.ai, "1 m"),
-      analytics: true,
-      prefix: "@gondolapp/ai",
     })
   : null;
 
@@ -117,10 +107,6 @@ export default async function proxy(request: NextRequest) {
     limiter = createLimiter;
     limitType = "Creación";
     cacheKey = `${identifier}:create`;
-  } else if (pathname.includes("/api/productos/normalizar")) {
-    limiter = aiLimiter;
-    limitType = "IA";
-    cacheKey = `${identifier}:ai`;
   }
 
   // ⚡ CHECK CACHE PRIMERO (evita llamada a Redis si hay entrada válida)
@@ -263,7 +249,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https://generativelanguage.googleapis.com https://*.mongodb.net",
+      "connect-src 'self' https://*.supabase.co",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

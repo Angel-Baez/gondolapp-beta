@@ -24,6 +24,7 @@ interface ProductoVarianteRow {
   tipo: string | null;
   tamano: string | null;
   sabor: string | null;
+  imagen: string | null;
   created_at: string;
 }
 
@@ -48,6 +49,7 @@ function mapProductoVariante(row: ProductoVarianteRow): ProductoVariante {
     tipo: row.tipo ?? undefined,
     tamano: row.tamano ?? undefined,
     sabor: row.sabor ?? undefined,
+    imagen: row.imagen ?? undefined,
     createdAt: new Date(row.created_at),
   };
 }
@@ -174,6 +176,7 @@ export async function crearProductoManual(
       tipo: dto.variante.tipo?.trim(),
       tamano: dto.variante.tamano.trim(),
       sabor: dto.variante.sabor?.trim(),
+      imagen: dto.variante.imagen,
     })
     .select()
     .single();
@@ -183,6 +186,41 @@ export async function crearProductoManual(
     base: mapProductoBase(baseRow),
     variante: mapProductoVariante(varianteRow as ProductoVarianteRow),
   };
+}
+
+/** Trae base+variante para un lote de varianteId de una sola vez (evita N+1 en las listas). */
+export async function obtenerProductosPorVarianteIds(
+  varianteIds: string[]
+): Promise<Map<string, ProductoCompleto>> {
+  const idsUnicos = Array.from(new Set(varianteIds));
+  if (idsUnicos.length === 0) return new Map();
+
+  const { data: variantes, error } = await supabase
+    .from("producto_variantes")
+    .select("*")
+    .in("id", idsUnicos);
+  if (error) throw error;
+
+  const baseIds = Array.from(
+    new Set((variantes ?? []).map((v) => v.producto_base_id))
+  );
+  const { data: bases, error: basesError } = await supabase
+    .from("producto_bases")
+    .select("*")
+    .in("id", baseIds);
+  if (basesError) throw basesError;
+
+  const basesPorId = new Map(
+    (bases ?? []).map((row) => [row.id, mapProductoBase(row as ProductoBaseRow)])
+  );
+
+  const resultado = new Map<string, ProductoCompleto>();
+  for (const row of (variantes ?? []) as ProductoVarianteRow[]) {
+    const base = basesPorId.get(row.producto_base_id);
+    if (!base) continue;
+    resultado.set(row.id, { base, variante: mapProductoVariante(row) });
+  }
+  return resultado;
 }
 
 /** Marcas y categorías existentes, para autocompletar el formulario de alta manual. */

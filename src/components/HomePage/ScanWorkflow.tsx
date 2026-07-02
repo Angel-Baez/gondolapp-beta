@@ -4,17 +4,14 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Plus, X } from "lucide-react";
 import { motion as m } from "framer-motion";
-import { useProductService } from "@/hooks/useProductService";
-import { useProductSync } from "@/hooks/useProductSync";
-import { useReposicionStore } from "@/store/reposicion";
-import { useVencimientoStore } from "@/store/vencimiento";
+import { useScanProduct, ProductoEscaneado } from "@/hooks/useScanProduct";
+import { useAgregarReposicionItem } from "@/hooks/useReposicion";
+import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { ScanMode } from "@/types";
-import { ProductoCompleto } from "@/services/productos";
 
-// 🚀 Lazy load del scanner para reducir bundle inicial
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
   ssr: false,
   loading: () => (
@@ -32,7 +29,6 @@ const FormularioProductoManual = dynamic(
   { ssr: false }
 );
 
-// Interface para el producto seleccionado en los modales
 interface ProductoSeleccionado {
   id: string;
   nombreCompleto: string;
@@ -46,21 +42,12 @@ interface ScanWorkflowProps {
   onClose: () => void;
 }
 
-/**
- * ScanWorkflow component - Maneja el flujo completo de escaneo + modales
- * 
- * ✅ SOLID Principles:
- * - SRP: Solo responsable del flujo completo de escaneo y modales
- * - DIP: Depende de abstracciones (hooks)
- * - OCP: Extensible para nuevos modos de escaneo
- */
 export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
-  console.log("ScanWorkflow rendered with scanMode:", scanMode);
   const [showScanner, setShowScanner] = useState(true);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showExpiryModal, setShowExpiryModal] = useState(false);
   const [showManualProductModal, setShowManualProductModal] = useState(false);
-  
+
   const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoSeleccionado | null>(null);
   const [cantidad, setCantidad] = useState(1);
   const [fechaVencimiento, setFechaVencimiento] = useState("");
@@ -68,10 +55,9 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   const [pendingEAN, setPendingEAN] = useState<string | null>(null);
   const [codigoNoEncontrado, setCodigoNoEncontrado] = useState<string | null>(null);
 
-  const { scanProduct, loading, error, clearError } = useProductService();
-  const { syncProductToIndexedDB } = useProductSync();
-  const { agregarItem: agregarReposicion } = useReposicionStore();
-  const { agregarItem: agregarVencimiento } = useVencimientoStore();
+  const { scanProduct, loading, error, clearError } = useScanProduct();
+  const agregarReposicion = useAgregarReposicionItem();
+  const agregarVencimiento = useAgregarVencimientoItem();
 
   useEffect(() => {
     if (!showManualProductModal && productoSeleccionado) {
@@ -83,25 +69,21 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     }
   }, [showManualProductModal, productoSeleccionado]);
 
-  const handleScan = async (codigoBarras: string) => {
-    // ✅ Logs movidos al componente (antes estaban en el hook)
-    console.log("🔍 Buscando producto con código:", codigoBarras);
-    
-    const result = await scanProduct(codigoBarras);
-    
-    if (result.success && result.producto) {
-      console.log("✅ Producto obtenido:", result.producto);
-      
-      // Guardar la variante completa con info del base
-      setProductoSeleccionado({
-        id: result.producto.variante.id,
-        nombreCompleto: result.producto.variante.nombreCompleto,
-        nombreBase: result.producto.base.nombre,
-        marca: result.producto.base.marca,
-        tamano: result.producto.variante.tamano,
-      });
+  const seleccionarProducto = (producto: ProductoEscaneado) => {
+    setProductoSeleccionado({
+      id: producto.variante.id,
+      nombreCompleto: producto.variante.nombreCompleto,
+      nombreBase: producto.base.nombre,
+      marca: producto.base.marca,
+      tamano: producto.variante.tamano,
+    });
+  };
 
-      // Mostrar modal según el modo
+  const handleScan = async (codigoBarras: string) => {
+    const result = await scanProduct(codigoBarras);
+
+    if (result.success && result.producto) {
+      seleccionarProducto(result.producto);
       setShowScanner(false);
       if (scanMode === "reposicion") {
         setShowQuantityModal(true);
@@ -109,9 +91,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         setShowExpiryModal(true);
       }
     } else {
-      console.error("❌ Error al procesar código:", result.error);
-      
-      // Producto no encontrado → Ofrecer registro manual
       setCodigoNoEncontrado(codigoBarras);
       setPendingEAN(codigoBarras);
       setShowScanner(false);
@@ -121,7 +100,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
 
   const handleAgregarReposicion = async () => {
     if (productoSeleccionado) {
-      await agregarReposicion(productoSeleccionado.id, cantidad);
+      await agregarReposicion.mutateAsync({ varianteId: productoSeleccionado.id, cantidad });
       setShowQuantityModal(false);
       setProductoSeleccionado(null);
       setCantidad(1);
@@ -131,12 +110,12 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
 
   const handleAgregarVencimiento = async () => {
     if (productoSeleccionado && fechaVencimiento) {
-      await agregarVencimiento(
-        productoSeleccionado.id,
-        new Date(fechaVencimiento),
-        cantidad || undefined,
-        lote || undefined
-      );
+      await agregarVencimiento.mutateAsync({
+        varianteId: productoSeleccionado.id,
+        fechaVencimiento: new Date(fechaVencimiento),
+        cantidad: cantidad || undefined,
+        lote: lote || undefined,
+      });
       setShowExpiryModal(false);
       setProductoSeleccionado(null);
       setCantidad(1);
@@ -146,27 +125,12 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     }
   };
 
-  const handleProductoCreado = async (producto: ProductoCompleto) => {
-    console.log("✅ Producto creado desde MongoDB:", producto);
-
-    // Sincronizar con IndexedDB
-    await syncProductToIndexedDB(producto);
-
-    // Configurar el producto para usar en los modales
-    setProductoSeleccionado({
-      id: producto.variante.id,
-      nombreCompleto: producto.variante.nombreCompleto,
-      nombreBase: producto.base.nombre,
-      marca: producto.base.marca,
-      tamano: producto.variante.tamano,
-    });
-
-    // Limpiar estados
+  const handleProductoCreado = async (producto: ProductoEscaneado) => {
+    seleccionarProducto(producto);
     setShowManualProductModal(false);
     setPendingEAN(null);
     clearError();
     setCodigoNoEncontrado(null);
-
   };
 
   const handleCloseManualModal = () => {
@@ -174,7 +138,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     setPendingEAN(null);
     clearError();
     setCodigoNoEncontrado(null);
-
   };
 
   const handleCloseQuantityModal = () => {
@@ -195,7 +158,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
 
   return (
     <>
-      {/* Barcode Scanner */}
       {showScanner && (
         <BarcodeScanner
           isOpen={showScanner}
@@ -204,7 +166,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         />
       )}
 
-      {/* Quantity Modal */}
       <Modal
         isOpen={showQuantityModal}
         onClose={handleCloseQuantityModal}
@@ -250,14 +211,17 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
             </m.button>
           </div>
 
-          <Button onClick={handleAgregarReposicion} className="w-full">
+          <Button
+            onClick={handleAgregarReposicion}
+            disabled={agregarReposicion.isPending}
+            className="w-full"
+          >
             <Plus size={20} />
             Agregar a Lista
           </Button>
         </div>
       </Modal>
 
-      {/* Expiry Modal */}
       <Modal
         isOpen={showExpiryModal}
         onClose={handleCloseExpiryModal}
@@ -303,7 +267,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
 
           <Button
             onClick={handleAgregarVencimiento}
-            disabled={!fechaVencimiento}
+            disabled={!fechaVencimiento || agregarVencimiento.isPending}
             className="w-full"
           >
             <Plus size={20} />
@@ -312,7 +276,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         </div>
       </Modal>
 
-      {/* Manual Product Modal */}
       {pendingEAN && (
         <FormularioProductoManual
           eanEscaneado={pendingEAN}
@@ -322,7 +285,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         />
       )}
 
-      {/* Error Toast */}
       {error && !showManualProductModal && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full px-4">
           <div className="bg-alert-critico text-white p-4 rounded-xl shadow-lg">
@@ -373,7 +335,6 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         </div>
       )}
 
-      {/* Loading Modal */}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 max-w-sm w-full mx-4 transition-colors">
@@ -385,7 +346,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
                 Buscando producto...
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-                Consultando la base de datos
+                Consultando el catálogo
               </p>
             </div>
           </div>

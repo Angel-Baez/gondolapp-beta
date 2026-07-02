@@ -166,22 +166,6 @@ export async function eliminarItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Recrea un item borrado (usado para deshacer el borrado optimista del stepper). */
-export async function restaurarItem(item: ItemReposicion): Promise<ItemReposicion> {
-  const { data, error } = await supabase
-    .from("items_reposicion")
-    .insert({
-      id: item.id,
-      variante_id: item.varianteId,
-      cantidad: item.cantidad,
-      estado: item.estado,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  return mapItem(data as ItemReposicionRow);
-}
-
 /**
  * Cierra la lista actual: guarda un snapshot en el historial y borra
  * todos los items activos de reposición ("cerrar turno").

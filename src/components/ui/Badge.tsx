@@ -26,9 +26,10 @@ export function Badge({
 
   if (alert) {
     const alertClasses = {
+      vencido: "bg-alert-vencido text-white font-bold shadow-md",
       critico: "bg-alert-critico text-white font-bold shadow-md",
-      advertencia: "bg-alert-advertencia text-gray-900 font-bold shadow-md",
-      precaucion: "bg-alert-precaucion text-white font-bold shadow-md",
+      advertencia: "bg-alert-advertencia text-white font-bold shadow-md",
+      precaucion: "bg-alert-precaucion text-gray-900 font-bold shadow-md",
       normal: "bg-alert-normal text-white",
     };
     variantClasses = alertClasses[alert];

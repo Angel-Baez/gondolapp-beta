@@ -25,6 +25,7 @@ create table producto_variantes (
   tipo text,
   tamano text,
   sabor text,
+  imagen text,
   created_at timestamptz not null default now()
 );
 

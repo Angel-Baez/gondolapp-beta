@@ -39,6 +39,7 @@ export interface ProductoVariante {
   tipo?: string; // "Original", "Sin Lactosa", etc.
   tamano?: string; // "1000g", "1400g", etc.
   sabor?: string;
+  imagen?: string;
   createdAt: Date;
 }
 
@@ -86,6 +87,7 @@ export interface CrearProductoDTO {
     imagen?: string;
   };
 }
+
 
 // ============================================
 // HISTORIAL DE REPOSICIÓN

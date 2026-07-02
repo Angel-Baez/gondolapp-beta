@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { CrearProductoDTO } from "@/types";
+import { ProductoEscaneado } from "@/hooks/useScanProduct";
 import toast from "react-hot-toast";
 
 interface Props {
   eanEscaneado: string;
   isOpen: boolean;
   onClose: () => void;
-  onProductoCreado: (producto: any) => void;
+  onProductoCreado: (producto: ProductoEscaneado) => void;
 }
 
 export default function FormularioProductoManual({
