@@ -54,58 +54,54 @@ function mapProductoVariante(row: ProductoVarianteRow): ProductoVariante {
   };
 }
 
-/** Busca un producto por código de barras. Devuelve null si no existe. */
+interface ProductoVarianteConBaseRow extends ProductoVarianteRow {
+  producto_bases: ProductoBaseRow | null;
+}
+
+function mapProductoCompleto(row: ProductoVarianteConBaseRow): ProductoCompleto | null {
+  if (!row.producto_bases) return null;
+  return {
+    base: mapProductoBase(row.producto_bases),
+    variante: mapProductoVariante(row),
+  };
+}
+
+/**
+ * Busca un producto por código de barras. Devuelve null si no existe.
+ *
+ * Trae variante + base en un solo round-trip vía embedding de PostgREST
+ * (antes eran dos consultas secuenciales, lo que duplicaba la latencia
+ * en el camino crítico de "escanear código").
+ */
 export async function buscarPorCodigoBarras(
   codigoBarras: string
 ): Promise<ProductoCompleto | null> {
-  const { data: variante, error } = await supabase
+  const { data, error } = await supabase
     .from("producto_variantes")
-    .select("*")
+    .select("*, producto_bases(*)")
     .eq("codigo_barras", codigoBarras)
     .maybeSingle();
 
   if (error) throw error;
-  if (!variante) return null;
+  if (!data) return null;
 
-  const { data: base, error: baseError } = await supabase
-    .from("producto_bases")
-    .select("*")
-    .eq("id", variante.producto_base_id)
-    .single();
-
-  if (baseError) throw baseError;
-
-  return {
-    base: mapProductoBase(base as ProductoBaseRow),
-    variante: mapProductoVariante(variante as ProductoVarianteRow),
-  };
+  return mapProductoCompleto(data as ProductoVarianteConBaseRow);
 }
 
 /** Obtiene una variante y su producto base a partir del id de la variante. */
 export async function obtenerProductoPorVarianteId(
   varianteId: string
 ): Promise<ProductoCompleto | null> {
-  const { data: variante, error } = await supabase
+  const { data, error } = await supabase
     .from("producto_variantes")
-    .select("*")
+    .select("*, producto_bases(*)")
     .eq("id", varianteId)
     .maybeSingle();
 
   if (error) throw error;
-  if (!variante) return null;
+  if (!data) return null;
 
-  const { data: base, error: baseError } = await supabase
-    .from("producto_bases")
-    .select("*")
-    .eq("id", variante.producto_base_id)
-    .single();
-
-  if (baseError) throw baseError;
-
-  return {
-    base: mapProductoBase(base as ProductoBaseRow),
-    variante: mapProductoVariante(variante as ProductoVarianteRow),
-  };
+  return mapProductoCompleto(data as ProductoVarianteConBaseRow);
 }
 
 /** Busca productos base por nombre o marca (para autocompletado/administración liviana). */
@@ -128,22 +124,29 @@ export async function buscarProductos(termino: string): Promise<ProductoBase[]> 
 export async function crearProductoManual(
   dto: CrearProductoDTO
 ): Promise<ProductoCompleto> {
-  const { data: existente, error: buscarError } = await supabase
-    .from("producto_variantes")
-    .select("id")
-    .eq("codigo_barras", dto.ean)
-    .maybeSingle();
+  // Los dos checks de existencia son independientes entre sí: se disparan
+  // en paralelo para no pagar dos round-trips secuenciales antes de poder
+  // crear el producto.
+  const [
+    { data: existente, error: buscarError },
+    { data: baseExistente, error: baseBuscarError },
+  ] = await Promise.all([
+    supabase
+      .from("producto_variantes")
+      .select("id")
+      .eq("codigo_barras", dto.ean)
+      .maybeSingle(),
+    supabase
+      .from("producto_bases")
+      .select("*")
+      .eq("nombre", dto.productoBase.nombre.trim())
+      .eq("marca", dto.productoBase.marca.trim())
+      .maybeSingle(),
+  ]);
   if (buscarError) throw buscarError;
   if (existente) {
     throw new Error("Este código de barras ya existe en el catálogo");
   }
-
-  const { data: baseExistente, error: baseBuscarError } = await supabase
-    .from("producto_bases")
-    .select("*")
-    .eq("nombre", dto.productoBase.nombre.trim())
-    .eq("marca", dto.productoBase.marca.trim())
-    .maybeSingle();
   if (baseBuscarError) throw baseBuscarError;
 
   let baseRow = baseExistente as ProductoBaseRow | null;
@@ -195,30 +198,17 @@ export async function obtenerProductosPorVarianteIds(
   const idsUnicos = Array.from(new Set(varianteIds));
   if (idsUnicos.length === 0) return new Map();
 
-  const { data: variantes, error } = await supabase
+  const { data, error } = await supabase
     .from("producto_variantes")
-    .select("*")
+    .select("*, producto_bases(*)")
     .in("id", idsUnicos);
   if (error) throw error;
 
-  const baseIds = Array.from(
-    new Set((variantes ?? []).map((v) => v.producto_base_id))
-  );
-  const { data: bases, error: basesError } = await supabase
-    .from("producto_bases")
-    .select("*")
-    .in("id", baseIds);
-  if (basesError) throw basesError;
-
-  const basesPorId = new Map(
-    (bases ?? []).map((row) => [row.id, mapProductoBase(row as ProductoBaseRow)])
-  );
-
   const resultado = new Map<string, ProductoCompleto>();
-  for (const row of (variantes ?? []) as ProductoVarianteRow[]) {
-    const base = basesPorId.get(row.producto_base_id);
-    if (!base) continue;
-    resultado.set(row.id, { base, variante: mapProductoVariante(row) });
+  for (const row of (data ?? []) as ProductoVarianteConBaseRow[]) {
+    const producto = mapProductoCompleto(row);
+    if (!producto) continue;
+    resultado.set(row.id, producto);
   }
   return resultado;
 }

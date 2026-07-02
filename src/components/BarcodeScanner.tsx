@@ -31,6 +31,10 @@ export default function BarcodeScanner({
   ).current;
   const isStoppingRef = useRef(false);
   const isStartingRef = useRef(false);
+  // Promesa del start() en curso: permite esperar a que termine antes de
+  // detener, para no dejar la cámara abierta sin referencia (bug que
+  // obligaba a recargar la página para poder volver a abrirla).
+  const startingPromiseRef = useRef<Promise<void> | null>(null);
 
   // Tiempo para limpiar el código escaneado y permitir re-escanear el mismo código
   const SCAN_CODE_CLEAR_DELAY = 2000;
@@ -41,30 +45,32 @@ export default function BarcodeScanner({
       return;
     }
 
-    try {
-      const scanner = scannerRef.current;
-
-      // Verificar que existe un escáner y que está en un estado válido
-      if (!scanner) {
-        return;
+    // Si hay un start() en curso, esperar a que resuelva/falle antes de
+    // intentar detener: si no, el resultado del start() deja la cámara
+    // encendida sin que nada la referencie para poder pararla después.
+    if (isStartingRef.current && startingPromiseRef.current) {
+      try {
+        await startingPromiseRef.current;
+      } catch {
+        // El error ya se maneja dentro de startScanning
       }
+    }
 
+    const scanner = scannerRef.current;
+    if (!scanner) {
+      return;
+    }
+
+    isStoppingRef.current = true;
+    try {
       // Verificar el estado real del escáner antes de intentar detenerlo
       const scannerState = scanner.getState();
 
       // Solo intentar detener si el escáner está escaneando
       if (scannerState === 2) {
         // 2 = SCANNING state
-        isStoppingRef.current = true;
         await scanner.stop();
-        scanner.clear();
-      } else {
-        scanner.clear();
       }
-
-      scannerRef.current = null;
-      setIsScanning(false);
-      setLastScannedCode(null);
     } catch (err: any) {
       // Silenciar errores de transición
       if (
@@ -73,9 +79,20 @@ export default function BarcodeScanner({
       ) {
         console.error("Error al detener escáner:", err);
       }
-    } finally {
-      isStoppingRef.current = false;
     }
+
+    // Pase lo que pase con stop(), siempre liberar la referencia: de lo
+    // contrario el guard de startScanning() queda bloqueado para siempre
+    // y hay que recargar la página para volver a abrir la cámara.
+    try {
+      scanner.clear();
+    } catch {
+      // Ignorar: el elemento puede ya no estar en el DOM
+    }
+    scannerRef.current = null;
+    setIsScanning(false);
+    setLastScannedCode(null);
+    isStoppingRef.current = false;
   }, []);
 
   const startScanning = useCallback(async () => {
@@ -202,6 +219,16 @@ export default function BarcodeScanner({
       setIsLoading(false);
       setIsScanning(false);
       setShowManualInput(true);
+
+      // Liberar la referencia del escáner fallido: si no, el guard de
+      // arriba (`scannerRef.current`) bloquea cualquier reintento hasta
+      // que se recargue la página.
+      try {
+        scannerRef.current?.clear();
+      } catch {
+        // Ignorar
+      }
+      scannerRef.current = null;
     } finally {
       isStartingRef.current = false;
     }
@@ -223,7 +250,7 @@ export default function BarcodeScanner({
 
     // Reducir delay de 100ms a 50ms para inicio más rápido
     const timer = setTimeout(() => {
-      startScanning();
+      startingPromiseRef.current = startScanning();
     }, 50);
 
     return () => {
@@ -259,30 +286,11 @@ export default function BarcodeScanner({
 
     setIsClosing(true);
 
-    if (scannerRef.current) {
-      try {
-        const scannerState = scannerRef.current.getState();
-
-        // Solo intentar detener si está escaneando (state === 2)
-        if (scannerState === 2) {
-          isStoppingRef.current = true;
-          await scannerRef.current.stop();
-        }
-
-        scannerRef.current.clear();
-        scannerRef.current = null;
-      } catch (err: any) {
-        // Ignorar errores de transición al cerrar
-        if (
-          !err.message?.includes("Cannot stop") &&
-          !err.message?.includes("Cannot transition")
-        ) {
-          console.error("Error al cerrar escáner:", err);
-        }
-      } finally {
-        isStoppingRef.current = false;
-      }
-    }
+    // Reutiliza stopScanning: espera cualquier start() en curso y SIEMPRE
+    // libera scannerRef.current pase lo que pase, incluso si stop() falla.
+    // Antes, un error en stop() dejaba la referencia "colgada" y bloqueaba
+    // reabrir la cámara hasta recargar la página.
+    await stopScanning();
 
     setIsScanning(false);
     setLastScannedCode(null);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Plus, X } from "lucide-react";
 import { motion as m } from "framer-motion";
+import toast from "react-hot-toast";
 import { useScanProduct, ProductoEscaneado } from "@/hooks/useScanProduct";
 import { useAgregarReposicionItem } from "@/hooks/useReposicion";
 import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
@@ -101,10 +102,14 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
   const handleAgregarReposicion = async () => {
     if (productoSeleccionado) {
       await agregarReposicion.mutateAsync({ varianteId: productoSeleccionado.id, cantidad });
+      toast.success(`${productoSeleccionado.nombreCompleto} agregado`, { duration: 1500 });
       setShowQuantityModal(false);
       setProductoSeleccionado(null);
       setCantidad(1);
-      onClose();
+      // Seguir escaneando en vez de volver al inicio: un gondolero carga
+      // varios productos seguidos y no debería tener que reabrir la
+      // cámara (con su costo de inicio) después de cada uno.
+      setShowScanner(true);
     }
   };
 
@@ -116,12 +121,13 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         cantidad: cantidad || undefined,
         lote: lote || undefined,
       });
+      toast.success(`${productoSeleccionado.nombreCompleto} agregado`, { duration: 1500 });
       setShowExpiryModal(false);
       setProductoSeleccionado(null);
       setCantidad(1);
       setFechaVencimiento("");
       setLote("");
-      onClose();
+      setShowScanner(true);
     }
   };
 
@@ -138,13 +144,22 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     setPendingEAN(null);
     clearError();
     setCodigoNoEncontrado(null);
+    // Volver directo a la cámara en vez de dejar al usuario en una
+    // pantalla vacía: cancelar el alta manual no debería sacarlo de la
+    // sesión de escaneo.
+    setShowScanner(true);
   };
 
+  // Cancelar la carga de un producto puntual (cantidad/fecha) vuelve a la
+  // cámara para seguir escaneando, en vez de cerrar toda la sesión: eso
+  // era lo que obligaba a reabrir el escáner (con su costo de inicio) por
+  // cada producto. El botón "Cerrar" (X) del header de la cámara sigue
+  // siendo la salida real de toda la sesión.
   const handleCloseQuantityModal = () => {
     setShowQuantityModal(false);
     setProductoSeleccionado(null);
     setCantidad(1);
-    onClose();
+    setShowScanner(true);
   };
 
   const handleCloseExpiryModal = () => {
@@ -153,7 +168,7 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
     setCantidad(1);
     setFechaVencimiento("");
     setLote("");
-    onClose();
+    setShowScanner(true);
   };
 
   return (
@@ -161,7 +176,17 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
       {showScanner && (
         <BarcodeScanner
           isOpen={showScanner}
-          onClose={() => setShowScanner(false)}
+          onClose={() => {
+            // Cerrar la cámara manualmente (botón X) termina toda la
+            // sesión de escaneo, no solo la cámara: si únicamente
+            // apagábamos `showScanner`, el estado `showScanWorkflow` del
+            // padre seguía en `true` y tocar "Escanear" de nuevo no hacía
+            // nada (mismo valor, sin re-render) hasta recargar la página.
+            // Llamar a onClose() desmonta el flujo entero y garantiza que
+            // el próximo tap en "Escanear" vuelva a montar todo de cero.
+            setShowScanner(false);
+            onClose();
+          }}
           onScan={handleScan}
         />
       )}
@@ -335,20 +360,17 @@ export function ScanWorkflow({ scanMode, onClose }: ScanWorkflowProps) {
         </div>
       )}
 
+      {/*
+        Indicador liviano en vez de un overlay de pantalla completa: la
+        búsqueda dura unos cientos de ms y tapar toda la cámara por eso
+        rompe la sensación de "escaneo instantáneo" que necesita un
+        gondolero encadenando productos uno atrás del otro.
+      */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 max-w-sm w-full mx-4 transition-colors">
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-primary mb-4" />
-              </div>
-              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Buscando producto...
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-                Consultando el catálogo
-              </p>
-            </div>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+          <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+            <span className="text-sm font-medium">Buscando producto...</span>
           </div>
         </div>
       )}

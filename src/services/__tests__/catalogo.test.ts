@@ -42,10 +42,10 @@ describe("buscarPorCodigoBarras", () => {
     expect(resultado).toBeNull();
   });
 
-  it("devuelve base + variante cuando el código existe", async () => {
+  it("devuelve base + variante cuando el código existe (un solo round-trip)", async () => {
     const { buscarPorCodigoBarras } = await import("@/services/catalogo");
     fromMock.mockImplementation(
-      mockSupabaseFrom({ data: varianteRow }, { data: baseRow })
+      mockSupabaseFrom({ data: { ...varianteRow, producto_bases: baseRow } })
     );
 
     const resultado = await buscarPorCodigoBarras(varianteRow.codigo_barras);
@@ -53,6 +53,7 @@ describe("buscarPorCodigoBarras", () => {
     expect(resultado!.variante.codigoBarras).toBe("7791234567890");
     expect(resultado!.base.nombre).toBe("Leche");
     expect(resultado!.base.marca).toBe("La Serenísima");
+    expect(fromMock).toHaveBeenCalledTimes(1);
   });
 
   it("propaga el error si la consulta falla", async () => {
@@ -74,7 +75,11 @@ describe("crearProductoManual", () => {
 
   it("rechaza si el código de barras ya existe", async () => {
     const { crearProductoManual } = await import("@/services/catalogo");
-    fromMock.mockImplementation(mockSupabaseFrom({ data: { id: "ya-existe" } }));
+    // Los dos checks de existencia se disparan en paralelo, así que ambos
+    // necesitan una respuesta mockeada aunque el segundo no se use.
+    fromMock.mockImplementation(
+      mockSupabaseFrom({ data: { id: "ya-existe" } }, { data: null })
+    );
 
     await expect(crearProductoManual(dto)).rejects.toThrow("ya existe en el catálogo");
   });
@@ -143,15 +148,16 @@ describe("obtenerProductosPorVarianteIds", () => {
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it("arma el mapa varianteId -> {base, variante}", async () => {
+  it("arma el mapa varianteId -> {base, variante} en un solo round-trip", async () => {
     const { obtenerProductosPorVarianteIds } = await import("@/services/catalogo");
     fromMock.mockImplementation(
-      mockSupabaseFrom({ data: [varianteRow] }, { data: [baseRow] })
+      mockSupabaseFrom({ data: [{ ...varianteRow, producto_bases: baseRow }] })
     );
 
     const resultado = await obtenerProductosPorVarianteIds(["variante-1", "variante-1"]);
     expect(resultado.size).toBe(1);
     expect(resultado.get("variante-1")?.base.nombre).toBe("Leche");
+    expect(fromMock).toHaveBeenCalledTimes(1);
   });
 });
 
