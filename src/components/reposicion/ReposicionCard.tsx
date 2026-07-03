@@ -175,7 +175,14 @@ export function ReposicionCard({
             className="border-t border-border"
           >
             <div className="divide-y divide-border">
-              {variantes.map(({ item, variante }) => (
+              {variantes.map(({ item, variante }) => {
+                // El header de la card ya muestra productoBase.nombre, así que acá
+                // se arma solo la parte de variante (tipo+sabor+tamaño) para no
+                // repetir el nombre base que nombreCompleto ya incluye.
+                const descriptorVariante =
+                  [variante.tipo, variante.sabor, variante.tamano].filter(Boolean).join(" ") ||
+                  variante.nombreCompleto;
+                return (
                 <div key={item.id} className="p-3 sm:p-4">
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
@@ -188,14 +195,9 @@ export function ReposicionCard({
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-subhead font-semibold text-fg leading-tight">
-                          {variante.nombreCompleto}
+                          {descriptorVariante}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          {variante.tamano && (
-                            <span className="text-footnote text-fg-secondary">
-                              {variante.tamano}
-                            </span>
-                          )}
                           {item.estado === "repuesto" && <Badge variant="success">REPUESTO</Badge>}
                           {item.estado === "sin_stock" && <Badge variant="danger">SIN STOCK</Badge>}
                           {item.estado === "pendiente" && <Badge variant="default">PENDIENTE</Badge>}
@@ -305,7 +307,8 @@ export function ReposicionCard({
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </m.div>
         )}

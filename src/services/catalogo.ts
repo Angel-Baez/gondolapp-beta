@@ -218,7 +218,12 @@ export async function crearProductoManual(
     baseRow = data as ProductoBaseRow;
   }
 
-  const nombreCompleto = [dto.variante.tipo, dto.variante.tamano, dto.variante.sabor]
+  const nombreCompleto = [
+    dto.productoBase.nombre,
+    dto.variante.tipo,
+    dto.variante.sabor,
+    dto.variante.tamano,
+  ]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -228,7 +233,7 @@ export async function crearProductoManual(
     .insert({
       producto_base_id: baseRow.id,
       codigo_barras: dto.ean.trim(),
-      nombre_completo: nombreCompleto || dto.productoBase.nombre,
+      nombre_completo: nombreCompleto,
       tipo: dto.variante.tipo?.trim(),
       tamano: dto.variante.tamano?.trim() || null,
       sabor: dto.variante.sabor?.trim(),

@@ -9,7 +9,6 @@ export interface ProductoRowData {
   varianteId: string;
   nombre: string;
   marca?: string;
-  tamano?: string;
 }
 
 export interface ProductResultRowProps {
@@ -37,10 +36,8 @@ function ProductResultRowImpl({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-body font-medium text-fg truncate">{producto.nombre}</p>
-        {(producto.marca || producto.tamano) && (
-          <p className="text-footnote text-fg-secondary truncate">
-            {[producto.marca, producto.tamano].filter(Boolean).join(" · ")}
-          </p>
+        {producto.marca && (
+          <p className="text-footnote text-fg-secondary truncate">{producto.marca}</p>
         )}
       </div>
 
