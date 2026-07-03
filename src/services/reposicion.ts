@@ -92,23 +92,28 @@ export async function listarItems(): Promise<ItemReposicion[]> {
   return (data ?? []).map((row) => mapItem(row as ItemReposicionRow));
 }
 
-/** Agrega cantidad a un item pendiente existente de la misma variante, o crea uno nuevo. */
+/**
+ * Agrega cantidad a un item existente de la misma variante (en cualquier
+ * estado, no solo pendiente: reescanear algo ya repuesto/sin_stock lo
+ * reabre en vez de crear una fila duplicada), o crea uno nuevo si no existe.
+ */
 export async function agregarItem(
   varianteId: string,
   cantidad: number
 ): Promise<ItemReposicion> {
-  const { data: existente, error: buscarError } = await supabase
+  const { data: existentes, error: buscarError } = await supabase
     .from("items_reposicion")
     .select("*")
     .eq("variante_id", varianteId)
-    .eq("estado", "pendiente")
-    .maybeSingle();
+    .order("agregado_at", { ascending: false })
+    .limit(1);
   if (buscarError) throw buscarError;
+  const existente = existentes?.[0];
 
   if (existente) {
     const { data, error } = await supabase
       .from("items_reposicion")
-      .update({ cantidad: existente.cantidad + cantidad })
+      .update({ cantidad: existente.cantidad + cantidad, estado: "pendiente" })
       .eq("id", existente.id)
       .select()
       .single();

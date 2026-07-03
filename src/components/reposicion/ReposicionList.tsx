@@ -122,8 +122,8 @@ export function ReposicionList() {
       toast.success("Lista guardada correctamente");
       setShowSaveSheet(false);
       setExpandedCards(new Set());
-    } catch {
-      toast.error("Error al guardar la lista");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar la lista");
     }
   };
 

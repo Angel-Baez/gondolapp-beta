@@ -40,7 +40,7 @@ describe("agregarItem", () => {
     const { agregarItem } = await import("@/services/reposicion");
     fromMock.mockImplementation(
       mockSupabaseFrom(
-        { data: itemRow({ cantidad: 3 }) }, // busca pendiente existente
+        { data: [itemRow({ cantidad: 3 })] }, // busca existente (cualquier estado)
         { data: itemRow({ cantidad: 5 }) } // update con la suma
       )
     );
@@ -50,17 +50,31 @@ describe("agregarItem", () => {
     expect(fromMock).toHaveBeenCalledTimes(2);
   });
 
-  it("crea un item nuevo si no hay uno pendiente para esa variante", async () => {
+  it("crea un item nuevo si no hay ninguno para esa variante", async () => {
     const { agregarItem } = await import("@/services/reposicion");
     fromMock.mockImplementation(
       mockSupabaseFrom(
-        { data: null }, // no hay pendiente
+        { data: [] }, // no hay ninguno
         { data: itemRow({ id: "item-nuevo", cantidad: 4 }) } // insert
       )
     );
 
     const item = await agregarItem("variante-1", 4);
     expect(item.id).toBe("item-nuevo");
+    expect(item.estado).toBe("pendiente");
+  });
+
+  it("reabre y fusiona cantidad contra un item ya repuesto/sin_stock de la misma variante", async () => {
+    const { agregarItem } = await import("@/services/reposicion");
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [itemRow({ cantidad: 2, estado: "sin_stock" })] }, // existente, no pendiente
+        { data: itemRow({ cantidad: 3, estado: "pendiente" }) } // update: suma y reabre a pendiente
+      )
+    );
+
+    const item = await agregarItem("variante-1", 1);
+    expect(item.cantidad).toBe(3);
     expect(item.estado).toBe("pendiente");
   });
 });
