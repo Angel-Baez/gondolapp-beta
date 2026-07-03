@@ -49,11 +49,11 @@ export function QuickAdjustCard({
       <AnimatePresence>
         <m.div
           key="quick-adjust"
-          initial={{ opacity: 0, y: 24, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.96 }}
+          initial={{ opacity: 0, y: 24, scale: 0.96, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+          exit={{ opacity: 0, y: 24, scale: 0.96, x: "-50%" }}
           transition={springSnappy}
-          className="fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-sm"
+          className="fixed left-1/2 z-30 w-[calc(100%-2rem)] max-w-sm"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
         >
           <div className="glass rounded-card shadow-float overflow-hidden">
