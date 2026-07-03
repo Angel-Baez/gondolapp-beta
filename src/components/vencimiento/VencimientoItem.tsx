@@ -72,11 +72,6 @@ export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps
             <p className="text-headline text-fg leading-tight">
               {variante.nombreCompleto}
             </p>
-            {variante.tamano && (
-              <p className="text-footnote text-fg-secondary mt-0.5 truncate">
-                {variante.tamano}
-              </p>
-            )}
           </div>
         </div>
 

@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export interface ExpiryQuickSheetProps {
   isOpen: boolean;
-  producto: { nombre: string; tamano?: string } | null;
+  producto: { nombre: string } | null;
   onSubmit: (v: { fecha: Date; cantidad?: number; lote?: string }) => void;
   onClose: () => void;
   isPending: boolean;
@@ -63,9 +63,6 @@ export function ExpiryQuickSheet({
         {producto && (
           <div className="p-3 rounded-field bg-surface-2">
             <p className="text-headline text-fg">{producto.nombre}</p>
-            {producto.tamano && (
-              <p className="text-footnote text-fg-secondary">{producto.tamano}</p>
-            )}
           </div>
         )}
 

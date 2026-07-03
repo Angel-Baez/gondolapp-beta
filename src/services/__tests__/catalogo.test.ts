@@ -111,6 +111,43 @@ describe("crearProductoManual", () => {
     expect(fromMock).toHaveBeenCalledTimes(3);
   });
 
+  it("arma nombre_completo como base + tipo + sabor + tamaño", async () => {
+    const { crearProductoManual } = await import("@/services/catalogo");
+    const dtoConSabor = {
+      ean: "7777777777777",
+      productoBase: { nombre: "Yerba", marca: "Playadito", categoria: "Almacén" },
+      variante: { tipo: "Con Palo", sabor: "Suave", tamano: "1kg" },
+    };
+    let payloadInsertado: Record<string, unknown> | undefined;
+    fromMock.mockImplementation((tabla: string) => {
+      if (tabla === "producto_variantes") {
+        return {
+          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+          insert: (payload: Record<string, unknown>) => {
+            payloadInsertado = payload;
+            return {
+              select: () => ({
+                single: async () => ({
+                  data: { ...payload, id: "variante-nueva", created_at: "2026-01-01T00:00:00Z" },
+                  error: null,
+                }),
+              }),
+            };
+          },
+        };
+      }
+      return {
+        select: () => ({
+          eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: baseRow, error: null }) }) }),
+        }),
+      };
+    });
+
+    await crearProductoManual(dtoConSabor);
+
+    expect(payloadInsertado?.nombre_completo).toBe("Yerba Con Palo Suave 1kg");
+  });
+
   it("crea un producto base nuevo si no existe ninguno con ese nombre+marca", async () => {
     const { crearProductoManual } = await import("@/services/catalogo");
     const baseNuevaRow = { ...baseRow, id: "base-nueva", nombre: "Yerba", marca: "Playadito" };

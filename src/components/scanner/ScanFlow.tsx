@@ -200,7 +200,6 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
           state.mode === "adjusting" ? (
             <QuickAdjustCard
               nombre={state.card.nombre}
-              tamano={state.card.tamano}
               cantidad={state.card.cantidad}
               deadline={state.card.deadline}
               onIncrement={() => dispatch({ type: "SET_QTY", cantidad: state.card.cantidad + 1 })}
@@ -216,10 +215,7 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
         isOpen={state.mode === "dating"}
         producto={
           state.mode === "dating"
-            ? {
-                nombre: state.producto.variante.nombreCompleto,
-                tamano: state.producto.variante.tamano,
-              }
+            ? { nombre: state.producto.variante.nombreCompleto }
             : null
         }
         onSubmit={handleVencimientoSubmit}
