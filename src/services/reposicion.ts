@@ -173,81 +173,14 @@ export async function eliminarItem(id: string): Promise<void> {
 
 /**
  * Cierra la lista actual: guarda un snapshot en el historial y borra
- * todos los items activos de reposición ("cerrar turno").
+ * todos los items activos de reposición ("cerrar turno"). RPC atómica
+ * (`guardar_lista_reposicion`): antes eran ~6 round-trips secuenciales sin
+ * transacción (leer items, leer variantes, leer bases, insertar lista,
+ * insertar items de historial, borrar activos), con riesgo real de quedar
+ * a mitad de camino si algún paso fallaba.
  */
 export async function guardarListaActual(): Promise<void> {
-  const items = await listarItems();
-  if (items.length === 0) {
-    throw new Error("No hay items para guardar");
-  }
-
-  const varianteIds = Array.from(new Set(items.map((i) => i.varianteId)));
-  const { data: variantes, error: variantesError } = await supabase
-    .from("producto_variantes")
-    .select("id, nombre_completo, producto_base_id")
-    .in("id", varianteIds);
-  if (variantesError) throw variantesError;
-
-  const baseIds = Array.from(
-    new Set((variantes ?? []).map((v) => v.producto_base_id))
-  );
-  const { data: bases, error: basesError } = await supabase
-    .from("producto_bases")
-    .select("id, nombre, marca")
-    .in("id", baseIds);
-  if (basesError) throw basesError;
-
-  const variantesPorId = new Map((variantes ?? []).map((v) => [v.id, v]));
-  const basesPorId = new Map((bases ?? []).map((b) => [b.id, b]));
-
-  const totalRepuestos = items.filter((i) => i.estado === "repuesto").length;
-  const totalSinStock = items.filter((i) => i.estado === "sin_stock").length;
-  const totalPendientes = items.filter((i) => i.estado === "pendiente").length;
-  const fechaCreacion = items.reduce(
-    (min, i) => (i.agregadoAt < min ? i.agregadoAt : min),
-    items[0].agregadoAt
-  );
-
-  const { data: listaRow, error: listaError } = await supabase
-    .from("listas_reposicion_historial")
-    .insert({
-      fecha_creacion: fechaCreacion.toISOString(),
-      total_productos: items.length,
-      total_repuestos: totalRepuestos,
-      total_sin_stock: totalSinStock,
-      total_pendientes: totalPendientes,
-    })
-    .select()
-    .single();
-  if (listaError) throw listaError;
-
-  const itemsHistorial = items.map((item) => {
-    const variante = variantesPorId.get(item.varianteId);
-    const base = variante ? basesPorId.get(variante.producto_base_id) : undefined;
-    return {
-      lista_id: listaRow.id,
-      variante_id: item.varianteId,
-      producto_nombre: base?.nombre ?? "Producto sin nombre",
-      producto_marca: base?.marca ?? null,
-      variante_nombre: variante?.nombre_completo ?? "Variante sin nombre",
-      cantidad: item.cantidad,
-      estado: item.estado,
-    };
-  });
-
-  const { error: itemsError } = await supabase
-    .from("items_reposicion_historial")
-    .insert(itemsHistorial);
-  if (itemsError) throw itemsError;
-
-  await limpiarListaActual();
-}
-
-export async function limpiarListaActual(): Promise<void> {
-  const { error } = await supabase
-    .from("items_reposicion")
-    .delete()
-    .not("id", "is", null);
+  const { error } = await supabase.rpc("guardar_lista_reposicion");
   if (error) throw error;
 }
 

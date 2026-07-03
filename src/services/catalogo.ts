@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { construirNombreCompleto } from "@/lib/utils";
 import { CrearProductoDTO, ProductoBase, ProductoVariante } from "@/types";
 
 export interface ProductoCompleto {

@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
 
 const fromMock = vi.fn();
+const rpcMock = vi.fn();
 
 vi.mock("@/lib/supabase", () => ({
-  supabase: { from: (...args: unknown[]) => fromMock(...args) },
+  supabase: {
+    from: (...args: unknown[]) => fromMock(...args),
+    rpc: (...args: unknown[]) => rpcMock(...args),
+  },
 }));
 
 function itemRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -21,6 +25,7 @@ function itemRow(overrides: Partial<Record<string, unknown>> = {}) {
 
 beforeEach(() => {
   fromMock.mockReset();
+  rpcMock.mockReset();
 });
 
 describe("listarItems", () => {
@@ -36,7 +41,7 @@ describe("listarItems", () => {
 });
 
 describe("agregarItem", () => {
-  it("suma la cantidad a un item pendiente existente de la misma variante", async () => {
+  it("delega en la RPC agregar_item_reposicion (upsert atómico en la DB)", async () => {
     const { agregarItem } = await import("@/services/reposicion");
     fromMock.mockImplementation(
       mockSupabaseFrom(
@@ -47,7 +52,11 @@ describe("agregarItem", () => {
 
     const item = await agregarItem("variante-1", 2);
     expect(item.cantidad).toBe(5);
-    expect(fromMock).toHaveBeenCalledTimes(2);
+    expect(rpcMock).toHaveBeenCalledWith("agregar_item_reposicion", {
+      p_variante_id: "variante-1",
+      p_cantidad: 2,
+    });
+    expect(fromMock).not.toHaveBeenCalled();
   });
 
   it("crea un item nuevo si no hay ninguno para esa variante", async () => {
@@ -59,9 +68,7 @@ describe("agregarItem", () => {
       )
     );
 
-    const item = await agregarItem("variante-1", 4);
-    expect(item.id).toBe("item-nuevo");
-    expect(item.estado).toBe("pendiente");
+    await expect(agregarItem("variante-1", 2)).rejects.toThrow("db error");
   });
 
   it("reabre y fusiona cantidad contra un item ya repuesto/sin_stock de la misma variante", async () => {
@@ -109,31 +116,20 @@ describe("cambiarEstado", () => {
 });
 
 describe("guardarListaActual", () => {
-  it("lanza un error si no hay items para guardar", async () => {
+  it("delega en la RPC guardar_lista_reposicion (snapshot + limpieza atómicos)", async () => {
     const { guardarListaActual } = await import("@/services/reposicion");
-    fromMock.mockImplementation(mockSupabaseFrom({ data: [] })); // listarItems vacío
-
-    await expect(guardarListaActual()).rejects.toThrow("No hay items para guardar");
-  });
-
-  it("snapshotea los items en el historial y limpia la lista activa", async () => {
-    const { guardarListaActual } = await import("@/services/reposicion");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: [itemRow({ estado: "repuesto" })] }, // listarItems
-        { data: [{ id: "variante-1", nombre_completo: "Leche 1L", producto_base_id: "base-1" }] }, // variantes
-        { data: [{ id: "base-1", nombre: "Leche", marca: "La Serenísima" }] }, // bases
-        { data: { id: "lista-1" } }, // insert listas_reposicion_historial
-        { error: null }, // insert items_reposicion_historial
-        { error: null } // delete (limpiarListaActual)
-      )
-    );
+    rpcMock.mockResolvedValue({ data: "lista-1", error: null });
 
     await guardarListaActual();
-    expect(fromMock).toHaveBeenCalledTimes(6);
-    expect(fromMock).toHaveBeenNthCalledWith(4, "listas_reposicion_historial");
-    expect(fromMock).toHaveBeenNthCalledWith(5, "items_reposicion_historial");
-    expect(fromMock).toHaveBeenNthCalledWith(6, "items_reposicion");
+    expect(rpcMock).toHaveBeenCalledWith("guardar_lista_reposicion");
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("propaga el error de la RPC (ej. 'No hay items para guardar')", async () => {
+    const { guardarListaActual } = await import("@/services/reposicion");
+    rpcMock.mockResolvedValue({ data: null, error: new Error("No hay items para guardar") });
+
+    await expect(guardarListaActual()).rejects.toThrow("No hay items para guardar");
   });
 });
 

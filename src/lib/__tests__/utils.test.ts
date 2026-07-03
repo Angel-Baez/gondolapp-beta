@@ -2,9 +2,30 @@ import { describe, expect, it } from "vitest";
 import {
   calcularDiasRestantes,
   calcularNivelAlerta,
+  construirNombreCompleto,
   formatearFecha,
   generarUUID,
 } from "@/lib/utils";
+
+describe("construirNombreCompleto", () => {
+  it("arma nombre + tipo + sabor + tamaño cuando todo está presente", () => {
+    expect(
+      construirNombreCompleto("Leche", { tipo: "Entera", sabor: "Vainilla", tamano: "1L" })
+    ).toBe("Leche Entera Vainilla 1L");
+  });
+
+  it("omite tipo si no está presente, sin dejar espacios de más", () => {
+    expect(construirNombreCompleto("Leche", { tamano: "1L" })).toBe("Leche 1L");
+  });
+
+  it("siempre incluye el nombre de la base aunque no haya variante", () => {
+    expect(construirNombreCompleto("Yerba", {})).toBe("Yerba");
+  });
+
+  it("ignora campos vacíos o solo espacios", () => {
+    expect(construirNombreCompleto("Yerba", { tipo: "  ", tamano: "1kg" })).toBe("Yerba 1kg");
+  });
+});
 
 function diasDesdeHoy(dias: number): Date {
   const fecha = new Date();
