@@ -11,6 +11,7 @@ import { EstadoReposicion, ItemReposicion, ProductoBase, ProductoVariante } from
 import { AnimatePresence, motion as m } from "framer-motion";
 import {
   Ban,
+  Check,
   CheckCircle,
   ChevronDown,
   ChevronUp,
@@ -29,6 +30,11 @@ interface ReposicionCardProps {
   }>;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  /** Modo selección múltiple: si está activo, cada fila muestra un checkbox
+   * en vez de sus botones de acción individuales. */
+  seleccionActiva?: boolean;
+  estaSeleccionado?: (id: string) => boolean;
+  onToggleSeleccion?: (id: string) => void;
 }
 
 export function ReposicionCard({
@@ -36,6 +42,9 @@ export function ReposicionCard({
   variantes,
   isExpanded,
   onToggleExpand,
+  seleccionActiva = false,
+  estaSeleccionado,
+  onToggleSeleccion,
 }: ReposicionCardProps) {
   const cambiarEstado = useCambiarEstadoReposicion();
   const decrementar = useDecrementarReposicion();
@@ -182,8 +191,15 @@ export function ReposicionCard({
                 const descriptorVariante =
                   [variante.tipo, variante.sabor, variante.tamano].filter(Boolean).join(" ") ||
                   variante.nombreCompleto;
+                const seleccionado = estaSeleccionado?.(item.id) ?? false;
                 return (
-                <div key={item.id} className="p-3 sm:p-4">
+                <div
+                  key={item.id}
+                  onClick={seleccionActiva ? () => onToggleSeleccion?.(item.id) : undefined}
+                  className={`p-3 sm:p-4 ${seleccionActiva ? "cursor-pointer" : ""} ${
+                    seleccionado ? "bg-accent-soft" : ""
+                  }`}
+                >
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       {variante.imagen && (
@@ -208,10 +224,17 @@ export function ReposicionCard({
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-border">
                       <div className="flex items-center gap-3">
                         {item.estado === "pendiente" && (
-                          <div className="flex items-center gap-1 bg-surface-2 rounded-field p-1">
+                          <div
+                            className={`flex items-center gap-1 bg-surface-2 rounded-field p-1 ${
+                              seleccionActiva ? "pointer-events-none opacity-60" : ""
+                            }`}
+                          >
                             <m.button
                               whileTap={{ scale: 0.85 }}
-                              onClick={() => decrementar(item)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                decrementar(item);
+                              }}
                               className="w-9 h-9 flex items-center justify-center rounded-chip hover:bg-border font-bold text-lg text-fg transition-colors"
                             >
                               -
@@ -221,9 +244,10 @@ export function ReposicionCard({
                             </span>
                             <m.button
                               whileTap={{ scale: 0.85 }}
-                              onClick={() =>
-                                actualizarCantidad.mutate({ id: item.id, cantidad: item.cantidad + 1 })
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                actualizarCantidad.mutate({ id: item.id, cantidad: item.cantidad + 1 });
+                              }}
                               className="w-9 h-9 flex items-center justify-center rounded-chip hover:bg-border font-bold text-lg text-fg transition-colors"
                             >
                               +
@@ -238,72 +262,86 @@ export function ReposicionCard({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      {seleccionActiva ? (
                         <IconButton
-                          variant={item.estado === "repuesto" ? "primary" : "ghost"}
-                          onClick={() => toggleEstado(item, "repuesto")}
-                          title={item.estado === "repuesto" ? "Desmarcar repuesto" : "Marcar como repuesto"}
-                          className="w-10 h-10 sm:w-11 sm:h-11"
-                        >
-                          <m.div
-                            animate={item.estado === "repuesto" ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <CheckCircle size={20} className="sm:w-6 sm:h-6" />
-                          </m.div>
-                        </IconButton>
-
-                        <IconButton
-                          variant={item.estado === "sin_stock" ? "destructive" : "ghost"}
-                          onClick={() => toggleEstado(item, "sin_stock")}
-                          title={item.estado === "sin_stock" ? "Desmarcar sin stock" : "Marcar como sin stock"}
-                          className="w-10 h-10 sm:w-11 sm:h-11"
-                        >
-                          <m.div
-                            animate={
-                              item.estado === "sin_stock"
-                                ? { scale: [1, 1.1, 1], opacity: [1, 0.8, 1] }
-                                : { scale: 1 }
-                            }
-                            transition={{
-                              duration: 0.6,
-                              repeat: item.estado === "sin_stock" ? Infinity : 0,
-                              repeatDelay: 1,
-                            }}
-                          >
-                            <XCircle size={20} className="sm:w-6 sm:h-6" />
-                          </m.div>
-                        </IconButton>
-
-                        <IconButton
-                          variant="ghost"
-                          onClick={() => {
-                            eliminar.mutate(item.id, {
-                              onSuccess: () => {
-                                haptic([50, 100, 50]);
-                                toast.error(
-                                  <div className="flex items-center gap-2">
-                                    <Trash2 className="text-red-500 w-5 h-5" />
-                                    <span>Producto eliminado</span>
-                                  </div>,
-                                  { duration: 2000 }
-                                );
-                              },
-                              onError: () => {
-                                toast.error("No se pudo eliminar el producto. Intentá de nuevo.");
-                              },
-                            });
+                          variant={seleccionado ? "primary" : "ghost"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSeleccion?.(item.id);
                           }}
-                          title="Eliminar"
+                          title={seleccionado ? "Deseleccionar" : "Seleccionar"}
                           className="w-10 h-10 sm:w-11 sm:h-11"
                         >
-                          <m.div
-                            whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.5 } }}
-                          >
-                            <Trash2 size={18} className="sm:w-5 sm:h-5" />
-                          </m.div>
+                          <Check size={20} className={seleccionado ? "" : "opacity-30"} />
                         </IconButton>
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <IconButton
+                            variant={item.estado === "repuesto" ? "primary" : "ghost"}
+                            onClick={() => toggleEstado(item, "repuesto")}
+                            title={item.estado === "repuesto" ? "Desmarcar repuesto" : "Marcar como repuesto"}
+                            className="w-10 h-10 sm:w-11 sm:h-11"
+                          >
+                            <m.div
+                              animate={item.estado === "repuesto" ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <CheckCircle size={20} className="sm:w-6 sm:h-6" />
+                            </m.div>
+                          </IconButton>
+
+                          <IconButton
+                            variant={item.estado === "sin_stock" ? "destructive" : "ghost"}
+                            onClick={() => toggleEstado(item, "sin_stock")}
+                            title={item.estado === "sin_stock" ? "Desmarcar sin stock" : "Marcar como sin stock"}
+                            className="w-10 h-10 sm:w-11 sm:h-11"
+                          >
+                            <m.div
+                              animate={
+                                item.estado === "sin_stock"
+                                  ? { scale: [1, 1.1, 1], opacity: [1, 0.8, 1] }
+                                  : { scale: 1 }
+                              }
+                              transition={{
+                                duration: 0.6,
+                                repeat: item.estado === "sin_stock" ? Infinity : 0,
+                                repeatDelay: 1,
+                              }}
+                            >
+                              <XCircle size={20} className="sm:w-6 sm:h-6" />
+                            </m.div>
+                          </IconButton>
+
+                          <IconButton
+                            variant="ghost"
+                            onClick={() => {
+                              eliminar.mutate(item.id, {
+                                onSuccess: () => {
+                                  haptic([50, 100, 50]);
+                                  toast.error(
+                                    <div className="flex items-center gap-2">
+                                      <Trash2 className="text-red-500 w-5 h-5" />
+                                      <span>Producto eliminado</span>
+                                    </div>,
+                                    { duration: 2000 }
+                                  );
+                                },
+                                onError: () => {
+                                  toast.error("No se pudo eliminar el producto. Intentá de nuevo.");
+                                },
+                              });
+                            }}
+                            title="Eliminar"
+                            className="w-10 h-10 sm:w-11 sm:h-11"
+                          >
+                            <m.div
+                              whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.5 } }}
+                            >
+                              <Trash2 size={18} className="sm:w-5 sm:h-5" />
+                            </m.div>
+                          </IconButton>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

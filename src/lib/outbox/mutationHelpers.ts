@@ -25,3 +25,32 @@ export async function ejecutarOEncolar<T>(
     return valorOffline;
   }
 }
+
+/**
+ * Variante masiva: separa los ids offline (tempId, todavía no sincronizados)
+ * de los reales. Los offline siempre se encolan de a uno (no existen en
+ * Supabase todavía). Para los reales, intenta un solo round-trip
+ * (`ejecutarReal`) y cae a encolar de a uno ante un error de red.
+ */
+export async function ejecutarMasivoOEncolar(
+  ids: string[],
+  ejecutarReal: (ids: string[]) => Promise<void>,
+  encolarUno: (id: string) => Promise<void>
+): Promise<void> {
+  const idsOffline = ids.filter(esTempId);
+  const idsReales = ids.filter((id) => !esTempId(id));
+
+  await Promise.all(idsOffline.map(encolarUno));
+  if (idsReales.length === 0) return;
+
+  if (!isOnline()) {
+    await Promise.all(idsReales.map(encolarUno));
+    return;
+  }
+  try {
+    await ejecutarReal(idsReales);
+  } catch (err) {
+    if (!isNetworkError(err)) throw err;
+    await Promise.all(idsReales.map(encolarUno));
+  }
+}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
+import { chainable, mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
 
 const fromMock = vi.fn();
 const rpcMock = vi.fn();
@@ -80,6 +80,27 @@ describe("retirarItem", () => {
     rpcMock.mockResolvedValue({ data: null, error: new Error("item no encontrado") });
 
     await expect(retirarItem("item-1")).rejects.toThrow("item no encontrado");
+  });
+});
+
+describe("retirarItemsMasivo", () => {
+  it("retira varios items en paralelo, reusando retirarItem", async () => {
+    const { retirarItemsMasivo } = await import("@/services/vencimiento");
+    // Los retiros corren en paralelo (Promise.all), así que sus llamadas a
+    // `from` se interfolan de forma no determinista: se despacha por nombre
+    // de tabla en vez de depender de un orden estricto de llamadas.
+    const respuestasPorTabla: Record<string, ReturnType<typeof chainable>> = {
+      items_vencimiento: chainable({ data: itemRow(), error: null }),
+      producto_variantes: chainable({
+        data: { nombre_completo: "Leche 1L", producto_base_id: "base-1" },
+      }),
+      producto_bases: chainable({ data: { nombre: "Leche", marca: "La Serenísima" } }),
+      items_vencimiento_historial: chainable({ error: null }),
+    };
+    fromMock.mockImplementation((tabla: string) => respuestasPorTabla[tabla]);
+
+    await retirarItemsMasivo(["item-1", "item-2"]);
+    expect(fromMock).toHaveBeenCalledTimes(10); // 5 llamadas por item retirado
   });
 });
 

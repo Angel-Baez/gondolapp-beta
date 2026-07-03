@@ -1,7 +1,7 @@
 "use client";
 
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
-import { ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
+import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
 import { calcularNivelAlerta } from "@/lib/utils";
 import * as vencimientoService from "@/services/vencimiento";
@@ -179,6 +179,37 @@ export function useRetirarVencimientoItem() {
       return { previous };
     },
     onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ITEMS_KEY });
+      queryClient.invalidateQueries({ queryKey: HISTORIAL_KEY });
+      queryClient.invalidateQueries({ queryKey: ESTADISTICAS_KEY });
+    },
+  });
+}
+
+/** Retira varios items a la vez (acción masiva del modo selección). */
+export function useRetirarItemsMasivo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: (ids: string[]) =>
+      ejecutarMasivoOEncolar(
+        ids,
+        (idsReales) => vencimientoService.retirarItemsMasivo(idsReales),
+        (id) => enqueueOperation("vencimiento.retirarItem", { id })
+      ),
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
+      const previous = queryClient.getQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY);
+      const idSet = new Set(ids);
+      queryClient.setQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY, (items) =>
+        (items ?? []).filter((item) => !idSet.has(item.id))
+      );
+      return { previous };
+    },
+    onError: (_err, _ids, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
     onSettled: () => {

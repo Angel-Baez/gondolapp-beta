@@ -171,6 +171,24 @@ export async function eliminarItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Cambia el estado de varios items en un solo round-trip (acción masiva). */
+export async function cambiarEstadoMasivo(
+  ids: string[],
+  estado: EstadoReposicion
+): Promise<void> {
+  const { error } = await supabase
+    .from("items_reposicion")
+    .update({ estado })
+    .in("id", ids);
+  if (error) throw error;
+}
+
+/** Elimina varios items en un solo round-trip (acción masiva). */
+export async function eliminarItemsMasivo(ids: string[]): Promise<void> {
+  const { error } = await supabase.from("items_reposicion").delete().in("id", ids);
+  if (error) throw error;
+}
+
 /**
  * Cierra la lista actual: guarda un snapshot en el historial y borra
  * todos los items activos de reposición ("cerrar turno"). RPC atómica

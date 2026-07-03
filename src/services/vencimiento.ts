@@ -140,6 +140,15 @@ export async function retirarItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Retira varios items de la góndola (acción masiva). Cada retiro sigue
+ * escribiendo su propio snapshot en el historial, así que no hay un `.in()`
+ * de una sola consulta posible; se resuelven en paralelo.
+ */
+export async function retirarItemsMasivo(ids: string[]): Promise<void> {
+  await Promise.all(ids.map((id) => retirarItem(id)));
+}
+
 export async function obtenerHistorial(filtros?: {
   desde?: Date;
   hasta?: Date;

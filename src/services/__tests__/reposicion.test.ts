@@ -105,6 +105,27 @@ describe("actualizarCantidad", () => {
   });
 });
 
+describe("cambiarEstadoMasivo", () => {
+  it("actualiza el estado de varios items en un solo round-trip", async () => {
+    const { cambiarEstadoMasivo } = await import("@/services/reposicion");
+    fromMock.mockImplementation(mockSupabaseFrom({ error: null }));
+
+    await cambiarEstadoMasivo(["item-1", "item-2"], "repuesto");
+    expect(fromMock).toHaveBeenCalledTimes(1);
+    expect(fromMock).toHaveBeenCalledWith("items_reposicion");
+  });
+});
+
+describe("eliminarItemsMasivo", () => {
+  it("elimina varios items en un solo round-trip", async () => {
+    const { eliminarItemsMasivo } = await import("@/services/reposicion");
+    fromMock.mockImplementation(mockSupabaseFrom({ error: null }));
+
+    await eliminarItemsMasivo(["item-1", "item-2"]);
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("cambiarEstado", () => {
   it("actualiza el estado del item", async () => {
     const { cambiarEstado } = await import("@/services/reposicion");

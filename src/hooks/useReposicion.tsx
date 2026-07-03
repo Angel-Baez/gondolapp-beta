@@ -1,7 +1,7 @@
 "use client";
 
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
-import { ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
+import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
 import * as reposicionService from "@/services/reposicion";
 import { EstadoReposicion, ItemReposicion } from "@/types";
@@ -141,6 +141,58 @@ export function useCambiarEstadoReposicion() {
       return { previous };
     },
     onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
+    },
+  });
+}
+
+/** Cambia el estado de varios items a la vez (acción masiva del modo selección). */
+export function useCambiarEstadoMasivo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: ({ ids, estado }: { ids: string[]; estado: EstadoReposicion }) =>
+      ejecutarMasivoOEncolar(
+        ids,
+        (idsReales) => reposicionService.cambiarEstadoMasivo(idsReales, estado),
+        (id) => enqueueOperation("reposicion.cambiarEstado", { id, estado })
+      ),
+    onMutate: async ({ ids, estado }) => {
+      await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
+      const previous = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY);
+      const idSet = new Set(ids);
+      queryClient.setQueryData<ItemReposicion[]>(ITEMS_KEY, (items) =>
+        (items ?? []).map((item) => (idSet.has(item.id) ? { ...item, estado } : item))
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
+    },
+  });
+}
+
+/** Elimina varios items a la vez (acción masiva del modo selección). */
+export function useEliminarItemsMasivo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: (ids: string[]) =>
+      ejecutarMasivoOEncolar(
+        ids,
+        (idsReales) => reposicionService.eliminarItemsMasivo(idsReales),
+        (id) => enqueueOperation("reposicion.eliminarItem", { id })
+      ),
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
+      const previous = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY);
+      const idSet = new Set(ids);
+      queryClient.setQueryData<ItemReposicion[]>(ITEMS_KEY, (items) =>
+        (items ?? []).filter((item) => !idSet.has(item.id))
+      );
+      return { previous };
+    },
+    onError: (_err, _ids, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
   });
