@@ -1,5 +1,9 @@
 "use client";
 
+import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
+import { ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
+import { crearTempId } from "@/lib/outbox/types";
+import { calcularNivelAlerta } from "@/lib/utils";
 import * as vencimientoService from "@/services/vencimiento";
 import { ItemVencimientoConAlerta } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +19,8 @@ export function useVencimientoItems() {
 export function useAgregarVencimientoItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    networkMode: "always",
+    mutationFn: async ({
       varianteId,
       fechaVencimiento,
       cantidad,
@@ -25,36 +30,95 @@ export function useAgregarVencimientoItem() {
       fechaVencimiento: Date;
       cantidad?: number;
       lote?: string;
-    }) => vencimientoService.agregarItem(varianteId, fechaVencimiento, cantidad, lote),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
+    }): Promise<ItemVencimientoConAlerta> => {
+      if (isOnline()) {
+        try {
+          return await vencimientoService.agregarItem(
+            varianteId,
+            fechaVencimiento,
+            cantidad,
+            lote
+          );
+        } catch (err) {
+          if (!isNetworkError(err)) throw err;
+        }
+      }
+
+      const tempId = crearTempId();
+      await enqueueOperation("vencimiento.agregarItem", {
+        tempId,
+        varianteId,
+        fechaVencimiento: fechaVencimiento.toISOString().slice(0, 10),
+        cantidad,
+        lote,
+      });
+      return {
+        id: tempId,
+        varianteId,
+        fechaVencimiento,
+        cantidad,
+        lote,
+        estado: "pendiente",
+        agregadoAt: new Date(),
+        alertaNivel: calcularNivelAlerta(fechaVencimiento),
+      };
+    },
+    onSuccess: (item) => {
+      queryClient.setQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY, (items) => {
+        const actuales = items ?? [];
+        const yaEstaba = actuales.some((i) => i.id === item.id);
+        return yaEstaba
+          ? actuales.map((i) => (i.id === item.id ? item : i))
+          : [item, ...actuales];
+      });
+    },
   });
 }
 
 export function useActualizarFechaVencimiento() {
   const queryClient = useQueryClient();
   return useMutation({
+    networkMode: "always",
     mutationFn: ({ id, fechaVencimiento }: { id: string; fechaVencimiento: Date }) =>
-      vencimientoService.actualizarFecha(id, fechaVencimiento),
+      ejecutarOEncolar(
+        id,
+        () => vencimientoService.actualizarFecha(id, fechaVencimiento),
+        () =>
+          enqueueOperation("vencimiento.actualizarFecha", {
+            id,
+            fechaVencimiento: fechaVencimiento.toISOString().slice(0, 10),
+          }),
+        null as ItemVencimientoConAlerta | null
+      ),
     onMutate: async ({ id, fechaVencimiento }) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY);
       queryClient.setQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY, (items) =>
-        (items ?? []).map((item) => (item.id === id ? { ...item, fechaVencimiento } : item))
+        (items ?? []).map((item) =>
+          item.id === id
+            ? { ...item, fechaVencimiento, alertaNivel: calcularNivelAlerta(fechaVencimiento) }
+            : item
+        )
       );
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
 export function useActualizarCantidadVencimiento() {
   const queryClient = useQueryClient();
   return useMutation({
+    networkMode: "always",
     mutationFn: ({ id, cantidad }: { id: string; cantidad: number }) =>
-      vencimientoService.actualizarCantidad(id, cantidad),
+      ejecutarOEncolar(
+        id,
+        () => vencimientoService.actualizarCantidad(id, cantidad),
+        () => enqueueOperation("vencimiento.actualizarCantidad", { id, cantidad }),
+        null as ItemVencimientoConAlerta | null
+      ),
     onMutate: async ({ id, cantidad }) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY);
@@ -66,14 +130,20 @@ export function useActualizarCantidadVencimiento() {
     onError: (_err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
 export function useEliminarVencimientoItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => vencimientoService.eliminarItem(id),
+    networkMode: "always",
+    mutationFn: (id: string) =>
+      ejecutarOEncolar(
+        id,
+        () => vencimientoService.eliminarItem(id),
+        () => enqueueOperation("vencimiento.eliminarItem", { id }),
+        undefined as void
+      ),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY);
@@ -85,7 +155,6 @@ export function useEliminarVencimientoItem() {
     onError: (_err, _id, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
@@ -93,7 +162,14 @@ export function useEliminarVencimientoItem() {
 export function useRetirarVencimientoItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => vencimientoService.retirarItem(id),
+    networkMode: "always",
+    mutationFn: (id: string) =>
+      ejecutarOEncolar(
+        id,
+        () => vencimientoService.retirarItem(id),
+        () => enqueueOperation("vencimiento.retirarItem", { id }),
+        undefined as void
+      ),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemVencimientoConAlerta[]>(ITEMS_KEY);

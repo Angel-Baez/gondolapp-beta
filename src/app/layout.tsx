@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import OutboxProvider from "@/components/OutboxProvider";
 import PWAProvider from "./PWAProvider";
 import { QueryProvider } from "./QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -102,6 +103,7 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <PWAProvider />
+            <OutboxProvider />
             <Toaster
               position="top-center"
               containerStyle={{ top: "calc(env(safe-area-inset-top, 0px) + 64px)" }}

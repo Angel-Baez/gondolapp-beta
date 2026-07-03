@@ -1,8 +1,11 @@
 "use client";
 
+import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
+import { ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
+import { crearTempId } from "@/lib/outbox/types";
 import * as reposicionService from "@/services/reposicion";
 import { EstadoReposicion, ItemReposicion } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
@@ -14,20 +17,96 @@ export function useReposicionItems() {
   return useQuery({ queryKey: ITEMS_KEY, queryFn: reposicionService.listarItems });
 }
 
+/**
+ * Reproduce localmente el merge-on-add del servicio (mismo criterio: cualquier
+ * estado de la misma variante se reabre a pendiente) cuando no hay red, y
+ * encola la operación real para cuando vuelva la conexión.
+ */
+async function agregarOffline(
+  queryClient: QueryClient,
+  varianteId: string,
+  cantidad: number
+): Promise<ItemReposicion> {
+  const actuales = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY) ?? [];
+  const existente = actuales.find((i) => i.varianteId === varianteId);
+  const ahora = new Date();
+
+  if (existente) {
+    const actualizado: ItemReposicion = {
+      ...existente,
+      cantidad: existente.cantidad + cantidad,
+      estado: "pendiente",
+      actualizadoAt: ahora,
+    };
+    await enqueueOperation("reposicion.actualizarCantidad", {
+      id: existente.id,
+      cantidad: actualizado.cantidad,
+    });
+    if (existente.estado !== "pendiente") {
+      await enqueueOperation("reposicion.cambiarEstado", {
+        id: existente.id,
+        estado: "pendiente",
+      });
+    }
+    return actualizado;
+  }
+
+  const tempId = crearTempId();
+  const nuevo: ItemReposicion = {
+    id: tempId,
+    varianteId,
+    cantidad,
+    estado: "pendiente",
+    agregadoAt: ahora,
+    actualizadoAt: ahora,
+  };
+  await enqueueOperation("reposicion.agregarItem", { tempId, varianteId, cantidad });
+  return nuevo;
+}
+
 export function useAgregarReposicionItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ varianteId, cantidad }: { varianteId: string; cantidad: number }) =>
-      reposicionService.agregarItem(varianteId, cantidad),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
+    networkMode: "always",
+    mutationFn: async ({
+      varianteId,
+      cantidad,
+    }: {
+      varianteId: string;
+      cantidad: number;
+    }): Promise<ItemReposicion> => {
+      if (isOnline()) {
+        try {
+          return await reposicionService.agregarItem(varianteId, cantidad);
+        } catch (err) {
+          if (!isNetworkError(err)) throw err;
+        }
+      }
+      return agregarOffline(queryClient, varianteId, cantidad);
+    },
+    onSuccess: (item) => {
+      queryClient.setQueryData<ItemReposicion[]>(ITEMS_KEY, (items) => {
+        const actuales = items ?? [];
+        const yaEstaba = actuales.some((i) => i.id === item.id);
+        return yaEstaba
+          ? actuales.map((i) => (i.id === item.id ? item : i))
+          : [item, ...actuales];
+      });
+    },
   });
 }
 
 export function useActualizarCantidadReposicion() {
   const queryClient = useQueryClient();
   return useMutation({
+    networkMode: "always",
     mutationFn: ({ id, cantidad }: { id: string; cantidad: number }) =>
-      reposicionService.actualizarCantidad(id, cantidad),
+      ejecutarOEncolar(
+        id,
+        () => reposicionService.actualizarCantidad(id, cantidad),
+        () => enqueueOperation("reposicion.actualizarCantidad", { id, cantidad }),
+        null as ItemReposicion | null
+      ),
     onMutate: async ({ id, cantidad }) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY);
@@ -39,15 +118,20 @@ export function useActualizarCantidadReposicion() {
     onError: (_err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
 export function useCambiarEstadoReposicion() {
   const queryClient = useQueryClient();
   return useMutation({
+    networkMode: "always",
     mutationFn: ({ id, estado }: { id: string; estado: EstadoReposicion }) =>
-      reposicionService.cambiarEstado(id, estado),
+      ejecutarOEncolar(
+        id,
+        () => reposicionService.cambiarEstado(id, estado),
+        () => enqueueOperation("reposicion.cambiarEstado", { id, estado }),
+        null as ItemReposicion | null
+      ),
     onMutate: async ({ id, estado }) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY);
@@ -59,15 +143,19 @@ export function useCambiarEstadoReposicion() {
     onError: (_err, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
 function useEliminarReposicionItem() {
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => reposicionService.eliminarItem(id),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
+    networkMode: "always",
+    mutationFn: (id: string) =>
+      ejecutarOEncolar(
+        id,
+        () => reposicionService.eliminarItem(id),
+        () => enqueueOperation("reposicion.eliminarItem", { id }),
+        undefined as void
+      ),
   });
 }
 
@@ -127,7 +215,14 @@ export function useDecrementarReposicion() {
 export function useEliminarReposicionItemDirecto() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => reposicionService.eliminarItem(id),
+    networkMode: "always",
+    mutationFn: (id: string) =>
+      ejecutarOEncolar(
+        id,
+        () => reposicionService.eliminarItem(id),
+        () => enqueueOperation("reposicion.eliminarItem", { id }),
+        undefined as void
+      ),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ITEMS_KEY });
       const previous = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY);
@@ -139,14 +234,21 @@ export function useEliminarReposicionItemDirecto() {
     onError: (_err, _id, context) => {
       if (context?.previous) queryClient.setQueryData(ITEMS_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ITEMS_KEY }),
   });
 }
 
 export function useGuardarListaReposicion() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => reposicionService.guardarListaActual(),
+    networkMode: "always",
+    mutationFn: async () => {
+      if (!isOnline()) {
+        throw new Error(
+          "Necesitás conexión a internet para guardar la lista y cerrar el turno."
+        );
+      }
+      return reposicionService.guardarListaActual();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ITEMS_KEY });
       queryClient.invalidateQueries({ queryKey: HISTORIAL_KEY });
