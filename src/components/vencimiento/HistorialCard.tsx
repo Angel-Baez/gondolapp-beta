@@ -23,25 +23,21 @@ export function HistorialCard({ item }: { item: ItemVencimientoHistorial }) {
     }).format(new Date(fecha));
 
   return (
-    <div className="bg-white dark:bg-dark-surface rounded-xl shadow-md p-4 border border-gray-100 dark:border-dark-border transition-colors">
+    <div className="island p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
+          <p className="text-headline text-fg">
             {item.productoNombre}
             {item.productoMarca && (
-              <span className="text-gray-500 dark:text-gray-400 font-normal ml-1">
-                ({item.productoMarca})
-              </span>
+              <span className="text-fg-secondary font-normal ml-1">({item.productoMarca})</span>
             )}
           </p>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {item.varianteNombre}
-          </p>
+          <p className="text-footnote text-fg-secondary mt-0.5">{item.varianteNombre}</p>
         </div>
         <Badge alert={item.nivelAlertaAlRetirar}>{ETIQUETAS_ALERTA[item.nivelAlertaAlRetirar]}</Badge>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-dark-border text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border text-footnote text-fg-secondary">
         <div className="flex items-center gap-1">
           <Calendar size={14} className="flex-shrink-0" />
           <span>Vencía: {formatearFecha(item.fechaVencimiento)}</span>

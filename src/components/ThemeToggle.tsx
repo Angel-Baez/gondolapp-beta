@@ -31,7 +31,7 @@ export function ThemeToggle() {
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={cycleTheme}
-      className="p-3 bg-white/10 hover:bg-white/20 dark:bg-gray-700/50 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center gap-2"
+      className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:bg-surface-2 transition-colors"
       aria-label={`Tema actual: ${themeOptions[safeIndex].label}. Click para cambiar.`}
       title={`Tema: ${themeOptions[safeIndex].label}`}
     >
@@ -44,47 +44,5 @@ export function ThemeToggle() {
         <CurrentIcon size={20} />
       </motion.div>
     </motion.button>
-  );
-}
-
-/**
- * ThemeSelector - Dropdown-style selector for theme selection
- */
-export function ThemeSelector() {
-  const { theme, setTheme } = useThemeStore();
-
-  return (
-    <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-      {themeOptions.map((option) => {
-        const Icon = option.icon;
-        const isActive = theme === option.value;
-
-        return (
-          <motion.button
-            key={option.value}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setTheme(option.value)}
-            className={`
-              relative p-2 rounded-md transition-colors flex items-center justify-center
-              ${isActive
-                ? "text-accent-primary"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              }
-            `}
-            aria-label={option.label}
-            title={option.label}
-          >
-            {isActive && (
-              <motion.div
-                layoutId="theme-indicator"
-                className="absolute inset-0 bg-white dark:bg-gray-700 rounded-md shadow-sm"
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <Icon size={18} className="relative z-10" />
-          </motion.button>
-        );
-      })}
-    </div>
   );
 }

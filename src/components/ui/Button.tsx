@@ -26,18 +26,14 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "font-bold rounded-xl transition-all duration-100 flex items-center justify-center gap-2 select-none touch-manipulation";
+    "font-semibold rounded-field transition-all duration-100 flex items-center justify-center gap-2 select-none touch-manipulation";
 
   const variantClasses = {
-    primary:
-      "bg-accent-primary text-white hover:bg-accent-primary/90 shadow-md",
-    secondary:
-      "border-2 border-accent-primary text-accent-primary hover:bg-accent-primary/10 dark:hover:bg-accent-primary/20",
-    destructive:
-      "bg-alert-critico text-white hover:bg-alert-critico/90 shadow-md",
-    ghost: "bg-gray-100 dark:bg-dark-card text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-dark-border",
-    outline:
-      "border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-card",
+    primary: "bg-accent text-on-accent hover:bg-accent-strong",
+    secondary: "border-2 border-accent text-accent hover:bg-accent-soft",
+    destructive: "bg-alert-critico text-white hover:bg-alert-critico/90",
+    ghost: "bg-surface-2 text-fg-secondary hover:bg-border",
+    outline: "border-2 border-border text-fg-secondary hover:bg-surface-2",
   };
 
   const sizeClasses = {
@@ -83,10 +79,10 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   const variantClasses = {
-    primary: "bg-accent-primary text-white hover:bg-accent-primary/90",
-    secondary: "bg-accent-secondary text-white hover:bg-accent-secondary/90",
+    primary: "bg-accent text-on-accent hover:bg-accent-strong",
+    secondary: "bg-estado-sin-stock text-white hover:opacity-90",
     destructive: "bg-alert-critico text-white hover:bg-alert-critico/90",
-    ghost: "bg-gray-100 dark:bg-dark-card text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border",
+    ghost: "bg-surface-2 text-fg-secondary hover:bg-border",
   };
 
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
@@ -95,7 +91,7 @@ export function IconButton({
     <motion.button
       whileTap={!disabled ? { scale: 0.92 } : {}}
       transition={{ type: "tween", duration: 0.1 }}
-      className={`p-2.5 rounded-lg transition-all duration-100 flex items-center justify-center flex-shrink-0 min-w-[44px] min-h-[44px] select-none touch-manipulation ${variantClasses[variant]} ${disabledClasses} ${className}`}
+      className={`p-2.5 rounded-field transition-all duration-100 flex items-center justify-center flex-shrink-0 min-w-[44px] min-h-[44px] select-none touch-manipulation ${variantClasses[variant]} ${disabledClasses} ${className}`}
       onClick={onClick}
       type={type}
       disabled={disabled}

@@ -104,16 +104,69 @@ export async function obtenerProductoPorVarianteId(
   return mapProductoCompleto(data as ProductoVarianteConBaseRow);
 }
 
+/**
+ * Saca caracteres que rompen el filtro `.or()` de PostgREST (coma separa
+ * condiciones, `%`/`(`/`)` tienen significado propio en ilike/or).
+ */
+function sanitizarTerminoBusqueda(termino: string): string {
+  return termino.replace(/[,%()]/g, "").trim();
+}
+
 /** Busca productos base por nombre o marca (para autocompletado/administración liviana). */
 export async function buscarProductos(termino: string): Promise<ProductoBase[]> {
+  const limpio = sanitizarTerminoBusqueda(termino);
+  if (limpio.length < 2) return [];
+
   const { data, error } = await supabase
     .from("producto_bases")
     .select("*")
-    .or(`nombre.ilike.%${termino}%,marca.ilike.%${termino}%`)
+    .or(`nombre.ilike.%${limpio}%,marca.ilike.%${limpio}%`)
     .limit(20);
 
   if (error) throw error;
   return (data ?? []).map((row) => mapProductoBase(row as ProductoBaseRow));
+}
+
+/**
+ * Busca variantes (con su base) por nombre completo, o por nombre/marca de
+ * la base — para agregar productos por búsqueda en vez de escaneo. Dos
+ * queries en paralelo (PostgREST no permite `.or()` cruzando la tabla
+ * principal y la referenciada en la misma llamada) mergeadas por variante.id.
+ */
+export async function buscarVariantes(termino: string): Promise<ProductoCompleto[]> {
+  const limpio = sanitizarTerminoBusqueda(termino);
+  if (limpio.length < 2) return [];
+
+  const [porNombreVariante, porBase] = await Promise.all([
+    supabase
+      .from("producto_variantes")
+      .select("*, producto_bases(*)")
+      .ilike("nombre_completo", `%${limpio}%`)
+      .limit(15),
+    supabase
+      .from("producto_variantes")
+      .select("*, producto_bases!inner(*)")
+      .or(`nombre.ilike.%${limpio}%,marca.ilike.%${limpio}%`, {
+        referencedTable: "producto_bases",
+      })
+      .limit(15),
+  ]);
+
+  if (porNombreVariante.error) throw porNombreVariante.error;
+  if (porBase.error) throw porBase.error;
+
+  const vistos = new Set<string>();
+  const resultado: ProductoCompleto[] = [];
+  for (const row of [
+    ...((porNombreVariante.data ?? []) as ProductoVarianteConBaseRow[]),
+    ...((porBase.data ?? []) as ProductoVarianteConBaseRow[]),
+  ]) {
+    if (vistos.has(row.id)) continue;
+    vistos.add(row.id);
+    const producto = mapProductoCompleto(row);
+    if (producto) resultado.push(producto);
+  }
+  return resultado;
 }
 
 /**
@@ -156,7 +209,7 @@ export async function crearProductoManual(
       .insert({
         nombre: dto.productoBase.nombre.trim(),
         marca: dto.productoBase.marca.trim(),
-        categoria: dto.productoBase.categoria.trim(),
+        categoria: dto.productoBase.categoria?.trim() || null,
         imagen: dto.productoBase.imagen,
       })
       .select()
@@ -177,7 +230,7 @@ export async function crearProductoManual(
       codigo_barras: dto.ean.trim(),
       nombre_completo: nombreCompleto || dto.productoBase.nombre,
       tipo: dto.variante.tipo?.trim(),
-      tamano: dto.variante.tamano.trim(),
+      tamano: dto.variante.tamano?.trim() || null,
       sabor: dto.variante.sabor?.trim(),
       imagen: dto.variante.imagen,
     })

@@ -1,6 +1,7 @@
 "use client";
 
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { motion as m } from "framer-motion";
 import { Camera, Keyboard, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -9,12 +10,26 @@ interface BarcodeScannerProps {
   onScan: (code: string) => void;
   onClose: () => void;
   isOpen: boolean;
+  /** Modo/label opcional mostrado en el header (ej. "Reposición"). */
+  modeLabel?: string;
+  /** Mientras es true, la cámara sigue corriendo pero los escaneos se
+   * ignoran (un sheet está abierto) — evita el costo de reiniciar la
+   * cámara al cerrar el sheet. */
+  paused?: boolean;
+  /** Contenido flotante inyectado sobre la vista de cámara (ej. QuickAdjustCard). */
+  overlay?: React.ReactNode;
+  /** Si se provee, muestra un link en la entrada manual para buscar por nombre en su lugar. */
+  onSearchInstead?: () => void;
 }
 
 export default function BarcodeScanner({
   onScan,
   onClose,
   isOpen,
+  modeLabel,
+  paused = false,
+  overlay,
+  onSearchInstead,
 }: BarcodeScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -31,6 +46,10 @@ export default function BarcodeScanner({
   ).current;
   const isStoppingRef = useRef(false);
   const isStartingRef = useRef(false);
+  // Ref (no state) para que onScanSuccess la lea sin entrar en las deps de
+  // startScanning: togglear `paused` no debe reiniciar la cámara.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   // Promesa del start() en curso: permite esperar a que termine antes de
   // detener, para no dejar la cámara abierta sin referencia (bug que
   // obligaba a recargar la página para poder volver a abrirla).
@@ -141,6 +160,7 @@ export default function BarcodeScanner({
       };
 
       const onScanSuccess = (decodedText: string) => {
+        if (pausedRef.current) return;
         if (decodedText !== lastScannedCode && !isClosing) {
           setLastScannedCode(decodedText);
           onScan(decodedText);
@@ -324,28 +344,32 @@ export default function BarcodeScanner({
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/90 to-transparent">
-        <div className="flex items-center gap-2 text-white">
-          {showManualInput ? <Keyboard size={24} /> : <Camera size={24} />}
-          <h2 className="font-bold text-lg">
-            {showManualInput ? "Entrada Manual" : "Escanear Código"}
+      {/* Header glass */}
+      <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex justify-between items-center z-10">
+        <div className="flex items-center gap-2 text-white glass rounded-full pl-3 pr-4 h-11">
+          {showManualInput ? <Keyboard size={18} /> : <Camera size={18} />}
+          <h2 className="font-semibold text-sm">
+            {showManualInput
+              ? "Entrada manual"
+              : modeLabel
+              ? `Escaneando · ${modeLabel}`
+              : "Escanear código"}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleToggleInputMode}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition backdrop-blur-sm text-white"
+            className="w-11 h-11 rounded-full glass flex items-center justify-center text-white"
             aria-label={showManualInput ? "Usar cámara" : "Entrada manual"}
           >
-            {showManualInput ? <Camera size={20} /> : <Keyboard size={20} />}
+            {showManualInput ? <Camera size={18} /> : <Keyboard size={18} />}
           </button>
           <button
             onClick={handleClose}
-            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition backdrop-blur-sm text-white"
+            className="w-11 h-11 rounded-full glass flex items-center justify-center text-white"
             aria-label="Cerrar"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
       </div>
@@ -354,12 +378,10 @@ export default function BarcodeScanner({
       <div className="flex items-center justify-center h-full p-4 pt-20">
         {showManualInput ? (
           <div className="w-full max-w-md">
-            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-2xl transition-colors">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Ingresar Código Manualmente
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Ingresa el código de barras del producto:
+            <div className="glass rounded-sheet p-6">
+              <h3 className="text-title2 text-white mb-1">Ingresar código manualmente</h3>
+              <p className="text-subhead text-white/70 mb-4">
+                Escribí el código de barras del producto
               </p>
               <form onSubmit={handleManualSubmit}>
                 <input
@@ -367,74 +389,89 @@ export default function BarcodeScanner({
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Ej: 7501234567890"
-                  className="w-full p-4 border-2 border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 rounded-xl focus:border-accent-primary outline-none text-lg text-center font-mono transition-colors"
+                  className="w-full h-14 px-4 rounded-field bg-white/10 text-white placeholder:text-white/40 outline-none text-lg text-center font-mono focus:ring-2 focus:ring-accent/60"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={!manualCode.trim()}
-                  className="w-full mt-4 py-3 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-gray-300 dark:disabled:bg-dark-border disabled:cursor-not-allowed text-white font-bold rounded-xl transition"
+                  className="w-full mt-4 h-14 bg-accent disabled:bg-white/10 disabled:text-white/40 text-on-accent font-semibold rounded-field transition-colors"
                 >
-                  Buscar Producto
+                  Buscar producto
                 </button>
               </form>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                💡 Tip: Puedes encontrar el código en el paquete del producto
-              </p>
+              {onSearchInstead && (
+                <button
+                  onClick={onSearchInstead}
+                  className="w-full mt-3 h-11 text-white/70 text-subhead font-medium"
+                >
+                  Buscar por nombre en vez de código
+                </button>
+              )}
             </div>
           </div>
         ) : (
           <div className="relative w-full max-w-md">
-            {/* Contenedor del escáner */}
+            {/* Contenedor del escáner: tamaño/estilo estables a propósito
+                para no forzar un reflow del <video> (evita reinicios de cámara) */}
             <div
               ref={readerElementRef}
               id={scannerElementId}
-              className="mx-auto rounded-lg overflow-hidden bg-black"
+              className="mx-auto rounded-card overflow-hidden bg-black"
               style={{
                 width: "100%",
                 minHeight: "400px",
               }}
             />
 
+            {/* Marco del viewfinder + línea de escaneo */}
+            {isScanning && !isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <div className="relative w-[280px] h-[180px] rounded-card border-2 border-white/70 overflow-hidden">
+                  <m.div
+                    className="absolute left-0 right-0 h-0.5 bg-accent shadow-[0_0_8px_2px_rgba(6,182,212,0.8)]"
+                    animate={{ top: ["6%", "94%", "6%"] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map(
+                    (corner) => (
+                      <span
+                        key={corner}
+                        className={`absolute w-5 h-5 border-white ${
+                          corner === "top-left"
+                            ? "top-0 left-0 border-t-[3px] border-l-[3px] rounded-tl-lg"
+                            : corner === "top-right"
+                            ? "top-0 right-0 border-t-[3px] border-r-[3px] rounded-tr-lg"
+                            : corner === "bottom-left"
+                            ? "bottom-0 left-0 border-b-[3px] border-l-[3px] rounded-bl-lg"
+                            : "bottom-0 right-0 border-b-[3px] border-r-[3px] rounded-br-lg"
+                        }`}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Loading Overlay */}
             {isLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 rounded-lg z-20">
-                <Loader2 className="h-12 w-12 text-cyan-400 animate-spin mb-3" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 rounded-card z-20">
+                <Loader2 className="h-12 w-12 text-accent animate-spin mb-3" />
                 <p className="text-white text-base font-medium">
                   Cargando cámara...
                 </p>
               </div>
             )}
 
-            {/* Último código escaneado */}
-            {lastScannedCode && isScanning && (
-              <div className="absolute top-0 left-0 right-0 p-4">
-                <div className="bg-green-600/90 border border-green-400 rounded-lg p-3 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white/80 text-xs">Último código:</p>
-                      <p className="font-mono font-bold text-white mt-1 text-sm break-all">
-                        {lastScannedCode}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
-                      <span className="text-xs text-white font-medium">✓</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Overlay flotante inyectado por el padre (ej. QuickAdjustCard) */}
+            {overlay}
 
-            {/* Instrucciones cuando está escaneando */}
-            {isScanning && !isLoading && (
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className="bg-accent-primary/20 border border-accent-primary/30 rounded-lg p-3 backdrop-blur-sm">
-                  <p className="text-white text-center text-sm font-medium">
-                    📸 Mantén el código dentro del recuadro verde
-                  </p>
-                  <p className="text-white/70 text-center text-xs mt-1">
-                    El escaneo es automático
+            {/* Instrucción mínima cuando está escaneando (sin overlay del padre) */}
+            {isScanning && !isLoading && !overlay && (
+              <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
+                <div className="glass rounded-full px-4 py-2">
+                  <p className="text-white text-caption font-medium">
+                    Centrá el código en el recuadro
                   </p>
                 </div>
               </div>
@@ -524,11 +561,11 @@ export default function BarcodeScanner({
       {/* Consejos de uso */}
       {!isScanning && !isLoading && !error && !showManualInput && (
         <div className="absolute bottom-8 left-0 right-0 px-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto">
-            <p className="text-white text-sm font-medium mb-2">
-              💡 Consejos para mejor escaneo:
+          <div className="glass rounded-card p-4 max-w-md mx-auto">
+            <p className="text-white text-subhead font-medium mb-2">
+              Consejos para mejor escaneo
             </p>
-            <ul className="text-white/80 text-xs space-y-1 list-disc list-inside">
+            <ul className="text-white/70 text-footnote space-y-1 list-disc list-inside">
               <li>Asegúrate de tener buena iluminación</li>
               <li>Mantén el código centrado en el recuadro</li>
               <li>Evita reflejos o brillos en el código</li>
@@ -545,10 +582,10 @@ export default function BarcodeScanner({
         }
         #${scannerElementId} video {
           width: 100% !important;
-          border-radius: 1rem;
+          border-radius: var(--radius-card);
         }
         #${scannerElementId}__scan_region {
-          border-radius: 1rem !important;
+          border-radius: var(--radius-card) !important;
         }
         #${scannerElementId}__dashboard_section_csr {
           display: none !important;

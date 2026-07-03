@@ -19,7 +19,7 @@ export function HistorialList({ filtros }: HistorialListProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 py-4">
+      <div className="space-y-3 py-4">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -29,18 +29,16 @@ export function HistorialList({ filtros }: HistorialListProps) {
 
   if (retirados.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col items-center justify-center py-16 text-fg-tertiary">
         <m.div
           animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <History size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
+          <History size={48} className="mb-4 opacity-50" />
         </m.div>
-        <p className="text-base sm:text-lg font-semibold text-center">
-          No hay productos retirados
-        </p>
-        <p className="text-xs sm:text-sm text-center mt-1">
-          Los productos que retires aparecerán aquí
+        <p className="text-headline text-fg-secondary text-center">No hay productos retirados</p>
+        <p className="text-footnote text-center mt-1">
+          Los productos que retires aparecerán acá
         </p>
       </div>
     );

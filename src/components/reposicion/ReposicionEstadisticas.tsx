@@ -11,11 +11,11 @@ export function ReposicionEstadisticas() {
   const { data: stats, isLoading } = useEstadisticasReposicion(periodo);
 
   return (
-    <div className="bg-white dark:bg-dark-surface rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border mb-4">
+    <div className="island p-4 mb-4">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <BarChart3 size={18} className="text-cyan-600 dark:text-cyan-400" />
-          <h3 className="font-bold text-gray-900 dark:text-gray-100">Estadísticas</h3>
+          <BarChart3 size={18} className="text-accent" />
+          <h3 className="text-headline text-fg">Estadísticas</h3>
         </div>
         <PeriodoSelector periodo={periodo} onChange={setPeriodo} />
       </div>
@@ -23,11 +23,11 @@ export function ReposicionEstadisticas() {
       {isLoading || !stats ? (
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 bg-gray-100 dark:bg-dark-card rounded-xl animate-pulse" />
+            <div key={i} className="h-20 bg-surface-2 rounded-field animate-pulse" />
           ))}
         </div>
       ) : stats.totalListas === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+        <p className="text-subhead text-fg-secondary py-4 text-center">
           No hay listas guardadas en este período
         </p>
       ) : (
@@ -41,32 +41,28 @@ export function ReposicionEstadisticas() {
             <StatTile
               label="Total repuestos"
               value={stats.totalProductosRepuestos}
-              colorClass="text-emerald-600 dark:text-emerald-400"
+              colorClass="text-estado-repuesto"
             />
             <StatTile
               label="Total sin stock"
               value={stats.totalProductosSinStock}
-              colorClass="text-red-600 dark:text-red-400"
+              colorClass="text-estado-sin-stock"
             />
           </div>
 
           {stats.productosMasRepuestos.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+              <p className="text-footnote font-semibold text-fg-tertiary uppercase tracking-wide mb-2">
                 Top productos repuestos
               </p>
               <div className="space-y-1.5">
                 {stats.productosMasRepuestos.slice(0, 5).map((p) => (
                   <div
                     key={p.productoNombre}
-                    className="flex items-center justify-between text-sm bg-gray-50 dark:bg-dark-card px-3 py-2 rounded-lg"
+                    className="flex items-center justify-between text-subhead bg-surface-2 px-3 py-2 rounded-field"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 truncate">
-                      {p.productoNombre}
-                    </span>
-                    <span className="font-bold text-gray-900 dark:text-gray-100 ml-2">
-                      x{p.cantidad}
-                    </span>
+                    <span className="text-fg-secondary truncate">{p.productoNombre}</span>
+                    <span className="font-semibold text-fg ml-2">x{p.cantidad}</span>
                   </div>
                 ))}
               </div>

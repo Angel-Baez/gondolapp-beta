@@ -4,7 +4,8 @@ import { CollapsibleSection } from "@/components/lists/CollapsibleSection";
 import { SearchSortBar } from "@/components/lists/SearchSortBar";
 import { SectionHeader } from "@/components/lists/SectionHeader";
 import { SkeletonCard } from "@/components/lists/SkeletonCard";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useListFilters } from "@/hooks/useListFilters";
 import { useProductosDeItems } from "@/hooks/useProductosDeItems";
 import {
@@ -22,7 +23,6 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { VencimientoHeader } from "./VencimientoHeader";
 import { VencimientoItem } from "./VencimientoItem";
 
 interface ItemConVariante {
@@ -36,11 +36,11 @@ const SECCIONES: Array<{
   icon: any;
   colorClass: string;
 }> = [
-  { nivel: "vencido", titulo: "Vencidos", icon: Skull, colorClass: "bg-gradient-to-r from-red-800 to-red-900" },
-  { nivel: "critico", titulo: "Críticos (0-15 días)", icon: AlertCircle, colorClass: "bg-gradient-to-r from-red-500 to-red-600" },
-  { nivel: "advertencia", titulo: "Advertencia (15-30 días)", icon: AlertTriangle, colorClass: "bg-gradient-to-r from-orange-500 to-orange-600" },
-  { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "bg-gradient-to-r from-amber-400 to-amber-500" },
-  { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "bg-gradient-to-r from-gray-500 to-gray-600" },
+  { nivel: "vencido", titulo: "Vencidos", icon: Skull, colorClass: "text-alert-vencido" },
+  { nivel: "critico", titulo: "Críticos (0-15 días)", icon: AlertCircle, colorClass: "text-alert-critico" },
+  { nivel: "advertencia", titulo: "Advertencia (15-30 días)", icon: AlertTriangle, colorClass: "text-alert-advertencia" },
+  { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "text-alert-precaucion" },
+  { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "text-alert-normal" },
 ];
 
 const OPCIONES_ORDEN = [
@@ -67,7 +67,7 @@ export function VencimientoList() {
     items.map((i) => i.varianteId)
   );
   const actualizarFecha = useActualizarFechaVencimiento();
-  const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("vencimiento");
+  const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("vencimiento", "vencimiento");
 
   const [editingItem, setEditingItem] = useState<ItemVencimientoConAlerta | null>(null);
   const [newDate, setNewDate] = useState("");
@@ -133,7 +133,7 @@ export function VencimientoList() {
 
   if (loading) {
     return (
-      <div className="space-y-4 py-10 px-4">
+      <div className="space-y-3 py-6">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -143,34 +143,29 @@ export function VencimientoList() {
 
   if (totalItems === 0) {
     return (
-      <>
-        <VencimientoHeader />
-        <div className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-gray-500 dark:text-gray-400">
-          <m.div
-            animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Clock size={48} className="mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
-          </m.div>
-          <p className="text-base sm:text-lg font-semibold text-center">
-            No hay productos con vencimiento registrado
-          </p>
-          <p className="text-xs sm:text-sm text-center mt-1">
-            Escanea productos para rastrear sus fechas de vencimiento
-          </p>
-        </div>
-      </>
+      <div className="flex flex-col items-center justify-center py-16 text-fg-tertiary">
+        <m.div
+          animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Clock size={48} className="mb-4 opacity-50" />
+        </m.div>
+        <p className="text-headline text-fg-secondary text-center">
+          No hay productos con vencimiento registrado
+        </p>
+        <p className="text-footnote text-center mt-1">
+          Escaneá productos para rastrear sus fechas de vencimiento
+        </p>
+      </div>
     );
   }
 
   return (
     <div className="pb-8">
-      <VencimientoHeader />
-
       {itemsUrgentes > 0 && (
-        <div className="mx-4 sm:mx-0 mb-4 flex items-start gap-2 p-3 bg-alert-critico/10 dark:bg-alert-critico/20 border-2 border-alert-critico rounded-xl">
-          <AlertTriangle size={18} className="text-alert-critico flex-shrink-0 mt-0.5 sm:w-5 sm:h-5" />
-          <p className="text-xs sm:text-sm font-semibold text-alert-critico leading-tight">
+        <div className="mb-4 flex items-start gap-2 p-3 island border-l-[3px] border-l-alert-critico">
+          <AlertTriangle size={18} className="text-alert-critico flex-shrink-0 mt-0.5" />
+          <p className="text-subhead font-semibold text-alert-critico leading-tight">
             {itemsUrgentes} producto{itemsUrgentes > 1 ? "s" : ""} urgente
             {itemsUrgentes > 1 ? "s" : ""} (vencido{itemsUrgentes > 1 ? "s" : ""} o por vencer)
           </p>
@@ -186,21 +181,18 @@ export function VencimientoList() {
       />
 
       {itemsConVariantes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-gray-500 dark:text-gray-400">
-          <p className="text-sm text-center">No hay productos que coincidan con la búsqueda</p>
+        <div className="flex flex-col items-center justify-center py-16 text-fg-tertiary">
+          <p className="text-subhead text-center">No hay productos que coincidan con la búsqueda</p>
         </div>
       ) : (
-        <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+        <div className="space-y-6">
           {SECCIONES.map(({ nivel, titulo, icon, colorClass }) => {
             const itemsSeccion = itemsByAlertLevel[nivel];
             if (itemsSeccion.length === 0) return null;
             const isExpanded = expandedSections.has(nivel);
 
             return (
-              <div
-                key={nivel}
-                className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden transition-colors"
-              >
+              <div key={nivel}>
                 <SectionHeader
                   title={titulo}
                   count={itemsSeccion.length}
@@ -210,11 +202,7 @@ export function VencimientoList() {
                   onToggle={() => toggleSection(nivel)}
                   showToggleButton={itemsSeccion.length >= 10}
                 />
-                <CollapsibleSection
-                  isExpanded={isExpanded}
-                  itemCount={itemsSeccion.length}
-                  bgColor="bg-gray-50/30 dark:bg-dark-bg/40"
-                >
+                <CollapsibleSection isExpanded={isExpanded} itemCount={itemsSeccion.length}>
                   {itemsSeccion.map(({ item, variante }) => (
                     <VencimientoItem
                       key={item.id}
@@ -230,15 +218,14 @@ export function VencimientoList() {
         </div>
       )}
 
-      <Modal
+      <BottomSheet
         isOpen={!!editingItem}
         onClose={() => setEditingItem(null)}
-        title="Actualizar Fecha de Vencimiento"
-        size="sm"
+        title="Actualizar fecha de vencimiento"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Actualiza la fecha de vencimiento para este producto.
+          <p className="text-subhead text-fg-secondary">
+            Actualizá la fecha de vencimiento para este producto.
           </p>
 
           <Input
@@ -249,10 +236,10 @@ export function VencimientoList() {
           />
 
           <Button onClick={handleSaveDate} disabled={actualizarFecha.isPending} className="w-full">
-            {actualizarFecha.isPending ? "Guardando..." : "Guardar Fecha"}
+            {actualizarFecha.isPending ? "Guardando..." : "Guardar fecha"}
           </Button>
         </div>
-      </Modal>
+      </BottomSheet>
     </div>
   );
 }

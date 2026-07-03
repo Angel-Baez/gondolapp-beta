@@ -46,21 +46,21 @@ export function ReposicionCard({
   const cantidadTotal = variantes.reduce((acc, v) => acc + v.item.cantidad, 0);
   const seccion = variantes[0]?.item.estado ?? "pendiente";
 
-  const sectionColors: Record<EstadoReposicion, { border: string; badge: string; hover: string }> = {
+  const sectionColors: Record<EstadoReposicion, { rail: string; badge: string; hover: string }> = {
     pendiente: {
-      border: "border-cyan-200 dark:border-cyan-800",
-      badge: "bg-cyan-500",
-      hover: "hover:bg-cyan-50 dark:hover:bg-cyan-900/30",
+      rail: "border-l-estado-pendiente",
+      badge: "bg-estado-pendiente",
+      hover: "hover:bg-surface-2",
     },
     repuesto: {
-      border: "border-emerald-200 dark:border-emerald-800",
-      badge: "bg-emerald-500",
-      hover: "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
+      rail: "border-l-estado-repuesto",
+      badge: "bg-estado-repuesto",
+      hover: "hover:bg-surface-2",
     },
     sin_stock: {
-      border: "border-red-200 dark:border-red-800",
-      badge: "bg-red-500",
-      hover: "hover:bg-red-50 dark:hover:bg-red-900/30",
+      rail: "border-l-estado-sin-stock",
+      badge: "bg-estado-sin-stock",
+      hover: "hover:bg-surface-2",
     },
   };
 
@@ -68,71 +68,79 @@ export function ReposicionCard({
 
   const toggleEstado = (item: { id: string; estado: EstadoReposicion }, target: EstadoReposicion) => {
     const nuevoEstado = item.estado === target ? "pendiente" : target;
-    cambiarEstado.mutate({ id: item.id, estado: nuevoEstado });
-    haptic(nuevoEstado === "pendiente" ? 50 : [30, 30, 30]);
 
-    if (target === "repuesto") {
-      if (nuevoEstado === "repuesto") {
-        toast.success(
-          <div className="flex items-center gap-2">
-            <CheckCircle className="text-emerald-500 w-5 h-5" />
-            <span>Producto marcado como repuesto</span>
-          </div>,
-          { duration: 2000 }
-        );
-      } else {
-        toast(
-          <div className="flex items-center gap-2">
-            <RefreshCw className="text-cyan-500 w-5 h-5" />
-            <span>Producto desmarcado como repuesto</span>
-          </div>,
-          { duration: 2000 }
-        );
+    cambiarEstado.mutate(
+      { id: item.id, estado: nuevoEstado },
+      {
+        onSuccess: () => {
+          haptic(nuevoEstado === "pendiente" ? 50 : [30, 30, 30]);
+
+          if (target === "repuesto") {
+            if (nuevoEstado === "repuesto") {
+              toast.success(
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="text-emerald-500 w-5 h-5" />
+                  <span>Producto marcado como repuesto</span>
+                </div>,
+                { duration: 2000 }
+              );
+            } else {
+              toast(
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                  <span>Producto desmarcado como repuesto</span>
+                </div>,
+                { duration: 2000 }
+              );
+            }
+          } else {
+            if (nuevoEstado === "sin_stock") {
+              toast.success(
+                <div className="flex items-center gap-2">
+                  <Ban className="text-red-500 w-5 h-5" />
+                  <span>Producto marcado sin stock</span>
+                </div>,
+                { duration: 2000 }
+              );
+            } else {
+              toast(
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="text-cyan-500 w-5 h-5" />
+                  <span>Producto reactivado</span>
+                </div>,
+                { duration: 2000 }
+              );
+            }
+          }
+        },
+        onError: () => {
+          toast.error("No se pudo actualizar el producto. Revisá tu conexión e intentá de nuevo.");
+        },
       }
-    } else {
-      if (nuevoEstado === "sin_stock") {
-        toast.success(
-          <div className="flex items-center gap-2">
-            <Ban className="text-red-500 w-5 h-5" />
-            <span>Producto marcado sin stock</span>
-          </div>,
-          { duration: 2000 }
-        );
-      } else {
-        toast(
-          <div className="flex items-center gap-2">
-            <RefreshCw className="text-cyan-500 w-5 h-5" />
-            <span>Producto reactivado</span>
-          </div>,
-          { duration: 2000 }
-        );
-      }
-    }
+    );
   };
 
   return (
-    <div
-      className={`bg-white dark:bg-dark-surface rounded-xl shadow-md overflow-hidden border-2 ${colors.border} transition-colors`}
-    >
+    <div className={`island overflow-hidden border-l-[3px] ${colors.rail}`}>
       <div
         onClick={onToggleExpand}
-        className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
+        className={`p-4 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {productoBase.imagen && (
             <img
               src={productoBase.imagen}
               alt={productoBase.nombre}
-              className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-lg flex-shrink-0"
+              className="w-12 h-12 object-cover rounded-field flex-shrink-0"
             />
           )}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base sm:text-lg leading-tight truncate">
+            <h3 className="text-headline text-fg leading-tight truncate">
               {productoBase.nombre}
             </h3>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               {productoBase.marca && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <span className="text-footnote text-fg-secondary truncate">
                   {productoBase.marca}
                 </span>
               )}
@@ -141,18 +149,18 @@ export function ReposicionCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           {cantidadTotal > 0 && (
             <div
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 ${colors.badge} text-white rounded-lg font-bold text-sm sm:text-base`}
+              className={`px-2.5 py-1 ${colors.badge} text-white rounded-chip font-semibold text-subhead`}
             >
               x{cantidadTotal}
             </div>
           )}
           {isExpanded ? (
-            <ChevronUp size={20} className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+            <ChevronUp size={20} className="text-fg-tertiary flex-shrink-0" />
           ) : (
-            <ChevronDown size={20} className="sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+            <ChevronDown size={20} className="text-fg-tertiary flex-shrink-0" />
           )}
         </div>
       </div>
@@ -164,9 +172,9 @@ export function ReposicionCard({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-gray-100 dark:border-dark-border"
+            className="border-t border-border"
           >
-            <div className="divide-y divide-gray-100 dark:divide-dark-border">
+            <div className="divide-y divide-border">
               {variantes.map(({ item, variante }) => (
                 <div key={item.id} className="p-3 sm:p-4">
                   <div className="space-y-3">
@@ -175,16 +183,16 @@ export function ReposicionCard({
                         <img
                           src={variante.imagen}
                           alt={variante.nombreCompleto}
-                          className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                          className="w-14 h-14 object-cover rounded-field flex-shrink-0"
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-tight">
+                        <p className="text-subhead font-semibold text-fg leading-tight">
                           {variante.nombreCompleto}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {variante.tamano && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-footnote text-fg-secondary">
                               {variante.tamano}
                             </span>
                           )}
@@ -195,28 +203,26 @@ export function ReposicionCard({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-dark-border">
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-border">
                       <div className="flex items-center gap-3">
                         {item.estado === "pendiente" && (
-                          <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-card rounded-lg p-1">
+                          <div className="flex items-center gap-1 bg-surface-2 rounded-field p-1">
                             <m.button
                               whileTap={{ scale: 0.85 }}
-                              whileHover={{ scale: 1.05 }}
                               onClick={() => decrementar(item)}
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
+                              className="w-9 h-9 flex items-center justify-center rounded-chip hover:bg-border font-bold text-lg text-fg transition-colors"
                             >
                               -
                             </m.button>
-                            <span className="w-12 text-center font-bold text-base text-gray-900 dark:text-gray-100">
+                            <span className="w-12 text-center text-headline text-fg">
                               {item.cantidad}
                             </span>
                             <m.button
                               whileTap={{ scale: 0.85 }}
-                              whileHover={{ scale: 1.05 }}
                               onClick={() =>
                                 actualizarCantidad.mutate({ id: item.id, cantidad: item.cantidad + 1 })
                               }
-                              className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-gray-200 dark:hover:bg-dark-border active:bg-gray-300 dark:active:bg-dark-border font-bold text-lg text-gray-700 dark:text-gray-200 transition-colors"
+                              className="w-9 h-9 flex items-center justify-center rounded-chip hover:bg-border font-bold text-lg text-fg transition-colors"
                             >
                               +
                             </m.button>
@@ -224,7 +230,7 @@ export function ReposicionCard({
                         )}
 
                         {item.estado !== "pendiente" && (
-                          <span className="px-3 py-1.5 bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-200 rounded-lg font-bold text-sm">
+                          <span className="px-3 py-1.5 bg-surface-2 text-fg-secondary rounded-chip font-semibold text-subhead">
                             x{item.cantidad}
                           </span>
                         )}
@@ -270,15 +276,21 @@ export function ReposicionCard({
                         <IconButton
                           variant="ghost"
                           onClick={() => {
-                            eliminar.mutate(item.id);
-                            haptic([50, 100, 50]);
-                            toast.error(
-                              <div className="flex items-center gap-2">
-                                <Trash2 className="text-red-500 w-5 h-5" />
-                                <span>Producto eliminado</span>
-                              </div>,
-                              { duration: 2000 }
-                            );
+                            eliminar.mutate(item.id, {
+                              onSuccess: () => {
+                                haptic([50, 100, 50]);
+                                toast.error(
+                                  <div className="flex items-center gap-2">
+                                    <Trash2 className="text-red-500 w-5 h-5" />
+                                    <span>Producto eliminado</span>
+                                  </div>,
+                                  { duration: 2000 }
+                                );
+                              },
+                              onError: () => {
+                                toast.error("No se pudo eliminar el producto. Intentá de nuevo.");
+                              },
+                            });
                           }}
                           title="Eliminar"
                           className="w-10 h-10 sm:w-11 sm:h-11"

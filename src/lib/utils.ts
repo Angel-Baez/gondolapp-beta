@@ -49,6 +49,22 @@ export function calcularDiasRestantes(fechaVencimiento: Date): number {
   );
 }
 
+/** Suma `dias` a hoy y devuelve la fecha resultante (para presets de vencimiento). */
+export function sumarDias(dias: number, base: Date = new Date()): Date {
+  const fecha = new Date(base);
+  fecha.setHours(0, 0, 0, 0);
+  fecha.setDate(fecha.getDate() + dias);
+  return fecha;
+}
+
+/** Formatea una fecha como YYYY-MM-DD para <input type="date">. */
+export function toDateInputValue(fecha: Date): string {
+  const y = fecha.getFullYear();
+  const m = String(fecha.getMonth() + 1).padStart(2, "0");
+  const d = String(fecha.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /**
  * Genera un UUID v4
  */

@@ -1,9 +1,11 @@
 "use client";
 
+import { DateRangeFilterSheet } from "@/components/lists/DateRangeFilterSheet";
 import { HistorialList } from "@/components/reposicion/HistorialList";
 import { ReposicionEstadisticas } from "@/components/reposicion/ReposicionEstadisticas";
-import { Calendar, History } from "lucide-react";
-import { Header } from "@/components/ui";
+import { AppShell } from "@/components/shell/AppShell";
+import { PageHeader } from "@/components/shell/PageHeader";
+import { Calendar } from "lucide-react";
 import { useState } from "react";
 
 export default function HistorialPage() {
@@ -16,96 +18,49 @@ export default function HistorialPage() {
   });
 
   const [showFiltros, setShowFiltros] = useState(false);
-
-  const handleDesdeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fecha = e.target.value ? new Date(e.target.value) : undefined;
-    setFiltros({ ...filtros, desde: fecha });
-  };
-
-  const handleHastaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fecha = e.target.value ? new Date(e.target.value) : undefined;
-    setFiltros({ ...filtros, hasta: fecha });
-  };
+  const filtroActivo = !!(filtros.desde || filtros.hasta);
 
   const limpiarFiltros = () => {
     setFiltros({ limite: 100 });
+    setShowFiltros(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg font-sans transition-colors">
-      <div className="max-w-lg mx-auto bg-white dark:bg-dark-surface min-h-screen sm:rounded-3xl sm:my-4 shadow-2xl overflow-hidden flex flex-col transition-colors">
-        <Header
-          title="Historial de Listas"
-          subtitle="Revisa todas tus listas guardadas"
-          icon={History}
-          backHref="/"
-          backText="Volver al Inventario"
-        />
+    <AppShell
+      renderHeader={() => (
+        <PageHeader title="Historial de reposición" subtitle="Tus listas guardadas" />
+      )}
+    >
+      <div className="pb-8">
+        <ReposicionEstadisticas />
 
-        {/* Filtros */}
-        <div className="p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
-          <ReposicionEstadisticas />
-
-          <button
-            onClick={() => setShowFiltros(!showFiltros)}
-            className="w-full bg-white dark:bg-dark-surface rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border flex items-center justify-between hover:shadow-md transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <Calendar size={20} className="text-gray-600 dark:text-gray-400" />
-              <span className="font-semibold text-gray-900 dark:text-gray-100">Filtrar por fecha</span>
-            </div>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {showFiltros ? "Ocultar" : "Mostrar"}
+        <button
+          onClick={() => setShowFiltros(true)}
+          className="w-full island p-4 flex items-center justify-between mb-4"
+        >
+          <div className="flex items-center gap-2">
+            <Calendar size={20} className="text-fg-secondary" />
+            <span className="text-headline text-fg">Filtrar por fecha</span>
+          </div>
+          {filtroActivo && (
+            <span className="text-caption font-semibold text-accent bg-accent-soft px-2.5 py-1 rounded-chip">
+              Activo
             </span>
-          </button>
-
-          {showFiltros && (
-            <div className="mt-4 bg-white dark:bg-dark-surface rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border space-y-4 transition-colors">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                  Desde
-                </label>
-                <input
-                  type="date"
-                  onChange={handleDesdeChange}
-                  value={
-                    filtros.desde
-                      ? new Date(filtros.desde).toISOString().split("T")[0]
-                      : ""
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                  Hasta
-                </label>
-                <input
-                  type="date"
-                  onChange={handleHastaChange}
-                  value={
-                    filtros.hasta
-                      ? new Date(filtros.hasta).toISOString().split("T")[0]
-                      : ""
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-colors"
-                />
-              </div>
-              <button
-                onClick={limpiarFiltros}
-                className="w-full bg-gray-100 dark:bg-dark-card hover:bg-gray-200 dark:hover:bg-dark-border text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
-              >
-                Limpiar filtros
-              </button>
-            </div>
           )}
-        </div>
+        </button>
 
-        {/* Lista de historial */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-dark-bg transition-colors">
-          <HistorialList filtros={filtros} />
-        </div>
+        <HistorialList filtros={filtros} />
       </div>
-    </div>
+
+      <DateRangeFilterSheet
+        isOpen={showFiltros}
+        onClose={() => setShowFiltros(false)}
+        desde={filtros.desde}
+        hasta={filtros.hasta}
+        onDesdeChange={(fecha) => setFiltros((f) => ({ ...f, desde: fecha }))}
+        onHastaChange={(fecha) => setFiltros((f) => ({ ...f, hasta: fecha }))}
+        onLimpiar={limpiarFiltros}
+      />
+    </AppShell>
   );
 }

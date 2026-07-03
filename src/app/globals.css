@@ -2,6 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ======================================
+   Design tokens — OneUI 8.5 × iOS 26
+   Valores HSL sin hsl() para permitir
+   alpha desde Tailwind: hsl(var(--x) / a)
+   ====================================== */
+
+:root {
+  /* Canvas y superficies (fondo neutro + islas) */
+  --bg-canvas: 228 24% 96%; /* #F2F3F7 */
+  --bg-surface: 0 0% 100%;
+  --bg-surface-2: 228 20% 97%;
+  --fg-primary: 222 47% 11%;
+  --fg-secondary: 215 16% 47%;
+  --fg-tertiary: 215 20% 65%;
+  --border: 214 32% 91%;
+
+  /* Identidad (cyan, igual en ambos temas) */
+  --accent: 189 94% 43%; /* #06B6D4 */
+  --accent-strong: 192 91% 36%;
+  --accent-soft: 185 96% 96%;
+  --on-accent: 0 0% 100%;
+
+  /* Estados de reposición */
+  --estado-pendiente: 189 94% 43%;
+  --estado-repuesto: 160 84% 39%;
+  --estado-sin-stock: 0 84% 60%;
+
+  /* Niveles de alerta de vencimiento (semántica intacta) */
+  --alert-vencido: 0 70% 35%;
+  --alert-critico: 0 84% 60%;
+  --alert-advertencia: 25 95% 53%;
+  --alert-precaucion: 45 96% 56%;
+  --alert-normal: 220 9% 46%;
+
+  /* Material glass */
+  --glass-bg: 0 0% 100% / 0.72;
+  --glass-border: 0 0% 100% / 0.45;
+  --glass-blur: 20px;
+
+  /* Radios continuos (squircle) */
+  --radius-chip: 12px;
+  --radius-field: 18px;
+  --radius-card: 24px;
+  --radius-sheet: 32px;
+
+  /* Elevación */
+  --shadow-island: 0 1px 2px rgb(16 24 40 / 0.04),
+    0 4px 16px rgb(16 24 40 / 0.06);
+  --shadow-float: 0 8px 32px rgb(16 24 40 / 0.16);
+
+  /* Métricas de layout */
+  --tabbar-h: 64px;
+  --tabbar-clearance: calc(
+    var(--tabbar-h) + 24px + env(safe-area-inset-bottom, 0px)
+  );
+  --header-h-collapsed: 56px;
+}
+
+.dark {
+  --bg-canvas: 220 49% 8%; /* #0B1220 */
+  --bg-surface: 220 35% 13%;
+  --bg-surface-2: 220 32% 16%;
+  --fg-primary: 210 40% 96%;
+  --fg-secondary: 215 20% 65%;
+  --fg-tertiary: 215 16% 47%;
+  --border: 219 25% 22%;
+
+  --accent-soft: 190 80% 16%;
+
+  --glass-bg: 220 40% 12% / 0.68;
+  --glass-border: 0 0% 100% / 0.08;
+
+  --shadow-island: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.35);
+  --shadow-float: 0 8px 32px rgb(0 0 0 / 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -22,53 +98,71 @@ body {
   overscroll-behavior: none;
 }
 
-/* ======================================
-   Dark Mode Base Styles
-   ====================================== */
+body {
+  background-color: hsl(var(--bg-canvas));
+  color: hsl(var(--fg-primary));
+}
 
 /* Smooth theme transition */
 html {
   transition: background-color 0.2s ease-in-out;
 }
 
-/* Dark mode body background */
-.dark body {
-  background-color: #0f172a;
-  color: #e2e8f0;
-}
-
 /* Dark mode selection */
 .dark ::selection {
-  background-color: rgba(0, 188, 212, 0.3);
-  color: #f1f5f9;
+  background-color: hsl(var(--accent) / 0.3);
+  color: hsl(var(--fg-primary));
 }
 
-/* Touch target sizes for mobile accessibility (Lighthouse AA) */
-/* Asegura que todos los elementos interactivos cumplan con el estándar de 44x44px */
-button,
-a,
-input[type="button"],
-input[type="submit"],
-[role="button"],
-.clickable {
+/* ======================================
+   Materiales y contenedores
+   ====================================== */
+
+@layer components {
+  /* Material glass (iOS 26 Liquid Glass) */
+  .glass {
+    background: hsl(var(--glass-bg));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      background: hsl(var(--bg-surface) / 0.97);
+    }
+  }
+
+  /* Isla OneUI: superficie redondeada sobre el canvas */
+  .island {
+    background-color: hsl(var(--bg-surface));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-island);
+  }
+}
+
+/* ======================================
+   Touch targets (Lighthouse AA)
+   Mínimo 44px sin forzar padding; los
+   componentes definen su propio padding.
+   ====================================== */
+
+:where(button, input[type="button"], input[type="submit"], [role="button"]) {
   min-height: 44px;
   min-width: 44px;
-  padding: 12px;
-  /* Improve touch responsiveness */
   touch-action: manipulation;
+}
+
+/* Opt-out para chips, steppers y controles densos (mínimo 36px) */
+.tap-compact {
+  min-height: 36px;
+  min-width: 36px;
 }
 
 /* Asegurar que iconos dentro de botones no rompan el tamaño mínimo */
 button > svg,
 a > svg {
   pointer-events: none;
-}
-
-/* Touch targets más grandes para acciones primarias */
-button.primary,
-a.primary {
-  min-height: 48px;
-  padding: 14px 20px;
 }
 
 /* Smooth scroll behavior */
@@ -100,22 +194,10 @@ html {
   animation: shimmer 2s infinite linear;
   background: linear-gradient(
     to right,
-    #f6f7f8 0%,
-    #edeef1 20%,
-    #f6f7f8 40%,
-    #f6f7f8 100%
-  );
-  background-size: 1000px 100%;
-}
-
-/* Dark mode shimmer */
-.dark .animate-shimmer {
-  background: linear-gradient(
-    to right,
-    #334155 0%,
-    #475569 20%,
-    #334155 40%,
-    #334155 100%
+    hsl(var(--bg-surface-2)) 0%,
+    hsl(var(--border)) 20%,
+    hsl(var(--bg-surface-2)) 40%,
+    hsl(var(--bg-surface-2)) 100%
   );
   background-size: 1000px 100%;
 }
@@ -151,25 +233,6 @@ html {
 .native-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-}
-
-/* iOS-like spring animation for modals/sheets */
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
 }
 
 /* Subtle press feedback for buttons */

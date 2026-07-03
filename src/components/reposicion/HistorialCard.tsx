@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal } from "@/components/ui/Modal";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useEliminarListaHistorial } from "@/hooks/useReposicion";
 import { ItemHistorial, ListaReposicionHistorial } from "@/types";
 import { motion as m } from "framer-motion";
@@ -70,32 +70,25 @@ export function HistorialCard({ lista }: HistorialCardProps) {
 
     return (
       <div className="mb-4">
-        <div className={`${colorClass} p-2 rounded-lg mb-2`}>
-          <div className="flex items-center gap-2 text-white font-semibold text-sm">
-            <Icon size={16} />
-            <span>
-              {titulo} ({items.length})
-            </span>
-          </div>
+        <div className="flex items-center gap-1.5 mb-2 px-0.5">
+          <Icon size={14} className={colorClass} />
+          <span className="text-footnote font-semibold text-fg-secondary uppercase tracking-wide">
+            {titulo} ({items.length})
+          </span>
         </div>
         <div className="space-y-2">
           {items.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-gray-50 dark:bg-dark-card p-3 rounded-lg text-sm border border-gray-200 dark:border-dark-border"
-            >
-              <div className="font-semibold text-gray-900 dark:text-gray-100">
+            <div key={idx} className="bg-surface-2 p-3 rounded-field text-subhead">
+              <div className="font-semibold text-fg">
                 {item.productoNombre}
                 {item.productoMarca && (
-                  <span className="text-gray-500 dark:text-gray-400 font-normal ml-2">
+                  <span className="text-fg-secondary font-normal ml-2">
                     ({item.productoMarca})
                   </span>
                 )}
               </div>
-              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1">
-                {item.varianteNombre}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+              <div className="text-fg-secondary text-footnote mt-1">{item.varianteNombre}</div>
+              <div className="text-fg-tertiary text-footnote mt-1">
                 Cantidad: {item.cantidad}
               </div>
             </div>
@@ -111,49 +104,46 @@ export function HistorialCard({ lista }: HistorialCardProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-white dark:bg-dark-surface rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-dark-border hover:shadow-xl transition-shadow"
+        className="island overflow-hidden"
       >
-        <div
-          className="p-4 cursor-pointer bg-gradient-to-r from-slate-50 to-slate-100 dark:from-dark-card dark:to-dark-surface"
-          onClick={() => setExpanded(!expanded)}
-        >
+        <div className="p-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              <div className="text-footnote text-fg-secondary mb-1">
                 {formatearFecha(lista.fechaGuardado)}
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                <div className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg text-xs font-semibold">
+                <div className="bg-accent-soft text-accent px-3 py-1 rounded-chip text-caption font-semibold">
                   {lista.resumen.totalProductos} productos
                 </div>
                 {lista.resumen.totalRepuestos > 0 && (
-                  <div className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-lg text-xs font-semibold">
+                  <div className="bg-estado-repuesto/15 text-estado-repuesto px-3 py-1 rounded-chip text-caption font-semibold">
                     {lista.resumen.totalRepuestos} repuestos ({porcentajeRepuestos}%)
                   </div>
                 )}
                 {lista.resumen.totalSinStock > 0 && (
-                  <div className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-3 py-1 rounded-lg text-xs font-semibold">
+                  <div className="bg-estado-sin-stock/15 text-estado-sin-stock px-3 py-1 rounded-chip text-caption font-semibold">
                     {lista.resumen.totalSinStock} sin stock
                   </div>
                 )}
                 {lista.resumen.totalPendientes > 0 && (
-                  <div className="bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 px-3 py-1 rounded-lg text-xs font-semibold">
+                  <div className="bg-estado-pendiente/15 text-estado-pendiente px-3 py-1 rounded-chip text-caption font-semibold">
                     {lista.resumen.totalPendientes} pendientes
                   </div>
                 )}
               </div>
             </div>
             <button
-              className="p-2 hover:bg-gray-200 dark:hover:bg-dark-border rounded-lg transition-colors"
+              className="tap-compact w-9 h-9 flex items-center justify-center hover:bg-surface-2 rounded-full transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded(!expanded);
               }}
             >
               {expanded ? (
-                <ChevronUp size={20} className="text-gray-600 dark:text-gray-400" />
+                <ChevronUp size={20} className="text-fg-secondary" />
               ) : (
-                <ChevronDown size={20} className="text-gray-600 dark:text-gray-400" />
+                <ChevronDown size={20} className="text-fg-secondary" />
               )}
             </button>
           </div>
@@ -165,37 +155,35 @@ export function HistorialCard({ lista }: HistorialCardProps) {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-gray-200 dark:border-dark-border"
+            className="border-t border-border"
           >
             <div className="p-4">
-              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-sm">
-                Detalle de productos
-              </h4>
+              <h4 className="text-subhead font-semibold text-fg mb-4">Detalle de productos</h4>
 
               <SeccionItems
                 titulo="Repuestos"
                 items={itemsPorEstado.repuesto}
-                colorClass="bg-gradient-to-r from-emerald-500 to-emerald-600"
+                colorClass="text-estado-repuesto"
                 icon={CheckCircle2}
               />
 
               <SeccionItems
-                titulo="Sin Stock"
+                titulo="Sin stock"
                 items={itemsPorEstado.sin_stock}
-                colorClass="bg-gradient-to-r from-red-500 to-red-600"
+                colorClass="text-estado-sin-stock"
                 icon={XCircle}
               />
 
               <SeccionItems
                 titulo="Pendientes"
                 items={itemsPorEstado.pendiente}
-                colorClass="bg-gradient-to-r from-cyan-500 to-cyan-600"
+                colorClass="text-estado-pendiente"
                 icon={Package}
               />
 
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full mt-4 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-4 h-12 bg-alert-critico/10 hover:bg-alert-critico/20 text-alert-critico font-semibold rounded-field transition-colors flex items-center justify-center gap-2"
               >
                 <Trash2 size={18} />
                 <span>Eliminar esta lista</span>
@@ -205,29 +193,29 @@ export function HistorialCard({ lista }: HistorialCardProps) {
         )}
       </m.div>
 
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Eliminar lista">
+      <BottomSheet isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Eliminar lista">
         <div className="space-y-4">
-          <p className="text-gray-600 dark:text-gray-400">
-            ¿Estás seguro de que deseas eliminar esta lista? Esta acción no se puede deshacer.
+          <p className="text-body text-fg-secondary">
+            ¿Estás seguro de que querés eliminar esta lista? Esta acción no se puede deshacer.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setShowDeleteModal(false)}
               disabled={eliminarLista.isPending}
-              className="flex-1 bg-gray-100 dark:bg-dark-card hover:bg-gray-200 dark:hover:bg-dark-border text-gray-700 dark:text-gray-200 font-semibold py-3 px-4 rounded-xl transition-colors"
+              className="flex-1 bg-surface-2 hover:bg-border text-fg-secondary font-semibold h-12 px-4 rounded-field transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleDelete}
               disabled={eliminarLista.isPending}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+              className="flex-1 bg-alert-critico text-white font-semibold h-12 px-4 rounded-field transition-colors disabled:opacity-50"
             >
               {eliminarLista.isPending ? "Eliminando..." : "Eliminar"}
             </button>
           </div>
         </div>
-      </Modal>
+      </BottomSheet>
     </>
   );
 }
