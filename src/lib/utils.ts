@@ -1,6 +1,19 @@
 import { AlertaNivel } from "@/types";
 
 /**
+ * Arma el nombre completo mostrado en pantalla para una variante: siempre
+ * nombre de la base + tipo (si existe) + sabor + tamaño, en ese orden.
+ */
+export function construirNombreCompleto(
+  nombreBase: string,
+  variante: { tipo?: string | null; sabor?: string | null; tamano?: string | null }
+): string {
+  return [nombreBase, variante.tipo, variante.sabor, variante.tamano]
+    .filter((parte): parte is string => Boolean(parte && parte.trim()))
+    .join(" ");
+}
+
+/**
  * Calcula el nivel de alerta basado en la fecha de vencimiento.
  * Se recalcula siempre al leer (nunca se persiste), así que no hay
  * riesgo de que quede desactualizado si la app queda abierta mucho tiempo.

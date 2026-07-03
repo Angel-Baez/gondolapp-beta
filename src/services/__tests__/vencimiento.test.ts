@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
 
 const fromMock = vi.fn();
+const rpcMock = vi.fn();
 
 vi.mock("@/lib/supabase", () => ({
-  supabase: { from: (...args: unknown[]) => fromMock(...args) },
+  supabase: {
+    from: (...args: unknown[]) => fromMock(...args),
+    rpc: (...args: unknown[]) => rpcMock(...args),
+  },
 }));
 
 function fechaISO(diasDesdeHoy: number): string {
@@ -29,6 +33,7 @@ function itemRow(overrides: Partial<Record<string, unknown>> = {}) {
 
 beforeEach(() => {
   fromMock.mockReset();
+  rpcMock.mockReset();
 });
 
 describe("listarItems", () => {
@@ -61,51 +66,20 @@ describe("agregarItem", () => {
 });
 
 describe("retirarItem", () => {
-  it("archiva el item en el historial y lo borra de la lista activa", async () => {
+  it("delega en la RPC retirar_item_vencimiento (archivo + borrado atómicos)", async () => {
     const { retirarItem } = await import("@/services/vencimiento");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: itemRow() }, // select item
-        { data: { nombre_completo: "Leche 1L", producto_base_id: "base-1" } }, // select variante
-        { data: { nombre: "Leche", marca: "La Serenísima" } }, // select base
-        { error: null }, // insert historial
-        { error: null } // delete item activo
-      )
-    );
+    rpcMock.mockResolvedValue({ data: null, error: null });
 
     await retirarItem("item-1");
-    expect(fromMock).toHaveBeenCalledTimes(5);
-    expect(fromMock).toHaveBeenNthCalledWith(4, "items_vencimiento_historial");
-    expect(fromMock).toHaveBeenNthCalledWith(5, "items_vencimiento");
+    expect(rpcMock).toHaveBeenCalledWith("retirar_item_vencimiento", { p_item_id: "item-1" });
+    expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it("usa un nombre por defecto si la variante ya no existe", async () => {
+  it("propaga el error de la RPC", async () => {
     const { retirarItem } = await import("@/services/vencimiento");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: itemRow() },
-        { data: null }, // variante ya no existe -> no se consulta la base
-        { error: null }, // insert historial
-        { error: null } // delete
-      )
-    );
+    rpcMock.mockResolvedValue({ data: null, error: new Error("item no encontrado") });
 
-    await retirarItem("item-1");
-    expect(fromMock).toHaveBeenCalledTimes(4);
-  });
-
-  it("propaga el error si falla el insert del historial (no debe borrar el item)", async () => {
-    const { retirarItem } = await import("@/services/vencimiento");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: itemRow() },
-        { data: null },
-        { error: new Error("insert falló") }
-      )
-    );
-
-    await expect(retirarItem("item-1")).rejects.toThrow("insert falló");
-    expect(fromMock).toHaveBeenCalledTimes(3); // nunca llega al delete
+    await expect(retirarItem("item-1")).rejects.toThrow("item no encontrado");
   });
 });
 

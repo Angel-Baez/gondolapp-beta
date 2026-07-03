@@ -131,58 +131,13 @@ export async function eliminarItem(id: string): Promise<void> {
 
 /**
  * Retira un item de la góndola: guarda un snapshot en el historial y lo
- * borra de la lista activa. Reemplaza a "borrar" como vía principal de
- * resolución (a diferencia de hoy, deja rastro en items_vencimiento_historial).
+ * borra de la lista activa. RPC atómica (`retirar_item_vencimiento`): antes
+ * eran 4 round-trips secuenciales sin transacción (leer item, leer variante,
+ * leer base, insertar historial, borrar) — ahora una sola llamada.
  */
 export async function retirarItem(id: string): Promise<void> {
-  const { data: item, error: itemError } = await supabase
-    .from("items_vencimiento")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (itemError) throw itemError;
-
-  const { data: variante, error: varianteError } = await supabase
-    .from("producto_variantes")
-    .select("nombre_completo, producto_base_id")
-    .eq("id", item.variante_id)
-    .maybeSingle();
-  if (varianteError) throw varianteError;
-
-  let productoNombre = "Producto sin nombre";
-  let productoMarca: string | null = null;
-  if (variante) {
-    const { data: base, error: baseError } = await supabase
-      .from("producto_bases")
-      .select("nombre, marca")
-      .eq("id", variante.producto_base_id)
-      .maybeSingle();
-    if (baseError) throw baseError;
-    productoNombre = base?.nombre ?? productoNombre;
-    productoMarca = base?.marca ?? null;
-  }
-
-  const itemMapeado = mapItem(item as ItemVencimientoRow);
-
-  const { error: historialError } = await supabase
-    .from("items_vencimiento_historial")
-    .insert({
-      variante_id: item.variante_id,
-      producto_nombre: productoNombre,
-      producto_marca: productoMarca,
-      variante_nombre: variante?.nombre_completo ?? "Variante sin nombre",
-      cantidad: item.cantidad,
-      lote: item.lote,
-      fecha_vencimiento: item.fecha_vencimiento,
-      nivel_alerta_al_retirar: calcularNivelAlerta(itemMapeado.fechaVencimiento),
-    });
-  if (historialError) throw historialError;
-
-  const { error: deleteError } = await supabase
-    .from("items_vencimiento")
-    .delete()
-    .eq("id", id);
-  if (deleteError) throw deleteError;
+  const { error } = await supabase.rpc("retirar_item_vencimiento", { p_item_id: id });
+  if (error) throw error;
 }
 
 export async function obtenerHistorial(filtros?: {

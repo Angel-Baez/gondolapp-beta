@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { construirNombreCompleto } from "@/lib/utils";
 import { CrearProductoDTO, ProductoBase, ProductoVariante } from "@/types";
 
 export interface ProductoCompleto {
@@ -218,17 +219,18 @@ export async function crearProductoManual(
     baseRow = data as ProductoBaseRow;
   }
 
-  const nombreCompleto = [dto.variante.tipo, dto.variante.tamano, dto.variante.sabor]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const nombreCompleto = construirNombreCompleto(dto.productoBase.nombre, {
+    tipo: dto.variante.tipo,
+    sabor: dto.variante.sabor,
+    tamano: dto.variante.tamano,
+  });
 
   const { data: varianteRow, error: varianteError } = await supabase
     .from("producto_variantes")
     .insert({
       producto_base_id: baseRow.id,
       codigo_barras: dto.ean.trim(),
-      nombre_completo: nombreCompleto || dto.productoBase.nombre,
+      nombre_completo: nombreCompleto,
       tipo: dto.variante.tipo?.trim(),
       tamano: dto.variante.tamano?.trim() || null,
       sabor: dto.variante.sabor?.trim(),
