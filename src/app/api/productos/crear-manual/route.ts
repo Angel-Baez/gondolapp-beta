@@ -11,13 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const body: CrearProductoDTO = await request.json();
 
-    if (
-      !body.ean ||
-      !body.productoBase?.nombre ||
-      !body.productoBase?.marca ||
-      !body.productoBase?.categoria ||
-      !body.variante?.tamano
-    ) {
+    if (!body.ean || !body.productoBase?.nombre || !body.productoBase?.marca) {
       return NextResponse.json(
         { success: false, error: "Faltan campos requeridos" },
         { status: 400 }

@@ -180,3 +180,66 @@ describe("obtenerMarcasYCategorias", () => {
     expect(categorias).toEqual(["Golosinas", "Lácteos"]);
   });
 });
+
+describe("buscarProductos", () => {
+  it("no consulta la base si el término sanitizado queda muy corto", async () => {
+    const { buscarProductos } = await import("@/services/catalogo");
+    const resultado = await buscarProductos(" ,%) (");
+
+    expect(resultado).toEqual([]);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("sanitiza antes de decidir el largo mínimo: ',,a,' sin comas queda en 1 char y no consulta", async () => {
+    const { buscarProductos } = await import("@/services/catalogo");
+    // Sin sanitizar tiene 4 caracteres (pasaría el mínimo); sanitizado
+    // ("a") queda en 1 y debe cortar antes de tocar la base — así se prueba
+    // que la sanitización corre ANTES del chequeo de longitud mínima.
+    const resultado = await buscarProductos(",,a,");
+
+    expect(resultado).toEqual([]);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("buscarVariantes", () => {
+  it("no consulta la base si el término sanitizado queda muy corto", async () => {
+    const { buscarVariantes } = await import("@/services/catalogo");
+    const resultado = await buscarVariantes("a,");
+
+    expect(resultado).toEqual([]);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("mergea las dos búsquedas en paralelo y dedupe por variante.id", async () => {
+    const { buscarVariantes } = await import("@/services/catalogo");
+    const otraVariante = {
+      ...varianteRow,
+      id: "variante-2",
+      nombre_completo: "Leche Descremada 1L",
+    };
+
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        // Query 1: ilike sobre nombre_completo de la variante
+        { data: [{ ...varianteRow, producto_bases: baseRow }] },
+        // Query 2: .or() sobre la base referenciada (mismo variante-1 repetido + una nueva)
+        {
+          data: [
+            { ...varianteRow, producto_bases: baseRow },
+            { ...otraVariante, producto_bases: baseRow },
+          ],
+        }
+      )
+    );
+
+    const resultado = await buscarVariantes("leche");
+
+    expect(resultado).toHaveLength(2);
+    expect(resultado.map((p) => p.variante.id).sort()).toEqual([
+      "variante-1",
+      "variante-2",
+    ]);
+    expect(fromMock).toHaveBeenCalledTimes(2);
+  });
+});

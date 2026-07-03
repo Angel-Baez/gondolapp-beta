@@ -16,15 +16,15 @@ export function PeriodoSelector({
   onChange: (periodo: Periodo) => void;
 }) {
   return (
-    <div className="inline-flex bg-gray-100 dark:bg-dark-card rounded-lg p-1">
+    <div className="inline-flex bg-surface-2 rounded-full p-1">
       {OPCIONES.map((opcion) => (
         <button
           key={opcion.value}
           onClick={() => onChange(opcion.value)}
-          className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+          className={`tap-compact px-3 text-subhead font-semibold rounded-full transition-colors ${
             periodo === opcion.value
-              ? "bg-white dark:bg-dark-surface text-cyan-600 dark:text-cyan-400 shadow-sm"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              ? "bg-surface text-accent shadow-island"
+              : "text-fg-secondary"
           }`}
         >
           {opcion.label}

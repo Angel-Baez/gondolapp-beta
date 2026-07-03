@@ -71,18 +71,20 @@ export interface ItemVencimientoConAlerta extends ItemVencimiento {
   alertaNivel: AlertaNivel;
 }
 
-// DTO para crear producto desde formulario
+// DTO para crear producto desde formulario. Sólo nombre + marca son
+// obligatorios (agilizar el alta cuando no se escanea el código): el resto
+// se completa con valores vacíos si no se especifica.
 export interface CrearProductoDTO {
   ean: string;
   productoBase: {
     nombre: string;
     marca: string;
-    categoria: string;
+    categoria?: string;
     imagen?: string;
   };
   variante: {
     tipo?: string;
-    tamano: string;
+    tamano?: string;
     sabor?: string;
     imagen?: string;
   };

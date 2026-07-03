@@ -26,20 +26,20 @@ export function Badge({
 
   if (alert) {
     const alertClasses = {
-      vencido: "bg-alert-vencido text-white font-bold shadow-md",
-      critico: "bg-alert-critico text-white font-bold shadow-md",
-      advertencia: "bg-alert-advertencia text-white font-bold shadow-md",
-      precaucion: "bg-alert-precaucion text-gray-900 font-bold shadow-md",
+      vencido: "bg-alert-vencido text-white font-semibold",
+      critico: "bg-alert-critico text-white font-semibold",
+      advertencia: "bg-alert-advertencia text-white font-semibold",
+      precaucion: "bg-alert-precaucion text-fg font-semibold",
       normal: "bg-alert-normal text-white",
     };
     variantClasses = alertClasses[alert];
   } else {
     const variants = {
-      default: "bg-gray-200 dark:bg-dark-card text-gray-700 dark:text-gray-200",
-      primary: "bg-accent-primary text-white",
-      secondary: "bg-accent-secondary text-white",
-      success: "bg-accent-tertiary text-white",
-      warning: "bg-alert-advertencia text-gray-900",
+      default: "bg-surface-2 text-fg-secondary",
+      primary: "bg-accent text-on-accent",
+      secondary: "bg-estado-sin-stock text-white",
+      success: "bg-estado-repuesto text-white",
+      warning: "bg-alert-advertencia text-white",
       danger: "bg-alert-critico text-white",
     };
     variantClasses = variants[variant];

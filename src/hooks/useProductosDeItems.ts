@@ -10,5 +10,8 @@ export function useProductosDeItems(varianteIds: string[]) {
     queryKey: ["catalogo", "por-variante-ids", idsOrdenados],
     queryFn: () => obtenerProductosPorVarianteIds(idsOrdenados),
     enabled: idsOrdenados.length > 0,
+    // El catálogo (nombre/marca/tamaño de un producto) cambia muy rara vez
+    // comparado con los items de las listas: evita refetch constante.
+    staleTime: 10 * 60_000,
   });
 }

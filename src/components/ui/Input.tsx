@@ -11,25 +11,21 @@ export function Input({ label, error, className = "", ...props }: InputProps) {
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+        <label className="block text-footnote font-semibold text-fg-secondary mb-1">
           {label}
         </label>
       )}
       <input
-        className={`w-full px-4 py-2.5 border-2 rounded-xl transition-all duration-200 
-          bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100
-          placeholder:text-gray-400 dark:placeholder:text-gray-500
-          ${
-            error
-              ? "border-alert-critico"
-              : "border-gray-300 dark:border-dark-border focus:border-accent-primary"
-          }
-          focus:outline-none focus:ring-2 focus:ring-accent-primary/20
+        className={`w-full h-12 px-4 rounded-field transition-all duration-200
+          bg-surface-2 text-body text-fg
+          placeholder:text-fg-tertiary
+          ${error ? "ring-2 ring-alert-critico" : "focus:ring-2 focus:ring-accent/40"}
+          focus:outline-none
           ${className}`}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-xs text-alert-critico font-medium">{error}</p>
+        <p className="mt-1 text-caption text-alert-critico font-medium">{error}</p>
       )}
     </div>
   );
@@ -50,25 +46,21 @@ export function TextArea({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+        <label className="block text-footnote font-semibold text-fg-secondary mb-1">
           {label}
         </label>
       )}
       <textarea
-        className={`w-full px-4 py-2.5 border-2 rounded-xl transition-all duration-200 resize-none
-          bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100
-          placeholder:text-gray-400 dark:placeholder:text-gray-500
-          ${
-            error
-              ? "border-alert-critico"
-              : "border-gray-300 dark:border-dark-border focus:border-accent-primary"
-          }
-          focus:outline-none focus:ring-2 focus:ring-accent-primary/20
+        className={`w-full px-4 py-2.5 rounded-field transition-all duration-200 resize-none
+          bg-surface-2 text-body text-fg
+          placeholder:text-fg-tertiary
+          ${error ? "ring-2 ring-alert-critico" : "focus:ring-2 focus:ring-accent/40"}
+          focus:outline-none
           ${className}`}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-xs text-alert-critico font-medium">{error}</p>
+        <p className="mt-1 text-caption text-alert-critico font-medium">{error}</p>
       )}
     </div>
   );

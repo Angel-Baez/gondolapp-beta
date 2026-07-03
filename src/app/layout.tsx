@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#06B6D4" },
-    { media: "(prefers-color-scheme: dark)", color: "#0E7490" },
+    { media: "(prefers-color-scheme: light)", color: "#F2F3F7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1220" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -45,6 +45,10 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        {process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        )}
+
         {/* Favicon and App Icons */}
         <link rel="icon" href="/icon-192x192.png" type="image/png" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -94,12 +98,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-gray-50 dark:bg-dark-bg transition-colors">
+      <body className="bg-canvas text-fg transition-colors">
         <QueryProvider>
           <ThemeProvider>
             <PWAProvider />
             <Toaster
               position="top-center"
+              containerStyle={{ top: "calc(env(safe-area-inset-top, 0px) + 64px)" }}
               toastOptions={{
                 duration: 3000,
                 style: {

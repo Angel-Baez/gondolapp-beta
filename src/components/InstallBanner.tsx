@@ -83,7 +83,10 @@ export default function InstallBanner() {
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[92%] max-w-xl">
+    <div
+      style={{ bottom: "var(--tabbar-clearance)" }}
+      className="fixed left-1/2 transform -translate-x-1/2 z-50 w-[92%] max-w-xl"
+    >
       <div className="bg-white dark:bg-slate-800 border shadow-lg rounded-lg p-4 flex items-center gap-3">
         <div className="flex-1">
           <div className="font-medium text-sm">{getTitle()}</div>
