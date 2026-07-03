@@ -57,6 +57,8 @@ export function ProductSearchSheet({ isOpen, onClose, mode }: ProductSearchSheet
   const [termino, setTermino] = useState("");
   const [addedMap, setAddedMap] = useState<Record<string, AddedInfo>>({});
   const [pendingVencimiento, setPendingVencimiento] = useState<SearchItem | null>(null);
+  // Última fecha registrada: habilita el chip "Misma fecha" para lotes.
+  const [ultimaFecha, setUltimaFecha] = useState<Date | null>(null);
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const { data: resultados = [], isFetching } = useBuscarVariantes(termino);
@@ -151,6 +153,7 @@ export function ProductSearchSheet({ isOpen, onClose, mode }: ProductSearchSheet
         lote: v.lote,
       });
       toast.success(`${pendingVencimiento.nombre} agregado`, { duration: 1500 });
+      setUltimaFecha(v.fecha);
       registrarUso(pendingVencimiento);
       setPendingVencimiento(null);
     } catch {
@@ -215,6 +218,7 @@ export function ProductSearchSheet({ isOpen, onClose, mode }: ProductSearchSheet
       <ExpiryQuickSheet
         isOpen={pendingVencimiento !== null}
         producto={pendingVencimiento ? { nombre: pendingVencimiento.nombre } : null}
+        ultimaFecha={ultimaFecha}
         onSubmit={handleVencimientoSubmit}
         onClose={() => setPendingVencimiento(null)}
         isPending={agregarVencimiento.isPending}

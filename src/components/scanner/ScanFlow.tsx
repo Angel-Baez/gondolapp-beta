@@ -58,6 +58,9 @@ const MODE_LABEL: Record<ScanMode, string> = {
  */
 export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) {
   const [state, setState] = useState<ScanFlowState>(initialScanFlowState);
+  // Última fecha registrada en la sesión de escaneo: habilita el chip
+  // "Misma fecha" del sheet para registrar lotes con 1 tap por producto.
+  const [ultimaFecha, setUltimaFecha] = useState<Date | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -167,6 +170,7 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
         lote: v.lote,
       });
       toast.success(`${state.producto.variante.nombreCompleto} agregado`, { duration: 1500 });
+      setUltimaFecha(v.fecha);
       registrarUso({
         varianteId: state.producto.variante.id,
         nombre: state.producto.variante.nombreCompleto,
@@ -218,6 +222,7 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
             ? { nombre: state.producto.variante.nombreCompleto }
             : null
         }
+        ultimaFecha={ultimaFecha}
         onSubmit={handleVencimientoSubmit}
         onClose={() => dispatch({ type: "SHEET_CANCEL" })}
         isPending={agregarVencimiento.isPending}
