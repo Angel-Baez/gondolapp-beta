@@ -15,6 +15,11 @@ vi.mock("@/services/reposicion", () => ({
   obtenerEstadisticas: vi.fn(),
 }));
 
+// El módulo del outbox (usado por useReposicion para el soporte offline)
+// importa también @/services/vencimiento, que a su vez importa el cliente
+// real de Supabase. Se mockea acá para no depender de env vars en este test.
+vi.mock("@/lib/supabase", () => ({ supabase: {} }));
+
 vi.mock("react-hot-toast", () => {
   let ultimoRenderProp: ((t: { id: string }) => React.ReactNode) | null = null;
   const toastFn = Object.assign(

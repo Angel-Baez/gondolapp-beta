@@ -1,5 +1,6 @@
 "use client";
 
+import { OutboxBadge } from "@/components/OutboxBadge";
 import { ScanFlow } from "@/components/scanner/ScanFlow";
 import { ProductSearchSheet } from "@/components/search/ProductSearchSheet";
 import { AppShell } from "@/components/shell/AppShell";
@@ -91,6 +92,7 @@ function HomePageContent() {
                 >
                   <History size={22} />
                 </Link>
+                <OutboxBadge />
                 <ThemeToggle />
               </>
             }

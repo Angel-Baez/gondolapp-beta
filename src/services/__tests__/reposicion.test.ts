@@ -43,7 +43,12 @@ describe("listarItems", () => {
 describe("agregarItem", () => {
   it("delega en la RPC agregar_item_reposicion (upsert atómico en la DB)", async () => {
     const { agregarItem } = await import("@/services/reposicion");
-    rpcMock.mockResolvedValue({ data: itemRow({ cantidad: 5 }), error: null });
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [itemRow({ cantidad: 3 })] }, // busca existente (cualquier estado)
+        { data: itemRow({ cantidad: 5 }) } // update con la suma
+      )
+    );
 
     const item = await agregarItem("variante-1", 2);
     expect(item.cantidad).toBe(5);
@@ -54,11 +59,30 @@ describe("agregarItem", () => {
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it("propaga el error si la RPC falla", async () => {
+  it("crea un item nuevo si no hay ninguno para esa variante", async () => {
     const { agregarItem } = await import("@/services/reposicion");
-    rpcMock.mockResolvedValue({ data: null, error: new Error("db error") });
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [] }, // no hay ninguno
+        { data: itemRow({ id: "item-nuevo", cantidad: 4 }) } // insert
+      )
+    );
 
     await expect(agregarItem("variante-1", 2)).rejects.toThrow("db error");
+  });
+
+  it("reabre y fusiona cantidad contra un item ya repuesto/sin_stock de la misma variante", async () => {
+    const { agregarItem } = await import("@/services/reposicion");
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [itemRow({ cantidad: 2, estado: "sin_stock" })] }, // existente, no pendiente
+        { data: itemRow({ cantidad: 3, estado: "pendiente" }) } // update: suma y reabre a pendiente
+      )
+    );
+
+    const item = await agregarItem("variante-1", 1);
+    expect(item.cantidad).toBe(3);
+    expect(item.estado).toBe("pendiente");
   });
 });
 

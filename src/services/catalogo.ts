@@ -219,11 +219,15 @@ export async function crearProductoManual(
     baseRow = data as ProductoBaseRow;
   }
 
-  const nombreCompleto = construirNombreCompleto(dto.productoBase.nombre, {
-    tipo: dto.variante.tipo,
-    sabor: dto.variante.sabor,
-    tamano: dto.variante.tamano,
-  });
+  const nombreCompleto = [
+    dto.productoBase.nombre,
+    dto.variante.tipo,
+    dto.variante.sabor,
+    dto.variante.tamano,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   const { data: varianteRow, error: varianteError } = await supabase
     .from("producto_variantes")

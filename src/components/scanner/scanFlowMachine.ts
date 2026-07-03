@@ -21,7 +21,6 @@ export interface AdjustCard {
   varianteId: string;
   ean: string;
   nombre: string;
-  tamano?: string;
   /** Cantidad total del item en la lista (incluye merge con un pendiente previo). */
   cantidad: number;
   /** Cantidad que el item pendiente ya tenía antes de este escaneo (0 = no existía). */
@@ -142,7 +141,6 @@ export function scanFlowReduce(
               varianteId: event.item.varianteId,
               ean: event.ean,
               nombre: event.producto.variante.nombreCompleto,
-              tamano: event.producto.variante.tamano,
               cantidad: event.item.cantidad,
               prevCantidad: Math.max(0, event.item.cantidad - 1),
               deadline: ctx.now() + ADJUST_TIMEOUT_MS,

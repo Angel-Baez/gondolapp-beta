@@ -93,20 +93,39 @@ export async function listarItems(): Promise<ItemReposicion[]> {
 }
 
 /**
- * Agrega cantidad a un item pendiente existente de la misma variante, o crea
- * uno nuevo. Upsert atómico en la DB (RPC `agregar_item_reposicion`, apoyada
- * en el índice único parcial de items_reposicion): antes era un SELECT +
- * INSERT/UPDATE en 2 round-trips desde la app, con ventana de carrera entre
- * ambos si dos escaneos del mismo producto llegaban casi simultáneos.
+ * Agrega cantidad a un item existente de la misma variante (en cualquier
+ * estado, no solo pendiente: reescanear algo ya repuesto/sin_stock lo
+ * reabre en vez de crear una fila duplicada), o crea uno nuevo si no existe.
  */
 export async function agregarItem(
   varianteId: string,
   cantidad: number
 ): Promise<ItemReposicion> {
-  const { data, error } = await supabase.rpc("agregar_item_reposicion", {
-    p_variante_id: varianteId,
-    p_cantidad: cantidad,
-  });
+  const { data: existentes, error: buscarError } = await supabase
+    .from("items_reposicion")
+    .select("*")
+    .eq("variante_id", varianteId)
+    .order("agregado_at", { ascending: false })
+    .limit(1);
+  if (buscarError) throw buscarError;
+  const existente = existentes?.[0];
+
+  if (existente) {
+    const { data, error } = await supabase
+      .from("items_reposicion")
+      .update({ cantidad: existente.cantidad + cantidad, estado: "pendiente" })
+      .eq("id", existente.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return mapItem(data as ItemReposicionRow);
+  }
+
+  const { data, error } = await supabase
+    .from("items_reposicion")
+    .insert({ variante_id: varianteId, cantidad, estado: "pendiente" })
+    .select()
+    .single();
   if (error) throw error;
   return mapItem(data as ItemReposicionRow);
 }

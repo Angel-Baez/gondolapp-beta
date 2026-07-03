@@ -8,7 +8,6 @@ import { useRef } from "react";
 
 export interface QuickAdjustCardProps {
   nombre: string;
-  tamano?: string;
   cantidad: number;
   deadline: number;
   onIncrement: () => void;
@@ -26,7 +25,6 @@ const CHIPS = [2, 3, 6, 12];
  */
 export function QuickAdjustCard({
   nombre,
-  tamano,
   cantidad,
   deadline,
   onIncrement,
@@ -63,7 +61,6 @@ export function QuickAdjustCard({
             <div className="flex items-start justify-between gap-2 mb-3">
               <div className="min-w-0">
                 <p className="text-headline text-fg truncate">{nombre}</p>
-                {tamano && <p className="text-footnote text-fg-secondary">{tamano}</p>}
               </div>
               <button
                 onClick={onUndo}

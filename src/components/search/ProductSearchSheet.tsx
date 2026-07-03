@@ -214,11 +214,7 @@ export function ProductSearchSheet({ isOpen, onClose, mode }: ProductSearchSheet
 
       <ExpiryQuickSheet
         isOpen={pendingVencimiento !== null}
-        producto={
-          pendingVencimiento
-            ? { nombre: pendingVencimiento.nombre, tamano: pendingVencimiento.tamano }
-            : null
-        }
+        producto={pendingVencimiento ? { nombre: pendingVencimiento.nombre } : null}
         onSubmit={handleVencimientoSubmit}
         onClose={() => setPendingVencimiento(null)}
         isPending={agregarVencimiento.isPending}
