@@ -10,7 +10,7 @@ export interface MockResponse {
  * método (select/eq/in/order/insert/...) devuelve el mismo objeto, y el
  * `await` final se resuelve con la respuesta configurada vía la trampa `then`.
  */
-function chainable(response: MockResponse) {
+export function chainable(response: MockResponse) {
   const resolved = Promise.resolve({
     data: response.data ?? null,
     error: response.error ?? null,

@@ -3,6 +3,7 @@
 import { CollapsibleSection } from "@/components/lists/CollapsibleSection";
 import { SearchSortBar } from "@/components/lists/SearchSortBar";
 import { SectionHeader } from "@/components/lists/SectionHeader";
+import { SelectionActionBar } from "@/components/lists/SelectionActionBar";
 import { SkeletonCard } from "@/components/lists/SkeletonCard";
 import { Button, Input } from "@/components/ui";
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -10,8 +11,10 @@ import { useListFilters } from "@/hooks/useListFilters";
 import { useProductosDeItems } from "@/hooks/useProductosDeItems";
 import {
   useActualizarFechaVencimiento,
+  useRetirarItemsMasivo,
   useVencimientoItems,
 } from "@/hooks/useVencimiento";
+import { useSeleccionMultiple } from "@/hooks/useSeleccionMultiple";
 import { AlertaNivel, ItemVencimientoConAlerta, ProductoVariante } from "@/types";
 import { motion as m } from "framer-motion";
 import {
@@ -19,6 +22,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  ListChecks,
+  PackageCheck,
   Skull,
   Zap,
 } from "lucide-react";
@@ -67,6 +72,8 @@ export function VencimientoList() {
     items.map((i) => i.varianteId)
   );
   const actualizarFecha = useActualizarFechaVencimiento();
+  const retirarMasivo = useRetirarItemsMasivo();
+  const seleccion = useSeleccionMultiple();
   const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("vencimiento", "vencimiento");
 
   const [editingItem, setEditingItem] = useState<ItemVencimientoConAlerta | null>(null);
@@ -160,6 +167,9 @@ export function VencimientoList() {
     );
   }
 
+  const idsVisibles = itemsConVariantes.map((i) => i.item.id);
+  const todosSeleccionados = idsVisibles.length > 0 && seleccion.cantidad === idsVisibles.length;
+
   return (
     <div className="pb-8">
       {itemsUrgentes > 0 && (
@@ -169,6 +179,18 @@ export function VencimientoList() {
             {itemsUrgentes} producto{itemsUrgentes > 1 ? "s" : ""} urgente
             {itemsUrgentes > 1 ? "s" : ""} (vencido{itemsUrgentes > 1 ? "s" : ""} o por vencer)
           </p>
+        </div>
+      )}
+
+      {!seleccion.activo && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={seleccion.activar}
+            className="flex items-center gap-1.5 text-footnote font-semibold text-fg-secondary"
+          >
+            <ListChecks size={16} />
+            Seleccionar
+          </button>
         </div>
       )}
 
@@ -209,6 +231,9 @@ export function VencimientoList() {
                       item={item}
                       variante={variante}
                       onEdit={() => handleEditClick(item)}
+                      seleccionActiva={seleccion.activo}
+                      estaSeleccionado={seleccion.estaSeleccionado(item.id)}
+                      onToggleSeleccion={() => seleccion.toggle(item.id)}
                     />
                   ))}
                 </CollapsibleSection>
@@ -216,6 +241,30 @@ export function VencimientoList() {
             );
           })}
         </div>
+      )}
+
+      {seleccion.activo && (
+        <SelectionActionBar
+          cantidad={seleccion.cantidad}
+          onCancelar={seleccion.cancelar}
+          onSeleccionarTodos={() =>
+            todosSeleccionados
+              ? seleccion.limpiarSeleccion()
+              : seleccion.seleccionarTodos(idsVisibles)
+          }
+          todosSeleccionados={todosSeleccionados}
+          acciones={[
+            {
+              label: "Retirar seleccionados",
+              icon: PackageCheck,
+              variant: "primary",
+              onClick: () =>
+                retirarMasivo.mutate(seleccion.seleccionados, {
+                  onSuccess: seleccion.limpiarSeleccion,
+                }),
+            },
+          ]}
+        />
       )}
 
       <BottomSheet

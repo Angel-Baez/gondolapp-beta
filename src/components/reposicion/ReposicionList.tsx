@@ -3,17 +3,29 @@
 import { CollapsibleSection } from "@/components/lists/CollapsibleSection";
 import { SearchSortBar } from "@/components/lists/SearchSortBar";
 import { SectionHeader } from "@/components/lists/SectionHeader";
+import { SelectionActionBar } from "@/components/lists/SelectionActionBar";
 import { SkeletonCard } from "@/components/lists/SkeletonCard";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useListFilters } from "@/hooks/useListFilters";
 import { useProductosDeItems } from "@/hooks/useProductosDeItems";
 import {
+  useCambiarEstadoMasivo,
+  useEliminarItemsMasivo,
   useGuardarListaReposicion,
   useReposicionItems,
 } from "@/hooks/useReposicion";
+import { useSeleccionMultiple } from "@/hooks/useSeleccionMultiple";
 import { EstadoReposicion, ItemReposicion, ProductoBase, ProductoVariante } from "@/types";
 import { motion as m } from "framer-motion";
-import { Archive, CheckCircle2, Package, Save, XCircle } from "lucide-react";
+import {
+  Archive,
+  CheckCircle2,
+  ListChecks,
+  Package,
+  Save,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { ReposicionCard } from "./ReposicionCard";
@@ -60,6 +72,9 @@ export function ReposicionList() {
   const { data: productosPorVariante, isLoading: loadingProductos } =
     useProductosDeItems(items.map((i) => i.varianteId));
   const guardarLista = useGuardarListaReposicion();
+  const cambiarEstadoMasivo = useCambiarEstadoMasivo();
+  const eliminarMasivo = useEliminarItemsMasivo();
+  const seleccion = useSeleccionMultiple();
   const { busqueda, setBusqueda, orden, setOrden, coincide } = useListFilters("reposicion", "recientes");
 
   const [showSaveSheet, setShowSaveSheet] = useState(false);
@@ -160,8 +175,23 @@ export function ReposicionList() {
   const totalSinStock = items.filter((i) => i.estado === "sin_stock").length;
   const totalPendientes = items.filter((i) => i.estado === "pendiente").length;
 
+  const idsVisibles = itemsConProductos.map((i) => i.item.id);
+  const todosSeleccionados = idsVisibles.length > 0 && seleccion.cantidad === idsVisibles.length;
+
   return (
     <>
+      {!seleccion.activo && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={seleccion.activar}
+            className="flex items-center gap-1.5 text-footnote font-semibold text-fg-secondary"
+          >
+            <ListChecks size={16} />
+            Seleccionar
+          </button>
+        </div>
+      )}
+
       <SearchSortBar
         busqueda={busqueda}
         onBusquedaChange={setBusqueda}
@@ -198,6 +228,9 @@ export function ReposicionList() {
                     variantes={items}
                     isExpanded={expandedCards.has(productoBase.id)}
                     onToggleExpand={() => toggleCardExpanded(productoBase.id)}
+                    seleccionActiva={seleccion.activo}
+                    estaSeleccionado={seleccion.estaSeleccionado}
+                    onToggleSeleccion={seleccion.toggle}
                   />
                 ))}
               </CollapsibleSection>
@@ -226,6 +259,9 @@ export function ReposicionList() {
                     variantes={items}
                     isExpanded={expandedCards.has(productoBase.id)}
                     onToggleExpand={() => toggleCardExpanded(productoBase.id)}
+                    seleccionActiva={seleccion.activo}
+                    estaSeleccionado={seleccion.estaSeleccionado}
+                    onToggleSeleccion={seleccion.toggle}
                   />
                 ))}
               </CollapsibleSection>
@@ -254,6 +290,9 @@ export function ReposicionList() {
                     variantes={items}
                     isExpanded={expandedCards.has(productoBase.id)}
                     onToggleExpand={() => toggleCardExpanded(productoBase.id)}
+                    seleccionActiva={seleccion.activo}
+                    estaSeleccionado={seleccion.estaSeleccionado}
+                    onToggleSeleccion={seleccion.toggle}
                   />
                 ))}
               </CollapsibleSection>
@@ -262,7 +301,7 @@ export function ReposicionList() {
         </div>
       )}
 
-      {items.length > 0 && (
+      {items.length > 0 && !seleccion.activo && (
         <button
           onClick={() => setShowSaveSheet(true)}
           style={{ bottom: "var(--tabbar-clearance)" }}
@@ -272,6 +311,50 @@ export function ReposicionList() {
           <Save size={18} />
           Guardar
         </button>
+      )}
+
+      {seleccion.activo && (
+        <SelectionActionBar
+          cantidad={seleccion.cantidad}
+          onCancelar={seleccion.cancelar}
+          onSeleccionarTodos={() =>
+            todosSeleccionados
+              ? seleccion.limpiarSeleccion()
+              : seleccion.seleccionarTodos(idsVisibles)
+          }
+          todosSeleccionados={todosSeleccionados}
+          acciones={[
+            {
+              label: "Repuesto",
+              icon: CheckCircle2,
+              variant: "primary",
+              onClick: () =>
+                cambiarEstadoMasivo.mutate(
+                  { ids: seleccion.seleccionados, estado: "repuesto" },
+                  { onSuccess: seleccion.limpiarSeleccion }
+                ),
+            },
+            {
+              label: "Sin stock",
+              icon: XCircle,
+              variant: "destructive",
+              onClick: () =>
+                cambiarEstadoMasivo.mutate(
+                  { ids: seleccion.seleccionados, estado: "sin_stock" },
+                  { onSuccess: seleccion.limpiarSeleccion }
+                ),
+            },
+            {
+              label: "Eliminar",
+              icon: Trash2,
+              variant: "outline",
+              onClick: () =>
+                eliminarMasivo.mutate(seleccion.seleccionados, {
+                  onSuccess: seleccion.limpiarSeleccion,
+                }),
+            },
+          ]}
+        />
       )}
 
       <BottomSheet isOpen={showSaveSheet} onClose={() => setShowSaveSheet(false)} title="Guardar lista">

@@ -3,7 +3,7 @@
 import { calcularDiasRestantes, formatearFecha } from "@/lib/utils";
 import { useEliminarVencimientoItem, useRetirarVencimientoItem } from "@/hooks/useVencimiento";
 import { AlertaNivel, ItemVencimientoConAlerta, ProductoVariante } from "@/types";
-import { Calendar, Edit2, PackageCheck, Trash2 } from "lucide-react";
+import { Calendar, Check, Edit2, PackageCheck, Trash2 } from "lucide-react";
 import { Badge, IconButton } from "../ui";
 import { motion as m } from "framer-motion";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -13,6 +13,11 @@ interface VencimientoItemProps {
   item: ItemVencimientoConAlerta;
   variante: ProductoVariante;
   onEdit: () => void;
+  /** Modo selección múltiple: si está activo, la fila de acciones se
+   * reemplaza por un checkbox. */
+  seleccionActiva?: boolean;
+  estaSeleccionado?: boolean;
+  onToggleSeleccion?: () => void;
 }
 
 // Clases literales (no interpoladas) para que el scanner de Tailwind las genere.
@@ -24,7 +29,14 @@ const RAIL_POR_ALERTA: Record<AlertaNivel, string> = {
   normal: "border-l-alert-normal",
 };
 
-export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps) {
+export function VencimientoItem({
+  item,
+  variante,
+  onEdit,
+  seleccionActiva = false,
+  estaSeleccionado = false,
+  onToggleSeleccion,
+}: VencimientoItemProps) {
   const retirarItem = useRetirarVencimientoItem();
   const eliminarItem = useEliminarVencimientoItem();
   const { haptic } = useHaptics();
@@ -58,7 +70,12 @@ export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps
   };
 
   return (
-    <div className={`island p-4 border-l-[3px] ${RAIL_POR_ALERTA[item.alertaNivel]}`}>
+    <div
+      onClick={seleccionActiva ? onToggleSeleccion : undefined}
+      className={`island p-4 border-l-[3px] ${RAIL_POR_ALERTA[item.alertaNivel]} ${
+        seleccionActiva ? "cursor-pointer" : ""
+      } ${estaSeleccionado ? "bg-accent-soft" : ""}`}
+    >
       <div className="space-y-3">
         <div className="flex items-start gap-3">
           {variante.imagen && (
@@ -93,45 +110,61 @@ export function VencimientoItem({ item, variante, onEdit }: VencimientoItemProps
         </div>
 
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
-          <button
-            onClick={handleRetirar}
-            disabled={retirarItem.isPending}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-estado-repuesto disabled:opacity-50 text-white rounded-field font-semibold text-subhead transition-colors"
-          >
-            <PackageCheck size={16} />
-            Retirar
-          </button>
-
-          <IconButton
-            onClick={() => {
-              haptic(50);
-              onEdit();
-            }}
-            title="Editar fecha"
-            className="w-11 h-11"
-          >
-            <m.div
-              whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ duration: 0.3 }}
+          {seleccionActiva ? (
+            <IconButton
+              variant={estaSeleccionado ? "primary" : "ghost"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSeleccion?.();
+              }}
+              title={estaSeleccionado ? "Deseleccionar" : "Seleccionar"}
+              className="w-11 h-11 ml-auto"
             >
-              <Edit2 size={18} />
-            </m.div>
-          </IconButton>
+              <Check size={20} className={estaSeleccionado ? "" : "opacity-30"} />
+            </IconButton>
+          ) : (
+            <>
+              <button
+                onClick={handleRetirar}
+                disabled={retirarItem.isPending}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-estado-repuesto disabled:opacity-50 text-white rounded-field font-semibold text-subhead transition-colors"
+              >
+                <PackageCheck size={16} />
+                Retirar
+              </button>
 
-          <IconButton
-            variant="ghost"
-            onClick={handleEliminar}
-            title="Quitar de la lista (sin registrar retiro)"
-            className="w-11 h-11"
-          >
-            <m.div
-              whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.5 } }}
-              whileTap={{ scale: 0.85 }}
-            >
-              <Trash2 size={18} />
-            </m.div>
-          </IconButton>
+              <IconButton
+                onClick={() => {
+                  haptic(50);
+                  onEdit();
+                }}
+                title="Editar fecha"
+                className="w-11 h-11"
+              >
+                <m.div
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Edit2 size={18} />
+                </m.div>
+              </IconButton>
+
+              <IconButton
+                variant="ghost"
+                onClick={handleEliminar}
+                title="Quitar de la lista (sin registrar retiro)"
+                className="w-11 h-11"
+              >
+                <m.div
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.5 } }}
+                  whileTap={{ scale: 0.85 }}
+                >
+                  <Trash2 size={18} />
+                </m.div>
+              </IconButton>
+            </>
+          )}
         </div>
       </div>
     </div>
