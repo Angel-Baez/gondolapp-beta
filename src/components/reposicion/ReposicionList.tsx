@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/lists/SectionHeader";
 import { SelectionActionBar } from "@/components/lists/SelectionActionBar";
 import { SkeletonCard } from "@/components/lists/SkeletonCard";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Portal } from "@/components/ui";
 import { useListFilters } from "@/hooks/useListFilters";
 import { useProductosDeItems } from "@/hooks/useProductosDeItems";
 import {
@@ -302,15 +303,17 @@ export function ReposicionList() {
       )}
 
       {items.length > 0 && !seleccion.activo && (
-        <button
-          onClick={() => setShowSaveSheet(true)}
-          style={{ bottom: "var(--tabbar-clearance)" }}
-          className="fixed right-6 z-20 h-12 px-5 gap-2 glass rounded-full shadow-float flex items-center text-estado-repuesto font-semibold text-subhead"
-          aria-label="Guardar lista"
-        >
-          <Save size={18} />
-          Guardar
-        </button>
+        <Portal>
+          <button
+            onClick={() => setShowSaveSheet(true)}
+            style={{ bottom: "var(--tabbar-clearance)" }}
+            className="fixed right-6 z-20 h-12 px-5 gap-2 glass rounded-full shadow-float flex items-center text-estado-repuesto font-semibold text-subhead"
+            aria-label="Guardar lista"
+          >
+            <Save size={18} />
+            Guardar
+          </button>
+        </Portal>
       )}
 
       {seleccion.activo && (
