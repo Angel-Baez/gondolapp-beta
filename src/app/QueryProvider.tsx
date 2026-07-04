@@ -31,7 +31,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       persistOptions={{
         persister: queryPersister,
         maxAge: MAX_AGE_CACHE_MS,
-        buster: "v1",
+        // v2: el catálogo pasó de Map (serializaba como {}) a objeto plano;
+        // el bump descarta caches v1 corruptos que crasheaban al rehidratar.
+        buster: "v2",
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             query.state.status === "success" &&

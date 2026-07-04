@@ -37,7 +37,6 @@ export default function BarcodeScanner({
   const [isClosing, setIsClosing] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualCode, setManualCode] = useState("");
-  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const readerElementRef = useRef<HTMLDivElement>(null);
@@ -54,6 +53,12 @@ export default function BarcodeScanner({
   // detener, para no dejar la cámara abierta sin referencia (bug que
   // obligaba a recargar la página para poder volver a abrirla).
   const startingPromiseRef = useRef<Promise<void> | null>(null);
+  // Ref (no state): html5-qrcode invoca el onScanSuccess con el que se
+  // inició la cámara, así que un state quedaría congelado en su closure y
+  // el dedupe nunca filtraría — cada frame decodificado (30 fps) dispararía
+  // un onScan del mismo código.
+  const lastScannedCodeRef = useRef<string | null>(null);
+  const clearScannedCodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tiempo para limpiar el código escaneado y permitir re-escanear el mismo código
   const SCAN_CODE_CLEAR_DELAY = 2000;
@@ -110,7 +115,7 @@ export default function BarcodeScanner({
     }
     scannerRef.current = null;
     setIsScanning(false);
-    setLastScannedCode(null);
+    lastScannedCodeRef.current = null;
     isStoppingRef.current = false;
   }, []);
 
@@ -161,8 +166,8 @@ export default function BarcodeScanner({
 
       const onScanSuccess = (decodedText: string) => {
         if (pausedRef.current) return;
-        if (decodedText !== lastScannedCode && !isClosing) {
-          setLastScannedCode(decodedText);
+        if (decodedText !== lastScannedCodeRef.current && !isClosing) {
+          lastScannedCodeRef.current = decodedText;
           onScan(decodedText);
 
           if ("vibrate" in navigator) {
@@ -170,8 +175,11 @@ export default function BarcodeScanner({
           }
 
           // Limpiar el código escaneado después de un tiempo para permitir re-escaneo
-          setTimeout(() => {
-            setLastScannedCode(null);
+          if (clearScannedCodeTimerRef.current) {
+            clearTimeout(clearScannedCodeTimerRef.current);
+          }
+          clearScannedCodeTimerRef.current = setTimeout(() => {
+            lastScannedCodeRef.current = null;
           }, SCAN_CODE_CLEAR_DELAY);
         }
       };
@@ -257,7 +265,6 @@ export default function BarcodeScanner({
     isClosing,
     showManualInput,
     scannerElementId,
-    lastScannedCode,
     stopScanning,
     onScan,
     onClose,
@@ -313,7 +320,7 @@ export default function BarcodeScanner({
     await stopScanning();
 
     setIsScanning(false);
-    setLastScannedCode(null);
+    lastScannedCodeRef.current = null;
     setError(null);
     setIsLoading(false);
 
@@ -332,7 +339,7 @@ export default function BarcodeScanner({
       setIsScanning(false);
       setIsLoading(false);
       setError(null);
-      setLastScannedCode(null);
+      lastScannedCodeRef.current = null;
       setShowManualInput(false);
       setManualCode("");
       isStoppingRef.current = false;
@@ -463,9 +470,6 @@ export default function BarcodeScanner({
               </div>
             )}
 
-            {/* Overlay flotante inyectado por el padre (ej. QuickAdjustCard) */}
-            {overlay}
-
             {/* Instrucción mínima cuando está escaneando (sin overlay del padre) */}
             {isScanning && !isLoading && !overlay && (
               <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
@@ -479,6 +483,11 @@ export default function BarcodeScanner({
           </div>
         )}
       </div>
+
+      {/* Overlay flotante inyectado por el padre (ej. QuickAdjustCard).
+          Fuera de la rama de cámara: también debe verse tras agregar un
+          producto por entrada manual. */}
+      {overlay}
 
       {/* Error Message */}
       {error && (

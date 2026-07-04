@@ -93,7 +93,7 @@ export function VencimientoList() {
     if (!productosPorVariante) return [];
     return items
       .map((item) => {
-        const producto = productosPorVariante.get(item.varianteId);
+        const producto = productosPorVariante[item.varianteId];
         if (!producto) return null;
         return { item, variante: producto.variante };
       })

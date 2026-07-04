@@ -250,12 +250,19 @@ export async function crearProductoManual(
   };
 }
 
-/** Trae base+variante para un lote de varianteId de una sola vez (evita N+1 en las listas). */
+/**
+ * Trae base+variante para un lote de varianteId de una sola vez (evita N+1 en las listas).
+ *
+ * Devuelve un objeto plano (no un Map): esta query se persiste en IndexedDB
+ * vía JSON.stringify (ver queryPersister.ts) y un Map serializa como `{}`,
+ * lo que rompía la app al rehidratar (`.get is not a function`).
+ */
 export async function obtenerProductosPorVarianteIds(
   varianteIds: string[]
-): Promise<Map<string, ProductoCompleto>> {
+): Promise<Record<string, ProductoCompleto>> {
   const idsUnicos = Array.from(new Set(varianteIds));
-  if (idsUnicos.length === 0) return new Map();
+  const resultado: Record<string, ProductoCompleto> = {};
+  if (idsUnicos.length === 0) return resultado;
 
   const { data, error } = await supabase
     .from("producto_variantes")
@@ -263,11 +270,10 @@ export async function obtenerProductosPorVarianteIds(
     .in("id", idsUnicos);
   if (error) throw error;
 
-  const resultado = new Map<string, ProductoCompleto>();
   for (const row of (data ?? []) as ProductoVarianteConBaseRow[]) {
     const producto = mapProductoCompleto(row);
     if (!producto) continue;
-    resultado.set(row.id, producto);
+    resultado[row.id] = producto;
   }
   return resultado;
 }
