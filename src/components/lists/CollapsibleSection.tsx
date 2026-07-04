@@ -1,9 +1,6 @@
 "use client";
 
-import { motion as m } from "framer-motion";
-
 export const MIN_ITEMS_FOR_COLLAPSE = 10;
-const EXPANDED_HEIGHT = "600px";
 const COLLAPSED_HEIGHT = "300px";
 
 interface CollapsibleSectionProps {
@@ -12,7 +9,12 @@ interface CollapsibleSectionProps {
   itemCount: number;
 }
 
-/** Envoltorio que colapsa una sección con más de MIN_ITEMS_FOR_COLLAPSE items, con fade de salida. */
+/**
+ * Envoltorio que colapsa una sección con más de MIN_ITEMS_FOR_COLLAPSE items.
+ * Expandida se renderiza sin tope de altura: scrollea la página, no una caja
+ * interna (el max-height + overflow-y-auto anterior creaba un scroll anidado
+ * que en móvil convertía cada gesto en una lotería de cuál lista se movía).
+ */
 export function CollapsibleSection({
   children,
   isExpanded,
@@ -20,23 +22,19 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const shouldCollapse = itemCount >= MIN_ITEMS_FOR_COLLAPSE;
 
-  if (!shouldCollapse) {
+  if (!shouldCollapse || isExpanded) {
     return <div className="space-y-2">{children}</div>;
   }
 
   return (
     <div className="relative">
-      <m.div
-        initial={false}
-        animate={{ maxHeight: isExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className={isExpanded ? "overflow-y-auto relative" : "overflow-hidden relative"}
+      <div
+        className="overflow-hidden relative"
+        style={{ maxHeight: COLLAPSED_HEIGHT }}
       >
         <div className="space-y-2">{children}</div>
-      </m.div>
-      {!isExpanded && (
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-canvas to-transparent pointer-events-none" />
-      )}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-canvas to-transparent pointer-events-none" />
     </div>
   );
 }
