@@ -141,12 +141,24 @@ export async function retirarItem(id: string): Promise<void> {
 }
 
 /**
- * Retira varios items de la góndola (acción masiva). Cada retiro sigue
- * escribiendo su propio snapshot en el historial, así que no hay un `.in()`
- * de una sola consulta posible; se resuelven en paralelo.
+ * Retira varios items de la góndola (acción masiva). RPC atómica
+ * (`retirar_items_vencimiento`, migración 0007): snapshot al historial y
+ * borrado de todo el lote en una sola transacción — antes eran N RPCs en
+ * paralelo, con fallos parciales posibles a mitad de lote.
  */
 export async function retirarItemsMasivo(ids: string[]): Promise<void> {
-  await Promise.all(ids.map((id) => retirarItem(id)));
+  const { error } = await supabase.rpc("retirar_items_vencimiento", {
+    p_item_ids: ids,
+  });
+  if (!error) return;
+  // PGRST202: la función todavía no existe en el proyecto (migración 0007
+  // sin aplicar). Fallback al retiro item por item para que el deploy del
+  // front no dependa del orden de aplicación. Borrar cuando 0007 esté en prod.
+  if (error.code === "PGRST202") {
+    await Promise.all(ids.map((id) => retirarItem(id)));
+    return;
+  }
+  throw error;
 }
 
 export async function obtenerHistorial(filtros?: {

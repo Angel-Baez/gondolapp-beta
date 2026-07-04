@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { chainable, mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
+import { mockSupabaseFrom } from "@/tests/mocks/supabaseMock";
 
 const fromMock = vi.fn();
 const rpcMock = vi.fn();
@@ -84,23 +84,43 @@ describe("retirarItem", () => {
 });
 
 describe("retirarItemsMasivo", () => {
-  it("retira varios items en paralelo, reusando retirarItem", async () => {
+  it("retira todo el lote con una sola RPC atómica", async () => {
     const { retirarItemsMasivo } = await import("@/services/vencimiento");
-    // Los retiros corren en paralelo (Promise.all), así que sus llamadas a
-    // `from` se interfolan de forma no determinista: se despacha por nombre
-    // de tabla en vez de depender de un orden estricto de llamadas.
-    const respuestasPorTabla: Record<string, ReturnType<typeof chainable>> = {
-      items_vencimiento: chainable({ data: itemRow(), error: null }),
-      producto_variantes: chainable({
-        data: { nombre_completo: "Leche 1L", producto_base_id: "base-1" },
-      }),
-      producto_bases: chainable({ data: { nombre: "Leche", marca: "La Serenísima" } }),
-      items_vencimiento_historial: chainable({ error: null }),
-    };
-    fromMock.mockImplementation((tabla: string) => respuestasPorTabla[tabla]);
+    rpcMock.mockResolvedValue({ data: null, error: null });
 
     await retirarItemsMasivo(["item-1", "item-2"]);
-    expect(fromMock).toHaveBeenCalledTimes(10); // 5 llamadas por item retirado
+    expect(rpcMock).toHaveBeenCalledTimes(1);
+    expect(rpcMock).toHaveBeenCalledWith("retirar_items_vencimiento", {
+      p_item_ids: ["item-1", "item-2"],
+    });
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("cae al retiro item por item si la función masiva aún no existe (PGRST202)", async () => {
+    const { retirarItemsMasivo } = await import("@/services/vencimiento");
+    rpcMock
+      .mockResolvedValueOnce({
+        data: null,
+        error: { code: "PGRST202", message: "function not found" },
+      })
+      .mockResolvedValue({ data: null, error: null });
+
+    await retirarItemsMasivo(["item-1", "item-2"]);
+    // 1 intento masivo + 2 retiros individuales
+    expect(rpcMock).toHaveBeenCalledTimes(3);
+    expect(rpcMock).toHaveBeenCalledWith("retirar_item_vencimiento", { p_item_id: "item-1" });
+    expect(rpcMock).toHaveBeenCalledWith("retirar_item_vencimiento", { p_item_id: "item-2" });
+  });
+
+  it("propaga errores que no sean de función inexistente", async () => {
+    const { retirarItemsMasivo } = await import("@/services/vencimiento");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: Object.assign(new Error("boom"), { code: "XX000" }),
+    });
+
+    await expect(retirarItemsMasivo(["item-1"])).rejects.toThrow("boom");
+    expect(rpcMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -128,7 +148,10 @@ describe("obtenerEstadisticas", () => {
             cantidad: 2,
             lote: null,
             fecha_vencimiento: "2026-01-01",
-            fecha_retiro: "2026-01-03T00:00:00Z",
+            // Mediodía local (sin Z): fecha_vencimiento se parsea a medianoche
+            // local, así el diff da 2 días en cualquier huso horario. Con
+            // medianoche UTC el test fallaba en husos negativos (floor de 1.875).
+            fecha_retiro: "2026-01-03T12:00:00",
             nivel_alerta_al_retirar: "critico",
           },
         ],
