@@ -53,7 +53,9 @@ export function QuickAdjustCard({
           animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
           exit={{ opacity: 0, y: 24, scale: 0.96, x: "-50%" }}
           transition={springSnappy}
-          className="fixed left-1/2 z-30 w-[calc(100%-2rem)] max-w-sm"
+          // z > 50: al montarse en document.body compite con el contenedor
+          // fullscreen del escáner (fixed z-50), no con sus hijos.
+          className="fixed left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
         >
           <div className="glass rounded-card shadow-float overflow-hidden">
