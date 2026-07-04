@@ -178,23 +178,34 @@ describe("crearProductoManual", () => {
 });
 
 describe("obtenerProductosPorVarianteIds", () => {
-  it("devuelve un mapa vacío sin consultar la base si no hay ids", async () => {
+  it("devuelve un objeto vacío sin consultar la base si no hay ids", async () => {
     const { obtenerProductosPorVarianteIds } = await import("@/services/catalogo");
     const resultado = await obtenerProductosPorVarianteIds([]);
-    expect(resultado.size).toBe(0);
+    expect(Object.keys(resultado)).toHaveLength(0);
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it("arma el mapa varianteId -> {base, variante} en un solo round-trip", async () => {
+  it("arma el índice varianteId -> {base, variante} en un solo round-trip", async () => {
     const { obtenerProductosPorVarianteIds } = await import("@/services/catalogo");
     fromMock.mockImplementation(
       mockSupabaseFrom({ data: [{ ...varianteRow, producto_bases: baseRow }] })
     );
 
     const resultado = await obtenerProductosPorVarianteIds(["variante-1", "variante-1"]);
-    expect(resultado.size).toBe(1);
-    expect(resultado.get("variante-1")?.base.nombre).toBe("Leche");
+    expect(Object.keys(resultado)).toHaveLength(1);
+    expect(resultado["variante-1"]?.base.nombre).toBe("Leche");
     expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sobrevive el round-trip JSON del persister (regresión: Map serializaba como {})", async () => {
+    const { obtenerProductosPorVarianteIds } = await import("@/services/catalogo");
+    fromMock.mockImplementation(
+      mockSupabaseFrom({ data: [{ ...varianteRow, producto_bases: baseRow }] })
+    );
+
+    const resultado = await obtenerProductosPorVarianteIds(["variante-1"]);
+    const restaurado = JSON.parse(JSON.stringify(resultado));
+    expect(restaurado["variante-1"]?.base.nombre).toBe("Leche");
   });
 });
 
