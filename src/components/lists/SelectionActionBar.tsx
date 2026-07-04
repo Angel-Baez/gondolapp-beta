@@ -37,11 +37,11 @@ export function SelectionActionBar({
       <AnimatePresence>
         <m.div
           key="selection-bar"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 24, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, x: "-50%" }}
+          exit={{ opacity: 0, y: 24, x: "-50%" }}
           style={{ bottom: "var(--tabbar-clearance)" }}
-          className="fixed left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-lg glass rounded-card shadow-float p-3 space-y-3"
+          className="fixed left-1/2 z-20 w-[calc(100%-2rem)] max-w-lg glass rounded-card shadow-float p-3 space-y-3"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-subhead font-semibold text-fg">

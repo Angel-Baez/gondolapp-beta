@@ -13,7 +13,18 @@ const HISTORIAL_KEY = ["vencimiento", "historial"] as const;
 const ESTADISTICAS_KEY = ["vencimiento", "estadisticas"] as const;
 
 export function useVencimientoItems() {
-  return useQuery({ queryKey: ITEMS_KEY, queryFn: vencimientoService.listarItems });
+  return useQuery({
+    queryKey: ITEMS_KEY,
+    queryFn: vencimientoService.listarItems,
+    // Re-deriva el nivel de alerta al leer: los datos pueden venir del
+    // cache persistido (arranque offline) o de una app abierta toda la
+    // noche, con un alertaNivel calculado días atrás.
+    select: (items) =>
+      items.map((item) => ({
+        ...item,
+        alertaNivel: calcularNivelAlerta(item.fechaVencimiento),
+      })),
+  });
 }
 
 export function useAgregarVencimientoItem() {

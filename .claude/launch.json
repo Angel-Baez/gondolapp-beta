@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "gondolapp-dev",
-      "runtimeExecutable": "/Users/macbook/.nvm/versions/node/v22.16.0/bin/npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/Users/macbook/.nvm/versions/node/v22.16.0/bin/node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev"],
       "port": 3000,
       "autoPort": true
     }

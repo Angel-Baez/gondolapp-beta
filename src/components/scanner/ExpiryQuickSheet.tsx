@@ -1,13 +1,16 @@
 "use client";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { sumarDias, toDateInputValue } from "@/lib/utils";
+import { sumarDias } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export interface ExpiryQuickSheetProps {
   isOpen: boolean;
   producto: { nombre: string } | null;
+  /** Última fecha registrada en la sesión: habilita el chip "Misma fecha"
+   * para registrar lotes enteros con 1 tap por producto. */
+  ultimaFecha?: Date | null;
   onSubmit: (v: { fecha: Date; cantidad?: number; lote?: string }) => void;
   onClose: () => void;
   isPending: boolean;
@@ -15,23 +18,26 @@ export interface ExpiryQuickSheetProps {
 
 const PRESETS = [7, 15, 30, 60, 90];
 
-/** Entrada de fecha de vencimiento más rápida posible: preset (1 tap) + confirmar. */
+const formatearFechaCorta = (fecha: Date) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(fecha);
+
+/** Entrada de fecha de vencimiento más rápida posible: preset o "misma fecha"
+ * registran directo en 1 tap; el input + botón quedan para fechas manuales. */
 export function ExpiryQuickSheet({
   isOpen,
   producto,
+  ultimaFecha,
   onSubmit,
   onClose,
   isPending,
 }: ExpiryQuickSheetProps) {
   const [fecha, setFecha] = useState("");
-  const [presetActivo, setPresetActivo] = useState<number | null>(null);
   const [detallesAbiertos, setDetallesAbiertos] = useState(false);
   const [cantidad, setCantidad] = useState("");
   const [lote, setLote] = useState("");
 
   const reset = () => {
     setFecha("");
-    setPresetActivo(null);
     setDetallesAbiertos(false);
     setCantidad("");
     setLote("");
@@ -42,19 +48,19 @@ export function ExpiryQuickSheet({
     onClose();
   };
 
-  const elegirPreset = (dias: number) => {
-    setPresetActivo(dias);
-    setFecha(toDateInputValue(sumarDias(dias)));
-  };
-
-  const handleSubmit = () => {
-    if (!fecha) return;
+  const confirmarFecha = (fechaElegida: Date) => {
+    if (isPending) return;
     onSubmit({
-      fecha: new Date(fecha),
+      fecha: fechaElegida,
       cantidad: cantidad ? parseInt(cantidad, 10) : undefined,
       lote: lote || undefined,
     });
     reset();
+  };
+
+  const handleSubmitManual = () => {
+    if (!fecha) return;
+    confirmarFecha(new Date(`${fecha}T00:00:00`));
   };
 
   return (
@@ -67,15 +73,21 @@ export function ExpiryQuickSheet({
         )}
 
         <div className="flex flex-wrap gap-2">
+          {ultimaFecha && (
+            <button
+              onClick={() => confirmarFecha(ultimaFecha)}
+              disabled={isPending}
+              className="tap-compact px-3.5 rounded-chip text-subhead font-semibold bg-accent text-on-accent disabled:opacity-40 transition-opacity"
+            >
+              Misma fecha ({formatearFechaCorta(ultimaFecha)})
+            </button>
+          )}
           {PRESETS.map((dias) => (
             <button
               key={dias}
-              onClick={() => elegirPreset(dias)}
-              className={`tap-compact px-3.5 rounded-chip text-subhead font-semibold transition-colors ${
-                presetActivo === dias
-                  ? "bg-accent text-on-accent"
-                  : "bg-surface-2 text-fg-secondary"
-              }`}
+              onClick={() => confirmarFecha(sumarDias(dias))}
+              disabled={isPending}
+              className="tap-compact px-3.5 rounded-chip text-subhead font-semibold bg-surface-2 text-fg-secondary disabled:opacity-40 transition-colors"
             >
               +{dias}d
             </button>
@@ -86,15 +98,12 @@ export function ExpiryQuickSheet({
           <label className="block text-footnote font-semibold text-fg-secondary mb-1.5">
             Fecha de vencimiento
           </label>
+          {/* Sin autoFocus: en Android abriría el picker nativo tapando los presets */}
           <input
             type="date"
             value={fecha}
-            onChange={(e) => {
-              setFecha(e.target.value);
-              setPresetActivo(null);
-            }}
+            onChange={(e) => setFecha(e.target.value)}
             className="w-full h-14 px-4 rounded-field bg-surface-2 text-headline text-fg focus:outline-none focus:ring-2 focus:ring-accent/40"
-            autoFocus
           />
         </div>
 
@@ -130,7 +139,7 @@ export function ExpiryQuickSheet({
         )}
 
         <button
-          onClick={handleSubmit}
+          onClick={handleSubmitManual}
           disabled={!fecha || isPending}
           className="w-full h-14 rounded-field bg-accent text-on-accent text-headline font-semibold disabled:opacity-40 transition-opacity"
         >

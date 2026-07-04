@@ -3,6 +3,7 @@
 import { useHaptics } from "@/hooks/useHaptics";
 import {
   useActualizarCantidadReposicion,
+  useCambiarEstadoMasivo,
   useCambiarEstadoReposicion,
   useDecrementarReposicion,
   useEliminarReposicionItemDirecto,
@@ -10,12 +11,10 @@ import {
 import { EstadoReposicion, ItemReposicion, ProductoBase, ProductoVariante } from "@/types";
 import { AnimatePresence, motion as m } from "framer-motion";
 import {
-  Ban,
   Check,
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  RefreshCw,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -47,6 +46,7 @@ export function ReposicionCard({
   onToggleSeleccion,
 }: ReposicionCardProps) {
   const cambiarEstado = useCambiarEstadoReposicion();
+  const cambiarEstadoMasivo = useCambiarEstadoMasivo();
   const decrementar = useDecrementarReposicion();
   const actualizarCantidad = useActualizarCantidadReposicion();
   const eliminar = useEliminarReposicionItemDirecto();
@@ -75,6 +75,7 @@ export function ReposicionCard({
 
   const colors = sectionColors[seccion];
 
+  // Sin toast de éxito: la card se mueve de sección + el haptic ya confirman.
   const toggleEstado = (item: { id: string; estado: EstadoReposicion }, target: EstadoReposicion) => {
     const nuevoEstado = item.estado === target ? "pendiente" : target;
 
@@ -83,45 +84,22 @@ export function ReposicionCard({
       {
         onSuccess: () => {
           haptic(nuevoEstado === "pendiente" ? 50 : [30, 30, 30]);
-
-          if (target === "repuesto") {
-            if (nuevoEstado === "repuesto") {
-              toast.success(
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="text-emerald-500 w-5 h-5" />
-                  <span>Producto marcado como repuesto</span>
-                </div>,
-                { duration: 2000 }
-              );
-            } else {
-              toast(
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="text-cyan-500 w-5 h-5" />
-                  <span>Producto desmarcado como repuesto</span>
-                </div>,
-                { duration: 2000 }
-              );
-            }
-          } else {
-            if (nuevoEstado === "sin_stock") {
-              toast.success(
-                <div className="flex items-center gap-2">
-                  <Ban className="text-red-500 w-5 h-5" />
-                  <span>Producto marcado sin stock</span>
-                </div>,
-                { duration: 2000 }
-              );
-            } else {
-              toast(
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="text-cyan-500 w-5 h-5" />
-                  <span>Producto reactivado</span>
-                </div>,
-                { duration: 2000 }
-              );
-            }
-          }
         },
+        onError: () => {
+          toast.error("No se pudo actualizar el producto. Revisá tu conexión e intentá de nuevo.");
+        },
+      }
+    );
+  };
+
+  /** Acción rápida del header: marca todas las variantes de la card como
+   * repuesto sin necesidad de expandirla (la acción más repetida del turno). */
+  const marcarTodoRepuesto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cambiarEstadoMasivo.mutate(
+      { ids: variantes.map((v) => v.item.id), estado: "repuesto" },
+      {
+        onSuccess: () => haptic([30, 30, 30]),
         onError: () => {
           toast.error("No se pudo actualizar el producto. Revisá tu conexión e intentá de nuevo.");
         },
@@ -153,7 +131,9 @@ export function ReposicionCard({
                   {productoBase.marca}
                 </span>
               )}
-              <Badge variant="primary">{variantes.length} variantes</Badge>
+              {variantes.length > 1 && (
+                <Badge variant="primary">{variantes.length} variantes</Badge>
+              )}
             </div>
           </div>
         </div>
@@ -165,6 +145,15 @@ export function ReposicionCard({
             >
               x{cantidadTotal}
             </div>
+          )}
+          {seccion === "pendiente" && !seleccionActiva && (
+            <IconButton
+              variant="ghost"
+              onClick={marcarTodoRepuesto}
+              title="Marcar como repuesto"
+            >
+              <CheckCircle size={22} className="text-estado-repuesto" />
+            </IconButton>
           )}
           {isExpanded ? (
             <ChevronUp size={20} className="text-fg-tertiary flex-shrink-0" />
