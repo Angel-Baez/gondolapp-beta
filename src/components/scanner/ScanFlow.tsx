@@ -82,7 +82,6 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
       queryFn: fetchMarcasCategorias,
       staleTime: 5 * 60_000,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const runEffect = useCallback(
@@ -136,7 +135,6 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
           return;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [scanProduct, agregarReposicion, actualizarCantidad, eliminarItem, haptic, registrarUso]
   );
 
