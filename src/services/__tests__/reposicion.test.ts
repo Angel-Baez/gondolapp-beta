@@ -41,17 +41,16 @@ describe("listarItems", () => {
 });
 
 describe("agregarItem", () => {
-  it("delega en la RPC agregar_item_reposicion (upsert atómico en la DB)", async () => {
+  it("delega en la RPC agregar_item_reposicion (upsert atómico en la DB, 1 round-trip)", async () => {
     const { agregarItem } = await import("@/services/reposicion");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: [itemRow({ cantidad: 3 })] }, // busca existente (cualquier estado)
-        { data: itemRow({ cantidad: 5 }) } // update con la suma
-      )
-    );
+    // El merge (sumar cantidad, reabrir a pendiente) vive en la función SQL:
+    // acá solo se verifica la delegación y el mapeo de la fila devuelta.
+    rpcMock.mockResolvedValue({ data: itemRow({ cantidad: 5 }), error: null });
 
     const item = await agregarItem("variante-1", 2);
     expect(item.cantidad).toBe(5);
+    expect(item.estado).toBe("pendiente");
+    expect(item.agregadoAt).toBeInstanceOf(Date);
     expect(rpcMock).toHaveBeenCalledWith("agregar_item_reposicion", {
       p_variante_id: "variante-1",
       p_cantidad: 2,
@@ -59,30 +58,11 @@ describe("agregarItem", () => {
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it("crea un item nuevo si no hay ninguno para esa variante", async () => {
+  it("propaga el error de la RPC", async () => {
     const { agregarItem } = await import("@/services/reposicion");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: [] }, // no hay ninguno
-        { data: itemRow({ id: "item-nuevo", cantidad: 4 }) } // insert
-      )
-    );
+    rpcMock.mockResolvedValue({ data: null, error: new Error("db error") });
 
     await expect(agregarItem("variante-1", 2)).rejects.toThrow("db error");
-  });
-
-  it("reabre y fusiona cantidad contra un item ya repuesto/sin_stock de la misma variante", async () => {
-    const { agregarItem } = await import("@/services/reposicion");
-    fromMock.mockImplementation(
-      mockSupabaseFrom(
-        { data: [itemRow({ cantidad: 2, estado: "sin_stock" })] }, // existente, no pendiente
-        { data: itemRow({ cantidad: 3, estado: "pendiente" }) } // update: suma y reabre a pendiente
-      )
-    );
-
-    const item = await agregarItem("variante-1", 1);
-    expect(item.cantidad).toBe(3);
-    expect(item.estado).toBe("pendiente");
   });
 });
 

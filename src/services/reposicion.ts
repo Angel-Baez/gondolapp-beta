@@ -96,36 +96,19 @@ export async function listarItems(): Promise<ItemReposicion[]> {
  * Agrega cantidad a un item existente de la misma variante (en cualquier
  * estado, no solo pendiente: reescanear algo ya repuesto/sin_stock lo
  * reabre en vez de crear una fila duplicada), o crea uno nuevo si no existe.
+ *
+ * RPC atómica (`agregar_item_reposicion`, migración 0006): antes eran 2
+ * round-trips secuenciales (SELECT del existente + UPDATE/INSERT) en el
+ * camino crítico del escaneo, con ventana de carrera entre ambos.
  */
 export async function agregarItem(
   varianteId: string,
   cantidad: number
 ): Promise<ItemReposicion> {
-  const { data: existentes, error: buscarError } = await supabase
-    .from("items_reposicion")
-    .select("*")
-    .eq("variante_id", varianteId)
-    .order("agregado_at", { ascending: false })
-    .limit(1);
-  if (buscarError) throw buscarError;
-  const existente = existentes?.[0];
-
-  if (existente) {
-    const { data, error } = await supabase
-      .from("items_reposicion")
-      .update({ cantidad: existente.cantidad + cantidad, estado: "pendiente" })
-      .eq("id", existente.id)
-      .select()
-      .single();
-    if (error) throw error;
-    return mapItem(data as ItemReposicionRow);
-  }
-
-  const { data, error } = await supabase
-    .from("items_reposicion")
-    .insert({ variante_id: varianteId, cantidad, estado: "pendiente" })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("agregar_item_reposicion", {
+    p_variante_id: varianteId,
+    p_cantidad: cantidad,
+  });
   if (error) throw error;
   return mapItem(data as ItemReposicionRow);
 }
