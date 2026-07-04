@@ -91,10 +91,17 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
       switch (effect.kind) {
         case "lookup": {
           scanProduct(effect.ean).then((result) => {
-            if (result.success && result.producto) {
+            if (result.status === "found") {
               dispatch({ type: "FOUND", ean: effect.ean, producto: result.producto });
-            } else {
+            } else if (result.status === "not_found") {
               dispatch({ type: "NOT_FOUND", ean: effect.ean });
+            } else {
+              // Fallo de red: volver a scanning para reintentar, sin abrir
+              // el alta manual de un producto que sí puede existir.
+              toast.error("No se pudo buscar el producto. Revisá tu conexión.", {
+                duration: 2000,
+              });
+              dispatch({ type: "LOOKUP_FAILED", ean: effect.ean });
             }
           });
           return;

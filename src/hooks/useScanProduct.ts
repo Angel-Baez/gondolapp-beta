@@ -1,5 +1,6 @@
 "use client";
 
+import { buscarPorCodigoBarras } from "@/services/catalogo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -7,6 +8,16 @@ export interface ProductoEscaneado {
   base: { id: string; nombre: string; marca?: string; categoria?: string };
   variante: { id: string; nombreCompleto: string; tamano?: string };
 }
+
+/**
+ * Resultado del lookup con tres estados: "error" (red caída, timeout) es
+ * distinto de "not_found" — un fallo de red NO debe abrir el alta manual
+ * para un producto que sí existe en el catálogo.
+ */
+export type ScanLookupResult =
+  | { status: "found"; producto: ProductoEscaneado }
+  | { status: "not_found" }
+  | { status: "error" };
 
 /** Diez minutos: suficiente para que re-escanear el mismo producto en la
  * sesión actual (encadenando varios ítems) no pague otro round-trip. */
@@ -16,46 +27,48 @@ export function eanQueryKey(ean: string) {
   return ["producto", "ean", ean] as const;
 }
 
-async function fetchPorEan(
-  ean: string
-): Promise<{ success: boolean; producto?: ProductoEscaneado; error?: string }> {
-  const response = await fetch(`/api/productos/buscar?ean=${encodeURIComponent(ean)}`);
-  const data = await response.json();
-
-  if (!data.success || !data.producto) {
-    return {
-      success: false,
-      error: data.message || `Producto con código ${ean} no encontrado.`,
-    };
-  }
-  return { success: true, producto: data.producto };
-}
-
 export function useScanProduct() {
   const queryClient = useQueryClient();
 
   const scanProduct = useCallback(
-    async (
-      barcode: string
-    ): Promise<{ success: boolean; producto?: ProductoEscaneado; error?: string }> => {
-      try {
-        // Cachea por EAN: sólo "no encontrado" no se cachea, para no
-        // bloquear el alta manual del mismo código en la misma sesión.
-        const cached = queryClient.getQueryData<ProductoEscaneado>(eanQueryKey(barcode));
-        if (cached) return { success: true, producto: cached };
+    async (barcode: string): Promise<ScanLookupResult> => {
+      // Cachea por EAN: sólo "no encontrado" no se cachea, para no
+      // bloquear el alta manual del mismo código en la misma sesión.
+      const cached = queryClient.getQueryData<ProductoEscaneado>(eanQueryKey(barcode));
+      if (cached) return { status: "found", producto: cached };
 
-        const result = await fetchPorEan(barcode);
-        if (result.success && result.producto) {
-          queryClient.setQueryData(eanQueryKey(barcode), result.producto, {
-            updatedAt: Date.now(),
-          });
-          queryClient.setQueryDefaults(eanQueryKey(barcode), {
-            staleTime: EAN_STALE_TIME,
-          });
-        }
-        return result;
+      try {
+        // Directo a Supabase: antes pasaba por /api/productos/buscar
+        // (función de Vercel), un hop extra de latencia en el camino
+        // crítico del escaneo que además convertía cualquier caída de
+        // red en un falso "no encontrado".
+        const resultado = await buscarPorCodigoBarras(barcode);
+        if (!resultado) return { status: "not_found" };
+
+        const producto: ProductoEscaneado = {
+          base: {
+            id: resultado.base.id,
+            nombre: resultado.base.nombre,
+            marca: resultado.base.marca,
+            categoria: resultado.base.categoria,
+          },
+          variante: {
+            id: resultado.variante.id,
+            nombreCompleto: resultado.variante.nombreCompleto,
+            tamano: resultado.variante.tamano,
+          },
+        };
+        queryClient.setQueryData(eanQueryKey(barcode), producto, {
+          updatedAt: Date.now(),
+        });
+        queryClient.setQueryDefaults(eanQueryKey(barcode), {
+          staleTime: EAN_STALE_TIME,
+        });
+        return { status: "found", producto };
       } catch {
-        return { success: false, error: "Error al buscar producto" };
+        // maybeSingle() devuelve null para "no existe"; cualquier throw
+        // es un fallo del lookup (red, servidor), nunca un "no está".
+        return { status: "error" };
       }
     },
     [queryClient]

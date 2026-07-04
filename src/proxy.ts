@@ -43,7 +43,6 @@ const redis = process.env.UPSTASH_REDIS_REST_URL
 // Para cambiar límites sin redeploy: https://vercel.com/docs/storage/edge-config
 const RATE_LIMITS = {
   api: parseInt(process.env.RATE_LIMIT_API || "30"),
-  search: parseInt(process.env.RATE_LIMIT_SEARCH || "20"),
   create: parseInt(process.env.RATE_LIMIT_CREATE || "15"),
 };
 
@@ -54,15 +53,6 @@ const apiLimiter = redis
       limiter: Ratelimit.slidingWindow(RATE_LIMITS.api, "1 m"),
       analytics: true,
       prefix: "@gondolapp/api",
-    })
-  : null;
-
-const searchLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(RATE_LIMITS.search, "1 m"),
-      analytics: true,
-      prefix: "@gondolapp/search",
     })
   : null;
 
@@ -99,11 +89,7 @@ export default async function proxy(request: NextRequest) {
   let limitType = "API general";
   let cacheKey = `${identifier}:api`;
 
-  if (pathname.includes("/api/productos/buscar")) {
-    limiter = searchLimiter;
-    limitType = "Búsqueda";
-    cacheKey = `${identifier}:search`;
-  } else if (pathname.includes("/api/productos/crear-manual")) {
+  if (pathname.includes("/api/productos/crear-manual")) {
     limiter = createLimiter;
     limitType = "Creación";
     cacheKey = `${identifier}:create`;
