@@ -93,6 +93,11 @@ export default async function proxy(request: NextRequest) {
     limiter = createLimiter;
     limitType = "Creación";
     cacheKey = `${identifier}:create`;
+  } else if (pathname.includes("/api/productos/parsear")) {
+    // El parseo llama a la IA (costo por request): mismo límite que creación.
+    limiter = createLimiter;
+    limitType = "Parseo IA";
+    cacheKey = `${identifier}:create`;
   }
 
   // ⚡ CHECK CACHE PRIMERO (evita llamada a Redis si hay entrada válida)
