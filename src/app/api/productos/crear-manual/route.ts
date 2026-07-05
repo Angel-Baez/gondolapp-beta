@@ -1,6 +1,43 @@
-import { crearProductoManual, obtenerMarcasYCategorias } from "@/services/catalogo";
-import { CrearProductoDTO } from "@/types";
+import {
+  crearProductoManual,
+  obtenerDefinicionesAtributos,
+  obtenerMarcasYCategorias,
+} from "@/services/catalogo";
+import { AtributosVariante, CategoriaAtributo, CrearProductoDTO } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
+
+/** El body viene de la red: no confiar en el shape de CrearProductoDTO. */
+function esObjetoPlanoDeStrings(valor: unknown): valor is AtributosVariante {
+  return (
+    typeof valor === "object" &&
+    valor !== null &&
+    !Array.isArray(valor) &&
+    Object.values(valor).every((v) => typeof v === "string")
+  );
+}
+
+/**
+ * Normaliza whitespace y, si el valor matchea case-insensitive una
+ * sugerencia de la definición, lo sustituye por la forma canónica. Es la
+ * única defensa contra "Vainilla"/"vainilla"/"VAINILLA" conviviendo en el
+ * jsonb (el schema no valida valores): el datalist del formulario empuja
+ * hacia el canon y acá se consolida lo que llegue tipeado distinto.
+ */
+function canonicalizarAtributos(
+  atributos: AtributosVariante,
+  defs: CategoriaAtributo[]
+): AtributosVariante {
+  const sugerenciasPorClave = new Map(defs.map((d) => [d.clave, d.sugerencias ?? []]));
+  return Object.fromEntries(
+    Object.entries(atributos).map(([clave, valor]) => {
+      const normalizado = valor.replace(/\s+/g, " ").trim();
+      const canonico = sugerenciasPorClave
+        .get(clave)
+        ?.find((s) => s.toLowerCase() === normalizado.toLowerCase());
+      return [clave, canonico ?? normalizado];
+    })
+  );
+}
 
 /**
  * POST /api/productos/crear-manual
@@ -18,7 +55,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const producto = await crearProductoManual(body);
+    const atributosCrudos = body.variante?.atributos ?? {};
+    if (!esObjetoPlanoDeStrings(atributosCrudos)) {
+      return NextResponse.json(
+        { success: false, error: "atributos debe ser un objeto plano de strings" },
+        { status: 400 }
+      );
+    }
+
+    // Si las definiciones no se pueden leer, se crea igual sin canonicalizar:
+    // perder el alta por un fallo del lookup sería peor que un valor sin canon.
+    let atributos = atributosCrudos;
+    try {
+      const defs = await obtenerDefinicionesAtributos();
+      const categoria = body.productoBase.categoria?.trim();
+      const defsAplicables =
+        (categoria && defs.porCategoria[categoria]) || defs.default;
+      atributos = canonicalizarAtributos(atributosCrudos, defsAplicables);
+    } catch {
+      // sin canonicalización
+    }
+
+    const producto = await crearProductoManual({
+      ...body,
+      variante: { ...body.variante, atributos },
+    });
 
     return NextResponse.json({
       success: true,
@@ -32,7 +93,9 @@ export async function POST(request: NextRequest) {
         variante: {
           id: producto.variante.id,
           nombreCompleto: producto.variante.nombreCompleto,
-          tamano: producto.variante.tamano,
+          atributos: producto.variante.atributos,
+          // Derivado para consumidores que siguen esperando el campo plano.
+          tamano: producto.variante.atributos["tamano"],
         },
       },
     });
@@ -46,17 +109,29 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/productos/crear-manual
  *
- * Devuelve listas de marcas y categorías existentes para autocompletado
+ * Devuelve marcas y categorías existentes para autocompletado, más las
+ * definiciones de atributos que arman el formulario dinámico del alta.
  */
 export async function GET() {
   try {
-    const { marcas, categorias } = await obtenerMarcasYCategorias();
-    return NextResponse.json({ success: true, marcas, categorias });
+    const [{ marcas, categorias }, defs] = await Promise.all([
+      obtenerMarcasYCategorias(),
+      obtenerDefinicionesAtributos(),
+    ]);
+    return NextResponse.json({
+      success: true,
+      marcas,
+      categorias,
+      atributosDefault: defs.default,
+      atributosPorCategoria: defs.porCategoria,
+    });
   } catch {
     return NextResponse.json({
       success: true,
       marcas: [],
       categorias: [],
+      atributosDefault: [],
+      atributosPorCategoria: {},
       warning: "Catálogo no disponible. Autocompletado deshabilitado.",
     });
   }

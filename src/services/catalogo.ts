@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase";
-import { construirNombreCompleto } from "@/lib/utils";
-import { CrearProductoDTO, ProductoBase, ProductoVariante } from "@/types";
+import {
+  AtributosVariante,
+  CategoriaAtributo,
+  CrearProductoDTO,
+  ProductoBase,
+  ProductoVariante,
+} from "@/types";
 
 export interface ProductoCompleto {
   base: ProductoBase;
@@ -22,9 +27,7 @@ interface ProductoVarianteRow {
   producto_base_id: string;
   codigo_barras: string;
   nombre_completo: string;
-  tipo: string | null;
-  tamano: string | null;
-  sabor: string | null;
+  atributos: Record<string, string> | null;
   imagen: string | null;
   created_at: string;
 }
@@ -47,9 +50,9 @@ function mapProductoVariante(row: ProductoVarianteRow): ProductoVariante {
     productoBaseId: row.producto_base_id,
     codigoBarras: row.codigo_barras,
     nombreCompleto: row.nombre_completo,
-    tipo: row.tipo ?? undefined,
-    tamano: row.tamano ?? undefined,
-    sabor: row.sabor ?? undefined,
+    // `?? {}` defensivo: respuestas viejas o caché con shape anterior
+    // pueden no traer la clave; el resto del código asume objeto.
+    atributos: row.atributos ?? {},
     imagen: row.imagen ?? undefined,
     createdAt: new Date(row.created_at),
   };
@@ -170,6 +173,15 @@ export async function buscarVariantes(termino: string): Promise<ProductoCompleto
   return resultado;
 }
 
+/** Trim de claves y valores, descartando entradas vacías. */
+function sanitizarAtributos(atributos?: AtributosVariante): AtributosVariante {
+  return Object.fromEntries(
+    Object.entries(atributos ?? {})
+      .map(([clave, valor]) => [clave.trim(), String(valor).trim()])
+      .filter(([clave, valor]) => clave && valor)
+  );
+}
+
 /**
  * Crea un producto (base + variante) manualmente cuando el código escaneado
  * no está en el catálogo. Reutiliza el producto base si ya existe uno con
@@ -219,25 +231,16 @@ export async function crearProductoManual(
     baseRow = data as ProductoBaseRow;
   }
 
-  const nombreCompleto = [
-    dto.productoBase.nombre,
-    dto.variante.tipo,
-    dto.variante.sabor,
-    dto.variante.tamano,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
+  // nombre_completo no se manda: es un campo derivado y su dueño es el
+  // trigger de BD (migración 0008), que lo arma desde atributos con el
+  // orden de la categoría. Así imports masivos o fixes por SQL nunca lo
+  // dejan desincronizado de la búsqueda ilike.
   const { data: varianteRow, error: varianteError } = await supabase
     .from("producto_variantes")
     .insert({
       producto_base_id: baseRow.id,
       codigo_barras: dto.ean.trim(),
-      nombre_completo: nombreCompleto,
-      tipo: dto.variante.tipo?.trim(),
-      tamano: dto.variante.tamano?.trim() || null,
-      sabor: dto.variante.sabor?.trim(),
+      atributos: sanitizarAtributos(dto.variante.atributos),
       imagen: dto.variante.imagen,
     })
     .select()
@@ -274,6 +277,50 @@ export async function obtenerProductosPorVarianteIds(
     const producto = mapProductoCompleto(row);
     if (!producto) continue;
     resultado[row.id] = producto;
+  }
+  return resultado;
+}
+
+interface CategoriaAtributoRow {
+  categoria: string | null;
+  clave: string;
+  etiqueta: string;
+  orden: number;
+  sugerencias: string[] | null;
+}
+
+export interface DefinicionesAtributos {
+  /** Claves del default global (filas con categoria null). */
+  default: CategoriaAtributo[];
+  /** Una categoría con >=1 fila REEMPLAZA al default (no mergea). */
+  porCategoria: Record<string, CategoriaAtributo[]>;
+}
+
+/**
+ * Definiciones de atributos por categoría: qué claves mostrar en el
+ * formulario dinámico, con qué etiqueta/orden y qué valores sugerir.
+ * La tabla es diminuta (unas filas por categoría), se trae entera.
+ */
+export async function obtenerDefinicionesAtributos(): Promise<DefinicionesAtributos> {
+  const { data, error } = await supabase
+    .from("categoria_atributos")
+    .select("categoria, clave, etiqueta, orden, sugerencias")
+    .order("orden");
+  if (error) throw error;
+
+  const resultado: DefinicionesAtributos = { default: [], porCategoria: {} };
+  for (const row of (data ?? []) as CategoriaAtributoRow[]) {
+    const def: CategoriaAtributo = {
+      clave: row.clave,
+      etiqueta: row.etiqueta,
+      orden: row.orden,
+      sugerencias: row.sugerencias?.length ? row.sugerencias : undefined,
+    };
+    if (row.categoria === null) {
+      resultado.default.push(def);
+    } else {
+      (resultado.porCategoria[row.categoria] ??= []).push(def);
+    }
   }
   return resultado;
 }
