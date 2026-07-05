@@ -177,7 +177,14 @@ export async function parsearProducto(texto: string): Promise<ProductoParseado> 
   const [{ marcas, categorias }, defs, basesResult] = await Promise.all([
     obtenerMarcasYCategorias(),
     obtenerDefinicionesAtributos(),
-    supabase.from("producto_bases").select("nombre, marca, categoria"),
+    // El orden estable importa: el system prompt se cachea por prefijo exacto
+    // de bytes, y sin .order() Postgres no garantiza orden — cada request
+    // generaría un prompt distinto y el caché nunca pegaría.
+    supabase
+      .from("producto_bases")
+      .select("nombre, marca, categoria")
+      .order("nombre")
+      .order("marca"),
   ]);
   if (basesResult.error) throw basesResult.error;
   const bases = (basesResult.data ?? []) as BaseExistenteRow[];
@@ -185,7 +192,18 @@ export async function parsearProducto(texto: string): Promise<ProductoParseado> 
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 1024,
-    system: construirSystemPrompt(marcas, categorias, defs, bases),
+    // El catálogo completo viaja en el system prompt y domina el costo del
+    // request. Con cache_control, requests dentro de la ventana del caché
+    // (5 min) pagan ~10% por el prefijo cacheado en vez del precio completo.
+    // Si el catálogo es chico (<4096 tokens, mínimo cacheable de Haiku 4.5)
+    // el marcador se ignora en silencio, sin costo extra.
+    system: [
+      {
+        type: "text",
+        text: construirSystemPrompt(marcas, categorias, defs, bases),
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     output_config: {
       format: {
         type: "json_schema",
