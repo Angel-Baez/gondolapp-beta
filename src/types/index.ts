@@ -87,6 +87,18 @@ export interface ItemVencimientoConAlerta extends ItemVencimiento {
   alertaNivel: AlertaNivel;
 }
 
+// Resultado del parseo con IA de un texto libre de producto ("Leche Milex
+// Original 2200g"): la clasificación normalizada contra el catálogo
+// existente, lista para pre-llenar el DTO de creación.
+export interface ProductoParseado {
+  productoBase: {
+    nombre: string;
+    marca: string;
+    categoria?: string;
+  };
+  atributos: AtributosVariante;
+}
+
 // DTO para crear producto desde formulario. Sólo nombre + marca son
 // obligatorios (agilizar el alta cuando no se escanea el código): el resto
 // se completa con valores vacíos si no se especifica.
