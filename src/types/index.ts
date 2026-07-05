@@ -30,15 +30,31 @@ export interface ProductoBase {
   updatedAt: Date;
 }
 
+// Ejes de variación de una variante, clave->valor (ej: { tipo: "Sin
+// Lactosa", sabor: "Vainilla", tamano: "1L" }). Las claves las define
+// categoria_atributos por categoría; los valores son texto libre.
+// Objeto plano a propósito: se persiste en IndexedDB vía JSON.stringify.
+export type AtributosVariante = Record<string, string>;
+
+// Definición de un atributo para una categoría (tabla categoria_atributos):
+// guía el formulario dinámico y el orden de armado del nombre. Los valores
+// reales viven en ProductoVariante.atributos.
+export interface CategoriaAtributo {
+  clave: string;
+  etiqueta: string;
+  orden: number;
+  sugerencias?: string[];
+}
+
 // Variante de Producto
 export interface ProductoVariante {
   id: string; // UUID
   productoBaseId: string; // FK a ProductoBase
   codigoBarras: string;
+  // Derivado en BD (trigger): nombre base + atributos en el orden de la
+  // categoría. Nunca escribirlo desde el cliente.
   nombreCompleto: string;
-  tipo?: string; // "Original", "Sin Lactosa", etc.
-  tamano?: string; // "1000g", "1400g", etc.
-  sabor?: string;
+  atributos: AtributosVariante;
   imagen?: string;
   createdAt: Date;
 }
@@ -83,9 +99,7 @@ export interface CrearProductoDTO {
     imagen?: string;
   };
   variante: {
-    tipo?: string;
-    tamano?: string;
-    sabor?: string;
+    atributos?: AtributosVariante;
     imagen?: string;
   };
 }

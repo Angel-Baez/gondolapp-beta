@@ -5,6 +5,7 @@ import {
   construirNombreCompleto,
   formatearFecha,
   generarUUID,
+  ordenarClavesAtributos,
 } from "@/lib/utils";
 
 describe("construirNombreCompleto", () => {
@@ -18,12 +19,46 @@ describe("construirNombreCompleto", () => {
     expect(construirNombreCompleto("Leche", { tamano: "1L" })).toBe("Leche 1L");
   });
 
-  it("siempre incluye el nombre de la base aunque no haya variante", () => {
+  it("siempre incluye el nombre de la base aunque no haya atributos", () => {
     expect(construirNombreCompleto("Yerba", {})).toBe("Yerba");
   });
 
   it("ignora campos vacíos o solo espacios", () => {
     expect(construirNombreCompleto("Yerba", { tipo: "  ", tamano: "1kg" })).toBe("Yerba 1kg");
+  });
+
+  it("pone claves desconocidas al final, en orden alfabético", () => {
+    expect(
+      construirNombreCompleto("Destornillador", {
+        medida: "PH2",
+        tamano: "150mm",
+        material: "Acero",
+      })
+    ).toBe("Destornillador 150mm Acero PH2");
+  });
+
+  it("respeta un orden de claves custom (definición por categoría)", () => {
+    expect(
+      construirNombreCompleto(
+        "Destornillador",
+        { medida: "PH2", material: "Acero" },
+        ["medida", "material"]
+      )
+    ).toBe("Destornillador PH2 Acero");
+  });
+});
+
+describe("ordenarClavesAtributos", () => {
+  it("ordena las claves conocidas según el orden default", () => {
+    expect(
+      ordenarClavesAtributos({ tamano: "1L", tipo: "Entera", sabor: "Vainilla" })
+    ).toEqual(["tipo", "sabor", "tamano"]);
+  });
+
+  it("agrega las desconocidas al final en orden alfabético", () => {
+    expect(
+      ordenarClavesAtributos({ zeta: "z", tamano: "1L", alfa: "a" })
+    ).toEqual(["tamano", "alfa", "zeta"]);
   });
 });
 

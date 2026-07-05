@@ -1,14 +1,41 @@
 import { AlertaNivel } from "@/types";
 
+// Orden de armado cuando la categoría no tiene definición propia en
+// categoria_atributos. Debe coincidir con el seed global de la migración 0008.
+export const ORDEN_ATRIBUTOS_DEFAULT = ["tipo", "sabor", "tamano"] as const;
+
 /**
- * Arma el nombre completo mostrado en pantalla para una variante: siempre
- * nombre de la base + tipo (si existe) + sabor + tamaño, en ese orden.
+ * Ordena las claves de un objeto de atributos: primero las conocidas en el
+ * orden dado, después las desconocidas en orden alfabético. Espeja el
+ * criterio de armar_nombre_completo() en BD para que el display client-side
+ * coincida con el nombre_completo derivado por el trigger.
+ */
+export function ordenarClavesAtributos(
+  atributos: Record<string, string | null | undefined>,
+  orden: readonly string[] = ORDEN_ATRIBUTOS_DEFAULT
+): string[] {
+  const conocidas = orden.filter((clave) => clave in atributos);
+  const desconocidas = Object.keys(atributos)
+    .filter((clave) => !orden.includes(clave))
+    .sort();
+  return [...conocidas, ...desconocidas];
+}
+
+/**
+ * Arma el nombre completo mostrado en pantalla para una variante: nombre de
+ * la base + valores de atributos en el orden de la categoría. Solo para
+ * display/optimistic UI: el nombre_completo persistido lo deriva el trigger
+ * de BD (migración 0008), nunca el cliente.
  */
 export function construirNombreCompleto(
   nombreBase: string,
-  variante: { tipo?: string | null; sabor?: string | null; tamano?: string | null }
+  atributos: Record<string, string | null | undefined>,
+  orden: readonly string[] = ORDEN_ATRIBUTOS_DEFAULT
 ): string {
-  return [nombreBase, variante.tipo, variante.sabor, variante.tamano]
+  return [
+    nombreBase,
+    ...ordenarClavesAtributos(atributos, orden).map((clave) => atributos[clave]),
+  ]
     .filter((parte): parte is string => Boolean(parte && parte.trim()))
     .join(" ");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useHaptics } from "@/hooks/useHaptics";
+import { ordenarClavesAtributos } from "@/lib/utils";
 import {
   useActualizarCantidadReposicion,
   useCambiarEstadoMasivo,
@@ -175,11 +176,13 @@ export function ReposicionCard({
             <div className="divide-y divide-border">
               {variantes.map(({ item, variante }) => {
                 // El header de la card ya muestra productoBase.nombre, así que acá
-                // se arma solo la parte de variante (tipo+sabor+tamaño) para no
+                // se arma solo la parte de variante (sus atributos) para no
                 // repetir el nombre base que nombreCompleto ya incluye.
                 const descriptorVariante =
-                  [variante.tipo, variante.sabor, variante.tamano].filter(Boolean).join(" ") ||
-                  variante.nombreCompleto;
+                  ordenarClavesAtributos(variante.atributos)
+                    .map((clave) => variante.atributos[clave])
+                    .filter(Boolean)
+                    .join(" ") || variante.nombreCompleto;
                 const seleccionado = estaSeleccionado?.(item.id) ?? false;
                 return (
                 <div

@@ -21,7 +21,7 @@ const PRODUCTO: ProductoCompleto = {
     productoBaseId: "base-1",
     codigoBarras: "7790000000001",
     nombreCompleto: "Leche Entera 1L",
-    tamano: "1L",
+    atributos: { tamano: "1L" },
     createdAt: new Date(),
   },
 };

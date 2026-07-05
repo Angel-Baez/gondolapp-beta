@@ -1,10 +1,13 @@
 "use client";
 
+import { CategoriaAtributo } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 export interface MarcasCategorias {
   marcas: string[];
   categorias: string[];
+  atributosDefault: CategoriaAtributo[];
+  atributosPorCategoria: Record<string, CategoriaAtributo[]>;
 }
 
 export const MARCAS_CATEGORIAS_KEY = ["catalogo", "marcas-categorias"] as const;
@@ -12,7 +15,12 @@ export const MARCAS_CATEGORIAS_KEY = ["catalogo", "marcas-categorias"] as const;
 export async function fetchMarcasCategorias(): Promise<MarcasCategorias> {
   const res = await fetch("/api/productos/crear-manual");
   const data = await res.json();
-  return { marcas: data.marcas ?? [], categorias: data.categorias ?? [] };
+  return {
+    marcas: data.marcas ?? [],
+    categorias: data.categorias ?? [],
+    atributosDefault: data.atributosDefault ?? [],
+    atributosPorCategoria: data.atributosPorCategoria ?? {},
+  };
 }
 
 /** Marcas/categorías existentes, para el autocompletado del alta manual. */

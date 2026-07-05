@@ -12,9 +12,7 @@ const varianteRow = {
   producto_base_id: "base-1",
   codigo_barras: "7791234567890",
   nombre_completo: "Leche Entera 1L",
-  tipo: "Entera",
-  tamano: "1L",
-  sabor: null,
+  atributos: { tipo: "Entera", tamano: "1L" },
   imagen: null,
   created_at: "2026-01-01T00:00:00Z",
 };
@@ -70,7 +68,7 @@ describe("crearProductoManual", () => {
   const dto = {
     ean: "7799999999999",
     productoBase: { nombre: "Yerba", marca: "Playadito", categoria: "Almacén" },
-    variante: { tamano: "1kg", tipo: "Con Palo" },
+    variante: { atributos: { tamano: "1kg", tipo: "Con Palo" } },
   };
 
   it("rechaza si el código de barras ya existe", async () => {
@@ -90,10 +88,8 @@ describe("crearProductoManual", () => {
       id: "variante-nueva",
       producto_base_id: "base-1",
       codigo_barras: dto.ean,
-      nombre_completo: "Con Palo 1kg",
-      tipo: "Con Palo",
-      tamano: "1kg",
-      sabor: null,
+      nombre_completo: "Yerba Con Palo 1kg",
+      atributos: { tipo: "Con Palo", tamano: "1kg" },
       imagen: null,
       created_at: "2026-01-01T00:00:00Z",
     };
@@ -111,12 +107,12 @@ describe("crearProductoManual", () => {
     expect(fromMock).toHaveBeenCalledTimes(3);
   });
 
-  it("arma nombre_completo como base + tipo + sabor + tamaño", async () => {
+  it("no manda nombre_completo (lo deriva el trigger de BD) y sanitiza atributos", async () => {
     const { crearProductoManual } = await import("@/services/catalogo");
-    const dtoConSabor = {
+    const dtoSucio = {
       ean: "7777777777777",
       productoBase: { nombre: "Yerba", marca: "Playadito", categoria: "Almacén" },
-      variante: { tipo: "Con Palo", sabor: "Suave", tamano: "1kg" },
+      variante: { atributos: { tipo: " Con Palo ", sabor: "  ", tamano: "1kg" } },
     };
     let payloadInsertado: Record<string, unknown> | undefined;
     fromMock.mockImplementation((tabla: string) => {
@@ -128,7 +124,12 @@ describe("crearProductoManual", () => {
             return {
               select: () => ({
                 single: async () => ({
-                  data: { ...payload, id: "variante-nueva", created_at: "2026-01-01T00:00:00Z" },
+                  data: {
+                    ...payload,
+                    id: "variante-nueva",
+                    nombre_completo: "Yerba Con Palo 1kg", // lo pondría el trigger
+                    created_at: "2026-01-01T00:00:00Z",
+                  },
                   error: null,
                 }),
               }),
@@ -143,9 +144,10 @@ describe("crearProductoManual", () => {
       };
     });
 
-    await crearProductoManual(dtoConSabor);
+    await crearProductoManual(dtoSucio);
 
-    expect(payloadInsertado?.nombre_completo).toBe("Yerba Con Palo Suave 1kg");
+    expect(payloadInsertado).not.toHaveProperty("nombre_completo");
+    expect(payloadInsertado?.atributos).toEqual({ tipo: "Con Palo", tamano: "1kg" });
   });
 
   it("crea un producto base nuevo si no existe ninguno con ese nombre+marca", async () => {
@@ -155,10 +157,8 @@ describe("crearProductoManual", () => {
       id: "variante-nueva",
       producto_base_id: "base-nueva",
       codigo_barras: dto.ean,
-      nombre_completo: "Con Palo 1kg",
-      tipo: "Con Palo",
-      tamano: "1kg",
-      sabor: null,
+      nombre_completo: "Yerba Con Palo 1kg",
+      atributos: { tipo: "Con Palo", tamano: "1kg" },
       imagen: null,
       created_at: "2026-01-01T00:00:00Z",
     };
@@ -206,6 +206,36 @@ describe("obtenerProductosPorVarianteIds", () => {
     const resultado = await obtenerProductosPorVarianteIds(["variante-1"]);
     const restaurado = JSON.parse(JSON.stringify(resultado));
     expect(restaurado["variante-1"]?.base.nombre).toBe("Leche");
+  });
+});
+
+describe("obtenerDefinicionesAtributos", () => {
+  it("separa el default global (categoria null) de las definiciones por categoría", async () => {
+    const { obtenerDefinicionesAtributos } = await import("@/services/catalogo");
+    fromMock.mockImplementation(
+      mockSupabaseFrom({
+        data: [
+          { categoria: null, clave: "tipo", etiqueta: "Tipo", orden: 0, sugerencias: [] },
+          { categoria: null, clave: "sabor", etiqueta: "Sabor", orden: 1, sugerencias: [] },
+          {
+            categoria: "Ferretería",
+            clave: "medida",
+            etiqueta: "Medida",
+            orden: 0,
+            sugerencias: ["PH1", "PH2"],
+          },
+        ],
+      })
+    );
+
+    const defs = await obtenerDefinicionesAtributos();
+
+    expect(defs.default.map((d) => d.clave)).toEqual(["tipo", "sabor"]);
+    expect(defs.porCategoria["Ferretería"]).toEqual([
+      { clave: "medida", etiqueta: "Medida", orden: 0, sugerencias: ["PH1", "PH2"] },
+    ]);
+    // sugerencias vacías se normalizan a undefined (no ensuciar el JSON persistido)
+    expect(defs.default[0].sugerencias).toBeUndefined();
   });
 });
 

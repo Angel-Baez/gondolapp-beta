@@ -55,7 +55,7 @@ export function useScanProduct() {
           variante: {
             id: resultado.variante.id,
             nombreCompleto: resultado.variante.nombreCompleto,
-            tamano: resultado.variante.tamano,
+            tamano: resultado.variante.atributos["tamano"],
           },
         };
         queryClient.setQueryData(eanQueryKey(barcode), producto, {

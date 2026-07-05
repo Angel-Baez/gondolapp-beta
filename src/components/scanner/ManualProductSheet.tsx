@@ -3,7 +3,7 @@
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useMarcasCategorias } from "@/hooks/useMarcasCategorias";
 import { ProductoEscaneado } from "@/hooks/useScanProduct";
-import { CrearProductoDTO } from "@/types";
+import { CategoriaAtributo, CrearProductoDTO } from "@/types";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -15,6 +15,20 @@ export interface ManualProductSheetProps {
   onClose: () => void;
 }
 
+// Último fallback cuando el GET de definiciones falló (offline) y no hay
+// nada cacheado: replica el seed global de la migración 0008.
+const DEFS_FALLBACK: CategoriaAtributo[] = [
+  { clave: "tipo", etiqueta: "Tipo", orden: 0 },
+  { clave: "sabor", etiqueta: "Sabor", orden: 1 },
+  { clave: "tamano", etiqueta: "Tamaño", orden: 2 },
+];
+
+const PLACEHOLDER_EJEMPLOS: Record<string, string> = {
+  tipo: "Tipo (ej: Sin Lactosa)",
+  sabor: "Sabor (opcional)",
+  tamano: "Tamaño (ej: 1L)",
+};
+
 /** Formulario de alta rápida para EAN desconocido: sólo nombre + marca son obligatorios. */
 export function ManualProductSheet({
   ean,
@@ -25,25 +39,32 @@ export function ManualProductSheet({
   const [nombre, setNombre] = useState("");
   const [marca, setMarca] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [tipo, setTipo] = useState("");
-  const [tamano, setTamano] = useState("");
-  const [sabor, setSabor] = useState("");
+  const [atributos, setAtributos] = useState<Record<string, string>>({});
   const [detallesAbiertos, setDetallesAbiertos] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   const { data } = useMarcasCategorias(isOpen);
+
+  // Inputs a mostrar: definición de la categoría si tiene, si no el default
+  // del server, si no el hardcode local. Cambiar de categoría cambia los
+  // inputs pero no borra lo tipeado (se filtra recién al enviar).
+  const defsCategoria = data?.atributosPorCategoria?.[categoria.trim()];
+  const defs =
+    defsCategoria ??
+    (data?.atributosDefault?.length ? data.atributosDefault : DEFS_FALLBACK);
 
   useEffect(() => {
     if (!isOpen) {
       setNombre("");
       setMarca("");
       setCategoria("");
-      setTipo("");
-      setTamano("");
-      setSabor("");
+      setAtributos({});
       setDetallesAbiertos(false);
     }
   }, [isOpen]);
+
+  const setAtributo = (clave: string, valor: string) =>
+    setAtributos((prev) => ({ ...prev, [clave]: valor }));
 
   const handleSubmit = async () => {
     if (!nombre.trim() || !marca.trim()) {
@@ -53,6 +74,14 @@ export function ManualProductSheet({
 
     setEnviando(true);
     try {
+      // Solo las claves visibles: si el usuario tipeó un sabor y después
+      // cambió a una categoría sin sabor, ese valor huérfano no viaja.
+      const atributosVisibles = Object.fromEntries(
+        defs
+          .map((def) => [def.clave, (atributos[def.clave] ?? "").trim()])
+          .filter(([, valor]) => valor)
+      );
+
       const dto: CrearProductoDTO = {
         ean,
         productoBase: {
@@ -61,9 +90,7 @@ export function ManualProductSheet({
           categoria: categoria.trim() || undefined,
         },
         variante: {
-          tipo: tipo.trim() || undefined,
-          tamano: tamano.trim() || undefined,
-          sabor: sabor.trim() || undefined,
+          atributos: atributosVisibles,
         },
       };
 
@@ -133,7 +160,7 @@ export function ManualProductSheet({
           onClick={() => setDetallesAbiertos((v) => !v)}
           className="w-full flex items-center justify-between text-subhead font-semibold text-fg-secondary py-1"
         >
-          Detalles (categoría, tipo, tamaño, sabor)
+          Detalles (categoría y variante)
           <ChevronDown
             size={18}
             className={`transition-transform ${detallesAbiertos ? "rotate-180" : ""}`}
@@ -155,27 +182,25 @@ export function ManualProductSheet({
                 <option key={c} value={c} />
               ))}
             </datalist>
-            <input
-              type="text"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-              placeholder="Tipo (ej: Sin Lactosa)"
-              className="w-full h-12 px-4 rounded-field bg-surface-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-accent/40"
-            />
-            <input
-              type="text"
-              value={tamano}
-              onChange={(e) => setTamano(e.target.value)}
-              placeholder="Tamaño (ej: 1L)"
-              className="w-full h-12 px-4 rounded-field bg-surface-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-accent/40"
-            />
-            <input
-              type="text"
-              value={sabor}
-              onChange={(e) => setSabor(e.target.value)}
-              placeholder="Sabor (opcional)"
-              className="w-full h-12 px-4 rounded-field bg-surface-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-accent/40"
-            />
+            {defs.map((def) => (
+              <div key={def.clave}>
+                <input
+                  type="text"
+                  list={def.sugerencias?.length ? `manual-atributo-${def.clave}` : undefined}
+                  value={atributos[def.clave] ?? ""}
+                  onChange={(e) => setAtributo(def.clave, e.target.value)}
+                  placeholder={PLACEHOLDER_EJEMPLOS[def.clave] ?? def.etiqueta}
+                  className="w-full h-12 px-4 rounded-field bg-surface-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-accent/40"
+                />
+                {def.sugerencias?.length ? (
+                  <datalist id={`manual-atributo-${def.clave}`}>
+                    {def.sugerencias.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
+                ) : null}
+              </div>
+            ))}
           </div>
         )}
 

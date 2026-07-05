@@ -44,7 +44,7 @@ function aSearchItem(producto: ProductoCompleto): SearchItem {
     varianteId: producto.variante.id,
     nombre: producto.variante.nombreCompleto,
     marca: producto.base.marca,
-    tamano: producto.variante.tamano,
+    tamano: producto.variante.atributos["tamano"],
   };
 }
 

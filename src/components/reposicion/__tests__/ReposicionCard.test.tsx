@@ -43,7 +43,7 @@ function variante(id: string, estado: ItemReposicion["estado"] = "pendiente") {
     productoBaseId: BASE.id,
     codigoBarras: `77900000${id}`,
     nombreCompleto: `Leche Entera ${id}L`,
-    tamano: `${id}L`,
+    atributos: { tamano: `${id}L` },
     createdAt: new Date("2026-01-01T00:00:00Z"),
   };
   return { item, variante: varianteProducto };

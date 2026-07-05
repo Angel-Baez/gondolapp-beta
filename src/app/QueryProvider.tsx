@@ -31,9 +31,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       persistOptions={{
         persister: queryPersister,
         maxAge: MAX_AGE_CACHE_MS,
-        // v2: el catálogo pasó de Map (serializaba como {}) a objeto plano;
-        // el bump descarta caches v1 corruptos que crasheaban al rehidratar.
-        buster: "v2",
+        // v3: ProductoVariante pasó de tipo/tamano/sabor a atributos jsonb;
+        // el bump descarta caches con el shape viejo (la rehidratación no
+        // pasa por el mapper, así que el `?? {}` defensivo no alcanza).
+        // (v2 había descartado los Map serializados como {} de v1.)
+        buster: "v3",
         dehydrateOptions: {
           shouldDehydrateQuery: (query) =>
             query.state.status === "success" &&
