@@ -135,12 +135,15 @@ describe("parsearProducto", () => {
     });
     expect(parsed.atributos).toEqual({ tamano: "2200g" });
 
-    // El contexto del catálogo viaja en el system prompt (matcheo canónico)
+    // El contexto del catálogo viaja en el system prompt (matcheo canónico),
+    // como bloque con cache_control para abaratar requests repetidos.
     const llamada = createMock.mock.calls[0][0];
     expect(llamada.model).toBe("claude-haiku-4-5");
-    expect(llamada.system).toContain("Milex");
-    expect(llamada.system).toContain("Leche Milex");
-    expect(llamada.system).toContain("Lácteos");
+    expect(llamada.system).toHaveLength(1);
+    expect(llamada.system[0].cache_control).toEqual({ type: "ephemeral" });
+    expect(llamada.system[0].text).toContain("Milex");
+    expect(llamada.system[0].text).toContain("Leche Milex");
+    expect(llamada.system[0].text).toContain("Lácteos");
     expect(llamada.messages).toEqual([
       { role: "user", content: "leche milex 2200 gramos" },
     ]);
