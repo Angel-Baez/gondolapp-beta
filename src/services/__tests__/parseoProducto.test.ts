@@ -14,14 +14,21 @@ vi.mock("@anthropic-ai/sdk", () => ({
   },
 }));
 
+const fetchMock = vi.fn();
+
 beforeEach(() => {
   fromMock.mockReset();
   createMock.mockReset();
+  fetchMock.mockReset();
+  vi.stubGlobal("fetch", fetchMock);
   process.env.ANTHROPIC_API_KEY = "sk-ant-test";
+  delete process.env.GEMINI_API_KEY;
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.GEMINI_API_KEY;
 });
 
 // parsearProducto trae contexto con 3 llamadas a supabase.from:
@@ -102,8 +109,24 @@ describe("mapearRespuestaParseo", () => {
   });
 });
 
+// Respuesta exitosa de Gemini generateContent con el JSON dado.
+function respuestaGemini(json: unknown) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      candidates: [
+        {
+          finishReason: "STOP",
+          content: { parts: [{ text: JSON.stringify(json) }] },
+        },
+      ],
+    }),
+  };
+}
+
 describe("parsearProducto", () => {
-  it("lanza IANoConfiguradaError sin ANTHROPIC_API_KEY (la route responde 503)", async () => {
+  it("lanza IANoConfiguradaError sin ninguna API key (la route responde 503)", async () => {
     delete process.env.ANTHROPIC_API_KEY;
     const { parsearProducto, IANoConfiguradaError } = await import(
       "@/services/parseoProducto"
@@ -112,6 +135,7 @@ describe("parsearProducto", () => {
       IANoConfiguradaError
     );
     expect(createMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("arma el prompt con el catálogo y devuelve el parseo mapeado", async () => {
@@ -154,6 +178,96 @@ describe("parsearProducto", () => {
     createMock.mockResolvedValue({
       stop_reason: "max_tokens",
       content: [{ type: "text", text: "{" }],
+    });
+    const { parsearProducto, ParseoInvalidoError } = await import(
+      "@/services/parseoProducto"
+    );
+    await expect(parsearProducto("algo")).rejects.toThrow(ParseoInvalidoError);
+  });
+
+  it("usa Gemini directamente cuando solo hay GEMINI_API_KEY", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    process.env.GEMINI_API_KEY = "AIza-test";
+    mockContexto();
+    fetchMock.mockResolvedValue(
+      respuestaGemini({
+        nombreBase: "Leche Milex",
+        marca: "Milex",
+        categoria: "Lácteos",
+        atributos: [{ clave: "tamano", valor: "2200g" }],
+      })
+    );
+    const { parsearProducto } = await import("@/services/parseoProducto");
+
+    const parsed = await parsearProducto("leche milex 2200g");
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(parsed.productoBase.nombre).toBe("Leche Milex");
+    expect(parsed.atributos).toEqual({ tamano: "2200g" });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain("gemini-3.1-flash-lite:generateContent");
+    const body = JSON.parse(init.body);
+    // El catálogo viaja como systemInstruction también en Gemini
+    expect(body.systemInstruction.parts[0].text).toContain("Leche Milex");
+    expect(body.contents).toEqual([
+      { role: "user", parts: [{ text: "leche milex 2200g" }] },
+    ]);
+  });
+
+  it("cae a Gemini cuando Anthropic falla (ej: crédito agotado)", async () => {
+    process.env.GEMINI_API_KEY = "AIza-test";
+    mockContexto();
+    createMock.mockRejectedValue(
+      new Error("Your credit balance is too low to access the Anthropic API")
+    );
+    fetchMock.mockResolvedValue(
+      respuestaGemini({
+        nombreBase: "Compota",
+        marca: "Gerber",
+        categoria: "",
+        atributos: [],
+      })
+    );
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { parsearProducto } = await import("@/services/parseoProducto");
+
+    const parsed = await parsearProducto("compota gerber");
+
+    expect(createMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(parsed.productoBase).toEqual({
+      nombre: "Compota",
+      marca: "Gerber",
+      categoria: undefined,
+    });
+    warnSpy.mockRestore();
+  });
+
+  it("propaga el error de Anthropic si Gemini no está configurado", async () => {
+    mockContexto();
+    createMock.mockRejectedValue(new Error("rate limited"));
+    const { parsearProducto } = await import("@/services/parseoProducto");
+
+    await expect(parsearProducto("algo")).rejects.toThrow("rate limited");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rechaza respuestas de Gemini con finishReason distinto de STOP", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    process.env.GEMINI_API_KEY = "AIza-test";
+    mockContexto();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [
+          {
+            finishReason: "MAX_TOKENS",
+            content: { parts: [{ text: "{" }] },
+          },
+        ],
+      }),
     });
     const { parsearProducto, ParseoInvalidoError } = await import(
       "@/services/parseoProducto"
