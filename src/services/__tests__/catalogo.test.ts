@@ -139,7 +139,8 @@ describe("crearProductoManual", () => {
       }
       return {
         select: () => ({
-          eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: baseRow, error: null }) }) }),
+          // El lookup de base usa ilike (igualdad case-insensitive, ver 0010)
+          ilike: () => ({ ilike: () => ({ maybeSingle: async () => ({ data: baseRow, error: null }) }) }),
         }),
       };
     });

@@ -202,11 +202,14 @@ export async function crearProductoManual(
       .select("id")
       .eq("codigo_barras", dto.ean)
       .maybeSingle(),
+    // ilike sin comodines = igualdad case-insensitive: reutiliza la base
+    // aunque el tipeo difiera en mayúsculas ("MILEX" → base "Milex"), en
+    // vez de chocar con el índice único de la migración 0010.
     supabase
       .from("producto_bases")
       .select("*")
-      .eq("nombre", dto.productoBase.nombre.trim())
-      .eq("marca", dto.productoBase.marca.trim())
+      .ilike("nombre", dto.productoBase.nombre.trim())
+      .ilike("marca", dto.productoBase.marca.trim())
       .maybeSingle(),
   ]);
   if (buscarError) throw buscarError;
