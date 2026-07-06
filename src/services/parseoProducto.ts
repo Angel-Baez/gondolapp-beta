@@ -7,13 +7,23 @@ import {
 import { AtributosVariante, ProductoParseado } from "@/types";
 import Anthropic from "@anthropic-ai/sdk";
 
-// Server-only: usa ANTHROPIC_API_KEY (sin NEXT_PUBLIC_). Importar este módulo
-// solo desde API routes; en el cliente no hay key y el flujo cae al form.
+// Server-only: usa ANTHROPIC_API_KEY / GEMINI_API_KEY (sin NEXT_PUBLIC_).
+// Importar este módulo solo desde API routes; en el cliente no hay key y el
+// flujo cae al form.
+//
+// Proveedores: Anthropic (Haiku 4.5) es el principal mientras haya crédito;
+// si su llamada falla (crédito agotado, rate limit, etc.) o no hay key, se
+// usa Gemini (free tier). Así la transición Anthropic → Gemini no requiere
+// deploy: cuando el crédito se acabe, el fallback entra solo.
+
+const GEMINI_MODEL_DEFAULT = "gemini-3.1-flash-lite";
 
 /** La route lo convierte en 503: la feature degrada al formulario manual. */
 export class IANoConfiguradaError extends Error {
   constructor() {
-    super("Falta ANTHROPIC_API_KEY: el parseo con IA no está configurado");
+    super(
+      "Falta ANTHROPIC_API_KEY o GEMINI_API_KEY: el parseo con IA no está configurado"
+    );
     this.name = "IANoConfiguradaError";
   }
 }
@@ -164,28 +174,27 @@ export function mapearRespuestaParseo(raw: unknown): ProductoParseado {
   };
 }
 
-/**
- * Parsea el texto libre de un producto ("Leche Milex Original 2200g") a
- * campos normalizados contra el catálogo existente, con Claude Haiku 4.5.
- */
-export async function parsearProducto(texto: string): Promise<ProductoParseado> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new IANoConfiguradaError();
-  }
+async function parsearConAnthropic(
+  texto: string,
+  systemPrompt: string
+): Promise<ProductoParseado> {
   const client = new Anthropic();
-
-  const [{ marcas, categorias }, defs, basesResult] = await Promise.all([
-    obtenerMarcasYCategorias(),
-    obtenerDefinicionesAtributos(),
-    supabase.from("producto_bases").select("nombre, marca, categoria"),
-  ]);
-  if (basesResult.error) throw basesResult.error;
-  const bases = (basesResult.data ?? []) as BaseExistenteRow[];
 
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 1024,
-    system: construirSystemPrompt(marcas, categorias, defs, bases),
+    // El catálogo completo viaja en el system prompt y domina el costo del
+    // request. Con cache_control, requests dentro de la ventana del caché
+    // (5 min) pagan ~10% por el prefijo cacheado en vez del precio completo.
+    // Si el catálogo es chico (<4096 tokens, mínimo cacheable de Haiku 4.5)
+    // el marcador se ignora en silencio, sin costo extra.
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
     output_config: {
       format: {
         type: "json_schema",
@@ -204,4 +213,121 @@ export async function parsearProducto(texto: string): Promise<ProductoParseado> 
   }
 
   return mapearRespuestaParseo(JSON.parse(bloqueTexto.text));
+}
+
+// Gemini no recibe el json_schema de structured outputs (su responseSchema
+// usa otro dialecto), así que la forma esperada se describe en el prompt y
+// mapearRespuestaParseo valida el shape igual que con Anthropic.
+const INSTRUCCION_JSON_GEMINI = [
+  "",
+  "Respondé ÚNICAMENTE con un objeto JSON (sin markdown, sin texto extra) con esta forma exacta:",
+  '{"nombreBase": "...", "marca": "...", "categoria": "...", "atributos": [{"clave": "...", "valor": "..."}]}',
+  "nombreBase: el producto conceptual, sin marca ni atributos de variación.",
+  "categoria: una existente si encaja, una nueva solo si ninguna aplica, cadena vacía si no se puede determinar.",
+].join("\n");
+
+interface GeminiParte {
+  text?: string;
+}
+
+async function parsearConGemini(
+  texto: string,
+  systemPrompt: string
+): Promise<ProductoParseado> {
+  const modelo = process.env.GEMINI_MODEL || GEMINI_MODEL_DEFAULT;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY as string,
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: systemPrompt + INSTRUCCION_JSON_GEMINI }],
+        },
+        contents: [{ role: "user", parts: [{ text: texto }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 2048,
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const cuerpo = await res.text().catch(() => "");
+    throw new ParseoInvalidoError(
+      `Gemini HTTP ${res.status}: ${cuerpo.slice(0, 200)}`
+    );
+  }
+
+  const data = (await res.json()) as {
+    candidates?: Array<{
+      finishReason?: string;
+      content?: { parts?: GeminiParte[] };
+    }>;
+  };
+  const candidato = data.candidates?.[0];
+  if (candidato?.finishReason && candidato.finishReason !== "STOP") {
+    throw new ParseoInvalidoError(`Gemini finishReason: ${candidato.finishReason}`);
+  }
+  const textoRespuesta = (candidato?.content?.parts ?? [])
+    .map((p) => (typeof p.text === "string" ? p.text : ""))
+    .join("");
+  if (!textoRespuesta) {
+    throw new ParseoInvalidoError("Gemini: respuesta sin texto");
+  }
+
+  return mapearRespuestaParseo(JSON.parse(textoRespuesta));
+}
+
+/**
+ * Parsea el texto libre de un producto ("Leche Milex Original 2200g") a
+ * campos normalizados contra el catálogo existente.
+ *
+ * Anthropic (Haiku 4.5) mientras haya key y crédito; Gemini como fallback
+ * automático (o único proveedor si solo hay GEMINI_API_KEY).
+ */
+export async function parsearProducto(texto: string): Promise<ProductoParseado> {
+  const anthropicConfigurado = Boolean(process.env.ANTHROPIC_API_KEY);
+  const geminiConfigurado = Boolean(process.env.GEMINI_API_KEY);
+  if (!anthropicConfigurado && !geminiConfigurado) {
+    throw new IANoConfiguradaError();
+  }
+
+  const [{ marcas, categorias }, defs, basesResult] = await Promise.all([
+    obtenerMarcasYCategorias(),
+    obtenerDefinicionesAtributos(),
+    // El orden estable importa: el system prompt se cachea por prefijo exacto
+    // de bytes, y sin .order() Postgres no garantiza orden — cada request
+    // generaría un prompt distinto y el caché nunca pegaría.
+    supabase
+      .from("producto_bases")
+      .select("nombre, marca, categoria")
+      .order("nombre")
+      .order("marca"),
+  ]);
+  if (basesResult.error) throw basesResult.error;
+  const bases = (basesResult.data ?? []) as BaseExistenteRow[];
+
+  const systemPrompt = construirSystemPrompt(marcas, categorias, defs, bases);
+
+  if (!anthropicConfigurado) {
+    return parsearConGemini(texto, systemPrompt);
+  }
+  try {
+    return await parsearConAnthropic(texto, systemPrompt);
+  } catch (error) {
+    if (!geminiConfigurado) throw error;
+    // Crédito agotado, rate limit o cualquier fallo del proveedor principal:
+    // el mismo request se resuelve con el fallback en vez de romper el alta.
+    console.warn(
+      "Parseo con Anthropic falló; reintentando con Gemini:",
+      error instanceof Error ? error.message : error
+    );
+    return parsearConGemini(texto, systemPrompt);
+  }
 }
