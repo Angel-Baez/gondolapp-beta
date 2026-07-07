@@ -1,7 +1,7 @@
 "use client";
 
+import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
 import { useHaptics } from "@/hooks/useHaptics";
-import { fetchMarcasCategorias, MARCAS_CATEGORIAS_KEY } from "@/hooks/useMarcasCategorias";
 import { ProductoEscaneado, useScanProduct } from "@/hooks/useScanProduct";
 import {
   useActualizarCantidadReposicion,
@@ -9,6 +9,7 @@ import {
   useEliminarReposicionItemDirecto,
 } from "@/hooks/useReposicion";
 import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
+import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useRecentsStore } from "@/store/recents";
 import { ScanMode } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,14 +74,17 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
   const registrarUso = useRecentsStore((s) => s.registrarUso);
   const queryClient = useQueryClient();
 
-  // Precargar marcas/categorías al abrir la cámara: si el código escaneado
-  // no está en el catálogo, el ManualProductSheet abre con el autocompletado
-  // ya listo en vez de esperar el round-trip.
+  // Precargar el catálogo completo al abrir la cámara: si el código
+  // escaneado no está, el ManualProductSheet abre con el autocompletado
+  // ya listo, y el lookup de EAN tiene un fallback local si falla la red.
+  // Redundante con CatalogoSyncProvider (que ya lo hace al montar la app),
+  // pero cubre el caso de abrir el escáner offline y recuperar señal recién
+  // acá — React Query dedupe si ambos disparan casi simultáneo.
   useEffect(() => {
     queryClient.prefetchQuery({
-      queryKey: MARCAS_CATEGORIAS_KEY,
-      queryFn: fetchMarcasCategorias,
-      staleTime: 5 * 60_000,
+      queryKey: CATALOGO_COMPLETO_KEY,
+      queryFn: obtenerCatalogoCompleto,
+      staleTime: 30 * 60_000,
     });
   }, []);
 
@@ -191,6 +195,11 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
   const handleProductoCreado = (producto: ProductoEscaneado) => {
     if (state.mode !== "unknown") return;
     seedProducto(state.ean, producto);
+    // La creación requiere red, así que el catálogo local quedó un producto
+    // atrás: invalidar dispara un refetch inmediato en vez de esperar el
+    // próximo sync. Más simple que mergear a mano (acá solo tenemos el
+    // ProductoEscaneado reducido, no el ProductoCompleto completo).
+    queryClient.invalidateQueries({ queryKey: CATALOGO_COMPLETO_KEY });
     dispatch({ type: "CREATED", producto });
   };
 
