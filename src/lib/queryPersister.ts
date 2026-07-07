@@ -45,14 +45,15 @@ export function deserializarConFechas(cached: string) {
 
 /**
  * Se persisten solo las lecturas que el gondolero necesita en el pasillo
- * sin señal: las dos listas activas, el catálogo de sus items y los EAN
- * ya resueltos. Historial y estadísticas se consultan con calma y online.
+ * sin señal: las dos listas activas, el catálogo completo (bases +
+ * variantes + definiciones, ver useCatalogoCompleto) y los EAN ya
+ * resueltos. Historial y estadísticas se consultan con calma y online.
  */
 export function esQueryPersistible(queryKey: readonly unknown[]): boolean {
   return (
     (queryKey[0] === "reposicion" && queryKey[1] === "items") ||
     (queryKey[0] === "vencimiento" && queryKey[1] === "items") ||
-    (queryKey[0] === "catalogo" && queryKey[1] === "por-variante-ids") ||
+    (queryKey[0] === "catalogo" && queryKey[1] === "completo") ||
     (queryKey[0] === "producto" && queryKey[1] === "ean")
   );
 }

@@ -38,10 +38,10 @@ describe("deserializarConFechas", () => {
 });
 
 describe("esQueryPersistible", () => {
-  it("persiste las listas activas, el catálogo de items y los EAN resueltos", () => {
+  it("persiste las listas activas, el catálogo completo y los EAN resueltos", () => {
     expect(esQueryPersistible(["reposicion", "items"])).toBe(true);
     expect(esQueryPersistible(["vencimiento", "items"])).toBe(true);
-    expect(esQueryPersistible(["catalogo", "por-variante-ids", ["v1"]])).toBe(true);
+    expect(esQueryPersistible(["catalogo", "completo"])).toBe(true);
     expect(esQueryPersistible(["producto", "ean", "779..."])).toBe(true);
   });
 
@@ -49,5 +49,8 @@ describe("esQueryPersistible", () => {
     expect(esQueryPersistible(["reposicion", "historial"])).toBe(false);
     expect(esQueryPersistible(["vencimiento", "estadisticas", "mes"])).toBe(false);
     expect(esQueryPersistible(["marcas-categorias"])).toBe(false);
+    // Reemplazada por ["catalogo","completo"]: useProductosDeItems ya no
+    // dispara un useQuery propio, deriva del catálogo completo vía useMemo.
+    expect(esQueryPersistible(["catalogo", "por-variante-ids", ["v1"]])).toBe(false);
   });
 });

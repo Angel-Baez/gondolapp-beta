@@ -260,6 +260,58 @@ describe("obtenerMarcasYCategorias", () => {
   });
 });
 
+describe("obtenerCatalogoCompleto", () => {
+  it("trae bases + variantes + definiciones en paralelo y las mapea", async () => {
+    const { obtenerCatalogoCompleto } = await import("@/services/catalogo");
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [baseRow] }, // producto_bases
+        { data: [varianteRow] }, // producto_variantes
+        {
+          data: [
+            { categoria: null, clave: "tipo", etiqueta: "Tipo", orden: 0, sugerencias: [] },
+          ],
+        } // categoria_atributos (dentro de obtenerDefinicionesAtributos)
+      )
+    );
+
+    const catalogo = await obtenerCatalogoCompleto();
+
+    expect(catalogo.bases).toEqual([expect.objectContaining({ id: "base-1", nombre: "Leche" })]);
+    expect(catalogo.variantes).toEqual([
+      expect.objectContaining({ id: "variante-1", codigoBarras: "7791234567890" }),
+    ]);
+    expect(catalogo.definiciones.default.map((d) => d.clave)).toEqual(["tipo"]);
+    expect(fromMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("propaga el error si falla la consulta de bases", async () => {
+    const { obtenerCatalogoCompleto } = await import("@/services/catalogo");
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { error: new Error("bases caídas") },
+        { data: [] },
+        { data: [] }
+      )
+    );
+
+    await expect(obtenerCatalogoCompleto()).rejects.toThrow("bases caídas");
+  });
+
+  it("propaga el error si falla la consulta de variantes", async () => {
+    const { obtenerCatalogoCompleto } = await import("@/services/catalogo");
+    fromMock.mockImplementation(
+      mockSupabaseFrom(
+        { data: [] },
+        { error: new Error("variantes caídas") },
+        { data: [] }
+      )
+    );
+
+    await expect(obtenerCatalogoCompleto()).rejects.toThrow("variantes caídas");
+  });
+});
+
 describe("buscarProductos", () => {
   it("no consulta la base si el término sanitizado queda muy corto", async () => {
     const { buscarProductos } = await import("@/services/catalogo");

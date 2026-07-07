@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
 import { eanQueryKey, useScanProduct } from "@/hooks/useScanProduct";
-import type { ProductoCompleto } from "@/services/catalogo";
+import type { CatalogoCompleto, ProductoCompleto } from "@/services/catalogo";
 
 vi.mock("@/services/catalogo", () => ({
   buscarPorCodigoBarras: vi.fn(),
@@ -71,6 +72,45 @@ describe("useScanProduct", () => {
       new Error("TypeError: Failed to fetch")
     );
     const { result } = setup();
+
+    const res = await result.current.scanProduct("7790000000001");
+    expect(res.status).toBe("error");
+  });
+
+  it("red caída + catálogo local cacheado tiene el EAN → found (fallback offline)", async () => {
+    const { buscarPorCodigoBarras } = await import("@/services/catalogo");
+    vi.mocked(buscarPorCodigoBarras).mockRejectedValue(
+      new Error("TypeError: Failed to fetch")
+    );
+    const queryClient = new QueryClient();
+    const catalogo: CatalogoCompleto = {
+      bases: [PRODUCTO.base],
+      variantes: [PRODUCTO.variante],
+      definiciones: { default: [], porCategoria: {} },
+    };
+    queryClient.setQueryData(CATALOGO_COMPLETO_KEY, catalogo);
+    const { result } = setup(queryClient);
+
+    const res = await result.current.scanProduct("7790000000001");
+
+    expect(res.status).toBe("found");
+    if (res.status !== "found") throw new Error("unreachable");
+    expect(res.producto.variante.id).toBe("var-1");
+  });
+
+  it("red caída + catálogo local cacheado NO tiene el EAN → error", async () => {
+    const { buscarPorCodigoBarras } = await import("@/services/catalogo");
+    vi.mocked(buscarPorCodigoBarras).mockRejectedValue(
+      new Error("TypeError: Failed to fetch")
+    );
+    const queryClient = new QueryClient();
+    const catalogo: CatalogoCompleto = {
+      bases: [],
+      variantes: [],
+      definiciones: { default: [], porCategoria: {} },
+    };
+    queryClient.setQueryData(CATALOGO_COMPLETO_KEY, catalogo);
+    const { result } = setup(queryClient);
 
     const res = await result.current.scanProduct("7790000000001");
     expect(res.status).toBe("error");

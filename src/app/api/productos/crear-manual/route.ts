@@ -111,6 +111,12 @@ export async function POST(request: NextRequest) {
  *
  * Devuelve marcas y categorías existentes para autocompletado, más las
  * definiciones de atributos que arman el formulario dinámico del alta.
+ *
+ * TODO: sin consumidores desde jul 2026 — useMarcasCategorias ahora deriva
+ * del catálogo completo cacheado (ver useCatalogoCompleto) en vez de
+ * pegarle a este endpoint. Se deja como red de recuperación por si ese
+ * cache nunca carga; considerar remover si en unos meses se confirma que
+ * nadie lo llama.
  */
 export async function GET() {
   try {

@@ -1,7 +1,9 @@
 "use client";
 
+import { obtenerMarcasYCategoriasLocal } from "@/lib/catalogoLocal";
 import { CategoriaAtributo } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useCatalogoCompleto } from "./useCatalogoCompleto";
 
 export interface MarcasCategorias {
   marcas: string[];
@@ -10,25 +12,24 @@ export interface MarcasCategorias {
   atributosPorCategoria: Record<string, CategoriaAtributo[]>;
 }
 
-export const MARCAS_CATEGORIAS_KEY = ["catalogo", "marcas-categorias"] as const;
-
-export async function fetchMarcasCategorias(): Promise<MarcasCategorias> {
-  const res = await fetch("/api/productos/crear-manual");
-  const data = await res.json();
-  return {
-    marcas: data.marcas ?? [],
-    categorias: data.categorias ?? [],
-    atributosDefault: data.atributosDefault ?? [],
-    atributosPorCategoria: data.atributosPorCategoria ?? {},
-  };
-}
-
-/** Marcas/categorías existentes, para el autocompletado del alta manual. */
+/**
+ * Marcas/categorías/atributos existentes, para el autocompletado del alta
+ * manual. Deriva del catálogo completo ya cacheado (useCatalogoCompleto):
+ * sin round-trip propio, funciona offline.
+ */
 export function useMarcasCategorias(enabled: boolean) {
-  return useQuery({
-    queryKey: MARCAS_CATEGORIAS_KEY,
-    queryFn: fetchMarcasCategorias,
-    enabled,
-    staleTime: 5 * 60_000,
-  });
+  const { data: catalogo, isLoading } = useCatalogoCompleto();
+
+  const data = useMemo<MarcasCategorias | undefined>(() => {
+    if (!enabled || !catalogo) return undefined;
+    const { marcas, categorias } = obtenerMarcasYCategoriasLocal(catalogo);
+    return {
+      marcas,
+      categorias,
+      atributosDefault: catalogo.definiciones.default,
+      atributosPorCategoria: catalogo.definiciones.porCategoria,
+    };
+  }, [catalogo, enabled]);
+
+  return { data, isLoading: enabled && isLoading };
 }

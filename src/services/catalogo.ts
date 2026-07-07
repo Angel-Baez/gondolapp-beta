@@ -347,3 +347,33 @@ export async function obtenerMarcasYCategorias(): Promise<{
 
   return { marcas, categorias };
 }
+
+export interface CatalogoCompleto {
+  bases: ProductoBase[];
+  variantes: ProductoVariante[];
+  definiciones: DefinicionesAtributos;
+}
+
+/**
+ * Todo el catálogo (bases + variantes + definiciones de atributos) en un
+ * solo objeto: 110 bases / 402 variantes pesan ~164KB en JSON, trivial para
+ * cachear entero en IndexedDB. Es la fuente para lookup/búsqueda offline
+ * (ver src/lib/catalogoLocal.ts) — reemplaza N round-trips por 1 sync.
+ */
+export async function obtenerCatalogoCompleto(): Promise<CatalogoCompleto> {
+  const [basesResult, variantesResult, definiciones] = await Promise.all([
+    supabase.from("producto_bases").select("*"),
+    supabase.from("producto_variantes").select("*"),
+    obtenerDefinicionesAtributos(),
+  ]);
+  if (basesResult.error) throw basesResult.error;
+  if (variantesResult.error) throw variantesResult.error;
+
+  return {
+    bases: (basesResult.data ?? []).map((row) => mapProductoBase(row as ProductoBaseRow)),
+    variantes: (variantesResult.data ?? []).map((row) =>
+      mapProductoVariante(row as ProductoVarianteRow)
+    ),
+    definiciones,
+  };
+}

@@ -1,12 +1,30 @@
 "use client";
 
-import { buscarPorCodigoBarras } from "@/services/catalogo";
+import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
+import { buscarPorCodigoBarrasLocal } from "@/lib/catalogoLocal";
+import { buscarPorCodigoBarras, CatalogoCompleto, ProductoCompleto } from "@/services/catalogo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 export interface ProductoEscaneado {
   base: { id: string; nombre: string; marca?: string; categoria?: string };
   variante: { id: string; nombreCompleto: string; tamano?: string };
+}
+
+function aProductoEscaneado(resultado: ProductoCompleto): ProductoEscaneado {
+  return {
+    base: {
+      id: resultado.base.id,
+      nombre: resultado.base.nombre,
+      marca: resultado.base.marca,
+      categoria: resultado.base.categoria,
+    },
+    variante: {
+      id: resultado.variante.id,
+      nombreCompleto: resultado.variante.nombreCompleto,
+      tamano: resultado.variante.atributos["tamano"],
+    },
+  };
 }
 
 /**
@@ -45,19 +63,7 @@ export function useScanProduct() {
         const resultado = await buscarPorCodigoBarras(barcode);
         if (!resultado) return { status: "not_found" };
 
-        const producto: ProductoEscaneado = {
-          base: {
-            id: resultado.base.id,
-            nombre: resultado.base.nombre,
-            marca: resultado.base.marca,
-            categoria: resultado.base.categoria,
-          },
-          variante: {
-            id: resultado.variante.id,
-            nombreCompleto: resultado.variante.nombreCompleto,
-            tamano: resultado.variante.atributos["tamano"],
-          },
-        };
+        const producto = aProductoEscaneado(resultado);
         queryClient.setQueryData(eanQueryKey(barcode), producto, {
           updatedAt: Date.now(),
         });
@@ -66,8 +72,26 @@ export function useScanProduct() {
         });
         return { status: "found", producto };
       } catch {
-        // maybeSingle() devuelve null para "no existe"; cualquier throw
-        // es un fallo del lookup (red, servidor), nunca un "no está".
+        // Red caída (o cualquier error real: maybeSingle() ya devuelve null
+        // para "no existe", nunca throwea por ausencia). Antes de rendirse,
+        // probar el catálogo local ya sincronizado — prioriza exactitud
+        // online (por eso este fallback vive en el catch, no reemplaza la
+        // llamada de red) pero evita bloquear un escaneo offline de un
+        // producto que sí está en el catálogo cacheado.
+        const catalogo = queryClient.getQueryData<CatalogoCompleto>(CATALOGO_COMPLETO_KEY);
+        if (catalogo) {
+          const resultadoLocal = buscarPorCodigoBarrasLocal(catalogo, barcode);
+          if (resultadoLocal) {
+            const producto = aProductoEscaneado(resultadoLocal);
+            queryClient.setQueryData(eanQueryKey(barcode), producto, {
+              updatedAt: Date.now(),
+            });
+            queryClient.setQueryDefaults(eanQueryKey(barcode), {
+              staleTime: EAN_STALE_TIME,
+            });
+            return { status: "found", producto };
+          }
+        }
         return { status: "error" };
       }
     },
