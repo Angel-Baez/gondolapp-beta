@@ -1,6 +1,6 @@
 "use client";
 
-import { calcularDiasRestantes, formatearFecha } from "@/lib/utils";
+import { formatearFecha, mensajeVencimiento } from "@/lib/utils";
 import {
   useAgregarVencimientoItem,
   useEliminarVencimientoItem,
@@ -45,19 +45,6 @@ export function VencimientoItem({
   const eliminarItem = useEliminarVencimientoItem();
   const agregarItem = useAgregarVencimientoItem();
   const { haptic } = useHaptics();
-  const diasRestantes = calcularDiasRestantes(item.fechaVencimiento);
-
-  const getMensajeVencimiento = () => {
-    if (diasRestantes < 0) {
-      return `Venció hace ${Math.abs(diasRestantes)} días`;
-    } else if (diasRestantes === 0) {
-      return "¡Vence hoy!";
-    } else if (diasRestantes === 1) {
-      return "Vence mañana";
-    } else {
-      return `Vence en ${diasRestantes} días`;
-    }
-  };
 
   const handleRetirar = () => {
     haptic([30, 30, 30]);
@@ -118,7 +105,7 @@ export function VencimientoItem({
 
         <div className="space-y-2">
           <Badge alert={item.alertaNivel} className="text-subhead">
-            {getMensajeVencimiento()}
+            {mensajeVencimiento(item.fechaVencimiento)}
           </Badge>
 
           <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 text-footnote text-fg-secondary">

@@ -5,6 +5,7 @@ import {
   construirNombreCompleto,
   formatearFecha,
   generarUUID,
+  mensajeVencimiento,
   ordenarClavesAtributos,
   sumarDias,
   toDateInputValue,
@@ -117,6 +118,16 @@ describe("formatearFecha", () => {
     const resultado = formatearFecha(new Date("2026-03-15T00:00:00"));
     expect(resultado).toContain("2026");
     expect(resultado.toLowerCase()).toContain("marzo");
+  });
+});
+
+describe("mensajeVencimiento", () => {
+  it("cubre hoy, mañana, futuro y pasado con plurales correctos", () => {
+    expect(mensajeVencimiento(diasDesdeHoy(0))).toBe("¡Vence hoy!");
+    expect(mensajeVencimiento(diasDesdeHoy(1))).toBe("Vence mañana");
+    expect(mensajeVencimiento(diasDesdeHoy(5))).toBe("Vence en 5 días");
+    expect(mensajeVencimiento(diasDesdeHoy(-1))).toBe("Venció hace 1 día");
+    expect(mensajeVencimiento(diasDesdeHoy(-3))).toBe("Venció hace 3 días");
   });
 });
 

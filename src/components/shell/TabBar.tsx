@@ -11,6 +11,8 @@ export interface TabBarProps {
   onChange: (view: ActiveView) => void;
   /** Botón central prominente; escanea en el modo de la vista activa. */
   onScan: () => void;
+  /** Cantidad de items urgentes (vencidos o críticos): burbuja en el tab. */
+  badgeVencimientos?: number;
 }
 
 const esCampoDeTexto = (el: EventTarget | null): boolean =>
@@ -24,7 +26,7 @@ const esCampoDeTexto = (el: EventTarget | null): boolean =>
  * Se esconde mientras un campo de texto tiene foco para no chocar con el
  * teclado en iOS Safari (position:fixed salta con el teclado abierto).
  */
-export function TabBar({ active, onChange, onScan }: TabBarProps) {
+export function TabBar({ active, onChange, onScan, badgeVencimientos = 0 }: TabBarProps) {
   const [oculta, setOculta] = useState(false);
 
   useEffect(() => {
@@ -74,6 +76,7 @@ export function TabBar({ active, onChange, onScan }: TabBarProps) {
           icon={<Clock size={22} />}
           activo={active === "vencimiento"}
           onClick={() => onChange("vencimiento")}
+          badge={badgeVencimientos}
         />
       </div>
     </m.nav>
@@ -85,11 +88,13 @@ function TabItem({
   icon,
   activo,
   onClick,
+  badge = 0,
 }: {
   label: string;
   icon: React.ReactNode;
   activo: boolean;
   onClick: () => void;
+  badge?: number;
 }) {
   return (
     <button
@@ -111,6 +116,14 @@ function TabItem({
         }`}
       >
         {icon}
+        {badge > 0 && (
+          <span
+            aria-label={`${badge} productos urgentes`}
+            className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-alert-critico text-white text-[11px] font-bold leading-none flex items-center justify-center tabular-nums"
+          >
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
       </span>
       <span
         className={`relative text-caption font-semibold transition-colors ${
