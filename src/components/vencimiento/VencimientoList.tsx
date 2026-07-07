@@ -15,6 +15,7 @@ import {
   useVencimientoItems,
 } from "@/hooks/useVencimiento";
 import { useSeleccionMultiple } from "@/hooks/useSeleccionMultiple";
+import { sumarDias, toDateInputValue } from "@/lib/utils";
 import { AlertaNivel, ItemVencimientoConAlerta, ProductoVariante } from "@/types";
 import { motion as m } from "framer-motion";
 import {
@@ -47,6 +48,9 @@ const SECCIONES: Array<{
   { nivel: "precaucion", titulo: "Precaución (30-60 días)", icon: Zap, colorClass: "text-alert-precaucion" },
   { nivel: "normal", titulo: "Normales (+60 días)", icon: CheckCircle2, colorClass: "text-alert-normal" },
 ];
+
+// Mismos presets que ExpiryQuickSheet (registro desde el scanner).
+const PRESETS_DIAS = [7, 15, 30, 60, 90];
 
 const OPCIONES_ORDEN = [
   { value: "vencimiento", label: "Por vencer primero" },
@@ -120,14 +124,18 @@ export function VencimientoList() {
 
   const handleEditClick = (item: ItemVencimientoConAlerta) => {
     setEditingItem(item);
-    setNewDate(item.fechaVencimiento.toISOString().split("T")[0]);
+    // toDateInputValue serializa en horario local: con toISOString() el input
+    // mostraba el día anterior en husos UTC-.
+    setNewDate(toDateInputValue(item.fechaVencimiento));
   };
 
   const handleSaveDate = async () => {
     if (editingItem && newDate) {
       await actualizarFecha.mutateAsync({
         id: editingItem.id,
-        fechaVencimiento: new Date(newDate),
+        // T00:00:00 fuerza medianoche local; new Date("YYYY-MM-DD") sería
+        // medianoche UTC y desplazaba la fecha un día.
+        fechaVencimiento: new Date(`${newDate}T00:00:00`),
       });
       setEditingItem(null);
       setNewDate("");
@@ -276,6 +284,18 @@ export function VencimientoList() {
           <p className="text-subhead text-fg-secondary">
             Actualizá la fecha de vencimiento para este producto.
           </p>
+
+          <div className="flex flex-wrap gap-2">
+            {PRESETS_DIAS.map((dias) => (
+              <button
+                key={dias}
+                onClick={() => setNewDate(toDateInputValue(sumarDias(dias)))}
+                className="tap-compact px-3.5 rounded-chip text-subhead font-semibold bg-surface-2 text-fg-secondary transition-colors"
+              >
+                +{dias}d
+              </button>
+            ))}
+          </div>
 
           <Input
             type="date"

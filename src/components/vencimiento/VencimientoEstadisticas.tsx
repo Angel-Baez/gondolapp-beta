@@ -33,7 +33,7 @@ export function VencimientoEstadisticas() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-3">
-            <StatTile label="Productos retirados" value={stats.totalRetirados} />
+            <StatTile label="Unidades retiradas" value={stats.totalRetirados} />
             <StatTile
               label="Promedio días vs. vencimiento"
               value={

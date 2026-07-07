@@ -1,7 +1,11 @@
 "use client";
 
 import { calcularDiasRestantes, formatearFecha } from "@/lib/utils";
-import { useEliminarVencimientoItem, useRetirarVencimientoItem } from "@/hooks/useVencimiento";
+import {
+  useAgregarVencimientoItem,
+  useEliminarVencimientoItem,
+  useRetirarVencimientoItem,
+} from "@/hooks/useVencimiento";
 import { AlertaNivel, ItemVencimientoConAlerta, ProductoVariante } from "@/types";
 import { Calendar, Check, Edit2, PackageCheck, Trash2 } from "lucide-react";
 import { Badge, IconButton } from "../ui";
@@ -39,6 +43,7 @@ export function VencimientoItem({
 }: VencimientoItemProps) {
   const retirarItem = useRetirarVencimientoItem();
   const eliminarItem = useEliminarVencimientoItem();
+  const agregarItem = useAgregarVencimientoItem();
   const { haptic } = useHaptics();
   const diasRestantes = calcularDiasRestantes(item.fechaVencimiento);
 
@@ -64,8 +69,27 @@ export function VencimientoItem({
 
   const handleEliminar = () => {
     haptic([50, 100, 50]);
+    // Snapshot para el deshacer: el item sale del cache al confirmarse el borrado.
+    const { varianteId, fechaVencimiento, cantidad, lote } = item;
     eliminarItem.mutate(item.id, {
-      onSuccess: () => toast("Producto quitado de la lista", { icon: "🗑️" }),
+      onSuccess: () =>
+        toast(
+          (t) => (
+            <div className="flex items-center gap-3">
+              <span>Producto quitado de la lista</span>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  agregarItem.mutate({ varianteId, fechaVencimiento, cantidad, lote });
+                }}
+                className="font-semibold text-accent whitespace-nowrap"
+              >
+                Deshacer
+              </button>
+            </div>
+          ),
+          { icon: "🗑️", duration: 5000 }
+        ),
     });
   };
 

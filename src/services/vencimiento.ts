@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { calcularNivelAlerta } from "@/lib/utils";
+import { calcularNivelAlerta, toDateInputValue } from "@/lib/utils";
 import {
   EstadisticasVencimiento,
   ItemVencimiento,
@@ -85,7 +85,9 @@ export async function agregarItem(
     .from("items_vencimiento")
     .insert({
       variante_id: varianteId,
-      fecha_vencimiento: fechaVencimiento.toISOString().slice(0, 10),
+      // toDateInputValue serializa en horario local: con toISOString() una
+      // fecha a medianoche local se corría un día en husos UTC+.
+      fecha_vencimiento: toDateInputValue(fechaVencimiento),
       cantidad: cantidad ?? null,
       lote: lote ?? null,
       estado: "pendiente",
@@ -102,7 +104,7 @@ export async function actualizarFecha(
 ): Promise<ItemVencimientoConAlerta> {
   const { data, error } = await supabase
     .from("items_vencimiento")
-    .update({ fecha_vencimiento: fechaVencimiento.toISOString().slice(0, 10) })
+    .update({ fecha_vencimiento: toDateInputValue(fechaVencimiento) })
     .eq("id", id)
     .select()
     .single();
@@ -180,6 +182,20 @@ export async function obtenerHistorial(filtros?: {
   return (data ?? []).map((row) => mapHistorial(row as ItemVencimientoHistorialRow));
 }
 
+interface EstadisticasRpcResult {
+  total_retirados: number;
+  promedio_dias_a_retiro: number;
+  productos_mas_retirados: Array<{ producto_nombre: string; cantidad: number }>;
+}
+
+/**
+ * Estadísticas de retiros del período. Agrega en Postgres
+ * (`obtener_estadisticas_vencimiento`, migración 0011): antes bajaba todo el
+ * historial del período y agregaba en JS, con el cap implícito de 1000 filas
+ * de PostgREST que silenciosamente recortaba períodos largos.
+ * `totalRetirados` cuenta unidades (cantidad, o 1 si no se registró), igual
+ * que el top de productos.
+ */
 export async function obtenerEstadisticas(
   periodo: "semana" | "mes" | "año"
 ): Promise<EstadisticasVencimiento> {
@@ -197,7 +213,36 @@ export async function obtenerEstadisticas(
       break;
   }
 
-  const retirados = await obtenerHistorial({ desde: fechaInicio, hasta: ahora });
+  const { data, error } = await supabase.rpc("obtener_estadisticas_vencimiento", {
+    p_desde: fechaInicio.toISOString(),
+    p_hasta: ahora.toISOString(),
+  });
+
+  if (!error) {
+    const stats = data as EstadisticasRpcResult;
+    return {
+      periodo,
+      totalRetirados: stats.total_retirados,
+      promedioDiasARetiro: Number(stats.promedio_dias_a_retiro),
+      productosMasRetirados: (stats.productos_mas_retirados ?? []).map((p) => ({
+        productoNombre: p.producto_nombre,
+        cantidad: p.cantidad,
+      })),
+    };
+  }
+
+  // PGRST202: la RPC todavía no existe (migración 0011 sin aplicar).
+  // Fallback al cálculo client-side para no depender del orden de deploy.
+  if (error.code !== "PGRST202") throw error;
+  return obtenerEstadisticasClientSide(periodo, fechaInicio, ahora);
+}
+
+async function obtenerEstadisticasClientSide(
+  periodo: "semana" | "mes" | "año",
+  desde: Date,
+  hasta: Date
+): Promise<EstadisticasVencimiento> {
+  const retirados = await obtenerHistorial({ desde, hasta });
 
   if (retirados.length === 0) {
     return {
@@ -209,10 +254,13 @@ export async function obtenerEstadisticas(
   }
 
   const productosCount = new Map<string, number>();
+  let totalUnidades = 0;
   let sumaDias = 0;
   retirados.forEach((item) => {
+    const unidades = item.cantidad ?? 1;
+    totalUnidades += unidades;
     const count = productosCount.get(item.productoNombre) || 0;
-    productosCount.set(item.productoNombre, count + (item.cantidad ?? 1));
+    productosCount.set(item.productoNombre, count + unidades);
 
     const dias = Math.floor(
       (item.fechaRetiro.getTime() - item.fechaVencimiento.getTime()) / (1000 * 60 * 60 * 24)
@@ -227,7 +275,7 @@ export async function obtenerEstadisticas(
 
   return {
     periodo,
-    totalRetirados: retirados.length,
+    totalRetirados: totalUnidades,
     productosMasRetirados,
     promedioDiasARetiro: sumaDias / retirados.length,
   };

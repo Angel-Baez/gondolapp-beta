@@ -6,6 +6,8 @@ import {
   formatearFecha,
   generarUUID,
   ordenarClavesAtributos,
+  sumarDias,
+  toDateInputValue,
 } from "@/lib/utils";
 
 describe("construirNombreCompleto", () => {
@@ -115,6 +117,27 @@ describe("formatearFecha", () => {
     const resultado = formatearFecha(new Date("2026-03-15T00:00:00"));
     expect(resultado).toContain("2026");
     expect(resultado.toLowerCase()).toContain("marzo");
+  });
+});
+
+describe("toDateInputValue", () => {
+  it("serializa en horario local, no en UTC", () => {
+    expect(toDateInputValue(new Date(2026, 6, 7))).toBe("2026-07-07");
+  });
+
+  it("hace roundtrip con el parseo a medianoche local (convención del módulo)", () => {
+    // Invariante que rompía toISOString(): en husos UTC- la medianoche local
+    // cae en el día anterior en UTC y la fecha se corría un día.
+    const valor = "2026-03-15";
+    expect(toDateInputValue(new Date(`${valor}T00:00:00`))).toBe(valor);
+  });
+});
+
+describe("sumarDias", () => {
+  it("suma días sobre una base explícita, normalizada a medianoche", () => {
+    const resultado = sumarDias(7, new Date(2026, 0, 30, 15, 45));
+    expect(toDateInputValue(resultado)).toBe("2026-02-06");
+    expect(resultado.getHours()).toBe(0);
   });
 });
 

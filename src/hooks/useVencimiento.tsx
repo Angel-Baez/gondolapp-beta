@@ -3,7 +3,7 @@
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
 import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
-import { calcularNivelAlerta } from "@/lib/utils";
+import { calcularNivelAlerta, toDateInputValue } from "@/lib/utils";
 import * as vencimientoService from "@/services/vencimiento";
 import { ItemVencimientoConAlerta } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +59,9 @@ export function useAgregarVencimientoItem() {
       await enqueueOperation("vencimiento.agregarItem", {
         tempId,
         varianteId,
-        fechaVencimiento: fechaVencimiento.toISOString().slice(0, 10),
+        // Serializar en horario local (no toISOString/UTC): la fecha es un
+        // DATE sin hora y el executor la re-parsea a medianoche local.
+        fechaVencimiento: toDateInputValue(fechaVencimiento),
         cantidad,
         lote,
       });
@@ -97,7 +99,7 @@ export function useActualizarFechaVencimiento() {
         () =>
           enqueueOperation("vencimiento.actualizarFecha", {
             id,
-            fechaVencimiento: fechaVencimiento.toISOString().slice(0, 10),
+            fechaVencimiento: toDateInputValue(fechaVencimiento),
           }),
         null as ItemVencimientoConAlerta | null
       ),

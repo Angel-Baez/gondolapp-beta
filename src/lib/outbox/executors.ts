@@ -44,7 +44,10 @@ export async function ejecutarOperacion(
     case "vencimiento.agregarItem": {
       const item = await vencimientoService.agregarItem(
         op.payload.varianteId,
-        new Date(op.payload.fechaVencimiento),
+        // El payload es YYYY-MM-DD en horario local; el sufijo T00:00:00
+        // fuerza el parseo a medianoche local (new Date("YYYY-MM-DD") solo
+        // sería medianoche UTC y correría la fecha un día en husos UTC-).
+        new Date(`${op.payload.fechaVencimiento}T00:00:00`),
         op.payload.cantidad,
         op.payload.lote
       );
@@ -53,7 +56,7 @@ export async function ejecutarOperacion(
     case "vencimiento.actualizarFecha":
       await vencimientoService.actualizarFecha(
         resolveId(op.payload.id),
-        new Date(op.payload.fechaVencimiento)
+        new Date(`${op.payload.fechaVencimiento}T00:00:00`)
       );
       return;
     case "vencimiento.actualizarCantidad":
