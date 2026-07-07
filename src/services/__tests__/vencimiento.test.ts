@@ -125,8 +125,45 @@ describe("retirarItemsMasivo", () => {
 });
 
 describe("obtenerEstadisticas", () => {
-  it("devuelve ceros cuando no hay retiros en el período", async () => {
+  it("agrega en Postgres vía la RPC obtener_estadisticas_vencimiento", async () => {
     const { obtenerEstadisticas } = await import("@/services/vencimiento");
+    rpcMock.mockResolvedValue({
+      data: {
+        total_retirados: 7,
+        promedio_dias_a_retiro: 1.5,
+        productos_mas_retirados: [{ producto_nombre: "Leche", cantidad: 5 }],
+      },
+      error: null,
+    });
+
+    const stats = await obtenerEstadisticas("mes");
+    expect(rpcMock).toHaveBeenCalledWith(
+      "obtener_estadisticas_vencimiento",
+      expect.objectContaining({ p_desde: expect.any(String), p_hasta: expect.any(String) })
+    );
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(stats.totalRetirados).toBe(7);
+    expect(stats.promedioDiasARetiro).toBe(1.5);
+    expect(stats.productosMasRetirados).toEqual([{ productoNombre: "Leche", cantidad: 5 }]);
+  });
+
+  it("propaga errores de la RPC que no sean de función inexistente", async () => {
+    const { obtenerEstadisticas } = await import("@/services/vencimiento");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: Object.assign(new Error("boom"), { code: "XX000" }),
+    });
+
+    await expect(obtenerEstadisticas("mes")).rejects.toThrow("boom");
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("devuelve ceros cuando no hay retiros en el período (fallback client-side)", async () => {
+    const { obtenerEstadisticas } = await import("@/services/vencimiento");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST202", message: "function not found" },
+    });
     fromMock.mockImplementation(mockSupabaseFrom({ data: [] }));
 
     const stats = await obtenerEstadisticas("mes");
@@ -134,8 +171,12 @@ describe("obtenerEstadisticas", () => {
     expect(stats.promedioDiasARetiro).toBe(0);
   });
 
-  it("calcula el promedio de días entre vencimiento y retiro", async () => {
+  it("cae al cálculo client-side si la RPC aún no existe (PGRST202)", async () => {
     const { obtenerEstadisticas } = await import("@/services/vencimiento");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { code: "PGRST202", message: "function not found" },
+    });
     fromMock.mockImplementation(
       mockSupabaseFrom({
         data: [
@@ -159,7 +200,8 @@ describe("obtenerEstadisticas", () => {
     );
 
     const stats = await obtenerEstadisticas("mes");
-    expect(stats.totalRetirados).toBe(1);
+    // Cuenta unidades (cantidad), no filas: misma semántica que el top de productos.
+    expect(stats.totalRetirados).toBe(2);
     expect(stats.promedioDiasARetiro).toBe(2); // retirado 2 días después de vencer
     expect(stats.productosMasRetirados[0]).toEqual({ productoNombre: "Leche", cantidad: 2 });
   });
