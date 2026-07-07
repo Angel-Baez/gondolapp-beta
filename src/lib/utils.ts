@@ -89,6 +89,18 @@ export function calcularDiasRestantes(fechaVencimiento: Date): number {
   );
 }
 
+/** Mensaje corto de urgencia: "Venció hace 3 días", "¡Vence hoy!", "Vence en 5 días". */
+export function mensajeVencimiento(fechaVencimiento: Date): string {
+  const dias = calcularDiasRestantes(fechaVencimiento);
+  if (dias < 0) {
+    const abs = Math.abs(dias);
+    return `Venció hace ${abs} día${abs === 1 ? "" : "s"}`;
+  }
+  if (dias === 0) return "¡Vence hoy!";
+  if (dias === 1) return "Vence mañana";
+  return `Vence en ${dias} días`;
+}
+
 /** Suma `dias` a hoy y devuelve la fecha resultante (para presets de vencimiento). */
 export function sumarDias(dias: number, base: Date = new Date()): Date {
   const fecha = new Date(base);

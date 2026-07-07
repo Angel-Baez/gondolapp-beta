@@ -8,7 +8,9 @@ import { CollapsingHeader } from "@/components/shell/CollapsingHeader";
 import { TabBar } from "@/components/shell/TabBar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ReposicionList } from "@/components/reposicion/ReposicionList";
+import { NotificacionesBell } from "@/components/vencimiento/NotificacionesBell";
 import { VencimientoList } from "@/components/vencimiento/VencimientoList";
+import { useNotificacionesVencimiento } from "@/hooks/useNotificacionesVencimiento";
 import { springGentle } from "@/lib/motion";
 import { ActiveView, useUiStore } from "@/store/ui";
 import { AnimatePresence, motion as m } from "framer-motion";
@@ -45,6 +47,8 @@ function HomePageContent() {
   const { activeView, setActiveView, scannerOpen, openScanner, closeScanner } =
     useUiStore();
   const [searchOpen, setSearchOpen] = useState(false);
+  // Badge del ícono/tab + notificaciones locales de items urgentes.
+  const { urgentesCount } = useNotificacionesVencimiento();
 
   // Manejar URL params (shortcuts PWA y deep links)
   useEffect(() => {
@@ -85,6 +89,7 @@ function HomePageContent() {
             scrollContainerRef={scrollRef}
             rightActions={
               <>
+                {activeView === "vencimiento" && <NotificacionesBell />}
                 <Link
                   href={`/${activeView}/historial`}
                   aria-label="Ver historial"
@@ -112,6 +117,7 @@ function HomePageContent() {
             active={activeView}
             onChange={handleViewChange}
             onScan={openScanner}
+            badgeVencimientos={urgentesCount}
           />
         }
       >
