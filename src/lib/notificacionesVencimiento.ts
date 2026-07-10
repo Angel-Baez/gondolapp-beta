@@ -98,6 +98,16 @@ export function guardarNotificados(registro: RegistroNotificados): void {
   }
 }
 
+/** Borra el registro de notificados (logout, spec §3.2). */
+export function limpiarNotificados(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // sin acceso a storage: nada que borrar
+  }
+}
+
 /** iOS Safari solo expone Notification con la PWA instalada (16.4+). */
 export function soportaNotificaciones(): boolean {
   return typeof window !== "undefined" && "Notification" in window;

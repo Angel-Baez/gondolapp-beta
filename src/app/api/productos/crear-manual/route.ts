@@ -1,3 +1,4 @@
+import { crearClienteServidor } from "@/lib/supabaseServer";
 import {
   crearProductoManual,
   obtenerDefinicionesAtributos,
@@ -46,6 +47,19 @@ function canonicalizarAtributos(
  */
 export async function POST(request: NextRequest) {
   try {
+    // Cliente por-request con el JWT del usuario: desde la migración 0012
+    // `anon` no tiene acceso y el singleton browser operaría como anon.
+    const supabase = await crearClienteServidor();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "No autenticado" },
+        { status: 401 }
+      );
+    }
+
     const body: CrearProductoDTO = await request.json();
 
     if (!body.ean || !body.productoBase?.nombre || !body.productoBase?.marca) {
@@ -67,7 +81,7 @@ export async function POST(request: NextRequest) {
     // perder el alta por un fallo del lookup sería peor que un valor sin canon.
     let atributos = atributosCrudos;
     try {
-      const defs = await obtenerDefinicionesAtributos();
+      const defs = await obtenerDefinicionesAtributos(supabase);
       const categoria = body.productoBase.categoria?.trim();
       const defsAplicables =
         (categoria && defs.porCategoria[categoria]) || defs.default;
@@ -76,10 +90,13 @@ export async function POST(request: NextRequest) {
       // sin canonicalización
     }
 
-    const producto = await crearProductoManual({
-      ...body,
-      variante: { ...body.variante, atributos },
-    });
+    const producto = await crearProductoManual(
+      {
+        ...body,
+        variante: { ...body.variante, atributos },
+      },
+      supabase
+    );
 
     return NextResponse.json({
       success: true,
@@ -120,9 +137,20 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    const supabase = await crearClienteServidor();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "No autenticado" },
+        { status: 401 }
+      );
+    }
+
     const [{ marcas, categorias }, defs] = await Promise.all([
-      obtenerMarcasYCategorias(),
-      obtenerDefinicionesAtributos(),
+      obtenerMarcasYCategorias(supabase),
+      obtenerDefinicionesAtributos(supabase),
     ]);
     return NextResponse.json({
       success: true,

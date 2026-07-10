@@ -1,5 +1,5 @@
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { createStore, del, get, set } from "idb-keyval";
+import { clear, createStore, del, get, set } from "idb-keyval";
 
 /**
  * Persistencia del cache de React Query en IndexedDB, para que las listas
@@ -56,6 +56,11 @@ export function esQueryPersistible(queryKey: readonly unknown[]): boolean {
     (queryKey[0] === "catalogo" && queryKey[1] === "completo") ||
     (queryKey[0] === "producto" && queryKey[1] === "ean")
   );
+}
+
+/** Vacía el cache persistido (logout / cambio de usuario, spec §3.2). */
+export async function limpiarCachePersistido(): Promise<void> {
+  if (store) await clear(store);
 }
 
 export const MAX_AGE_CACHE_MS = 24 * 60 * 60 * 1000;
