@@ -3,15 +3,16 @@
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
 import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
+import {
+  REPOSICION_ESTADISTICAS_KEY as ESTADISTICAS_KEY,
+  REPOSICION_HISTORIAL_KEY as HISTORIAL_KEY,
+  REPOSICION_ITEMS_KEY as ITEMS_KEY,
+} from "@/lib/queryKeys";
 import * as reposicionService from "@/services/reposicion";
 import { EstadoReposicion, ItemReposicion } from "@/types";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
-
-const ITEMS_KEY = ["reposicion", "items"] as const;
-const HISTORIAL_KEY = ["reposicion", "historial"] as const;
-const ESTADISTICAS_KEY = ["reposicion", "estadisticas"] as const;
 
 export function useReposicionItems() {
   return useQuery({ queryKey: ITEMS_KEY, queryFn: reposicionService.listarItems });

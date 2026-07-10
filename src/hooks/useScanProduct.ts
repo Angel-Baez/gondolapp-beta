@@ -1,7 +1,7 @@
 "use client";
 
-import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
 import { buscarPorCodigoBarrasLocal } from "@/lib/catalogoLocal";
+import { CATALOGO_COMPLETO_KEY, eanQueryKey } from "@/lib/queryKeys";
 import { buscarPorCodigoBarras, CatalogoCompleto, ProductoCompleto } from "@/services/catalogo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -41,9 +41,7 @@ export type ScanLookupResult =
  * sesión actual (encadenando varios ítems) no pague otro round-trip. */
 const EAN_STALE_TIME = 10 * 60_000;
 
-export function eanQueryKey(ean: string) {
-  return ["producto", "ean", ean] as const;
-}
+export { eanQueryKey } from "@/lib/queryKeys";
 
 export function useScanProduct() {
   const queryClient = useQueryClient();

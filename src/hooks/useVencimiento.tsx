@@ -3,14 +3,15 @@
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
 import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
+import {
+  VENCIMIENTO_ESTADISTICAS_KEY as ESTADISTICAS_KEY,
+  VENCIMIENTO_HISTORIAL_KEY as HISTORIAL_KEY,
+  VENCIMIENTO_ITEMS_KEY as ITEMS_KEY,
+} from "@/lib/queryKeys";
 import { calcularNivelAlerta, toDateInputValue } from "@/lib/utils";
 import * as vencimientoService from "@/services/vencimiento";
 import { ItemVencimientoConAlerta } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-const ITEMS_KEY = ["vencimiento", "items"] as const;
-const HISTORIAL_KEY = ["vencimiento", "historial"] as const;
-const ESTADISTICAS_KEY = ["vencimiento", "estadisticas"] as const;
 
 export function useVencimientoItems() {
   return useQuery({
