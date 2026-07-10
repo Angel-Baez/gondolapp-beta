@@ -278,3 +278,36 @@ if (!dataOFF) {
 ☐ Intentar de nuevo → Reabre scanner
 ☐ Modal de loading → Aparece durante búsqueda
 ```
+
+---
+
+## 🔌 Tests de integración contra Supabase real (julio 2026)
+
+Además de la suite de unidad (`npm test`, Supabase mockeado), existe un harness de
+integración que corre contra un stack de Supabase **real** — es la base de la suite
+de aislamiento RLS de la Fase 2 del proyecto multi-tienda (`docs/SPECMULTIUSER.md` §2.4).
+
+```bash
+# 1. Levantar el stack local (requiere Docker; usa supabase/config.toml
+#    y aplica supabase/migrations/)
+supabase start
+
+# 2. Exportar las keys que imprime el stack local
+supabase status   # → anon key y service_role key
+export SUPABASE_ANON_KEY=<anon key>
+export SUPABASE_SERVICE_ROLE_KEY=<service_role key>
+# SUPABASE_URL es opcional (default http://127.0.0.1:54321)
+
+# 3. Correr la suite
+npm run test:integration
+```
+
+- Config: `vitest.integration.config.ts` (environment `node`, **sin mocks**),
+  excluida del `npm test` default y del coverage.
+- Helpers: `src/tests/integration/helpers.ts` — clientes anon/admin y fixtures de
+  usuarios reales creados vía Admin API (`crearUsuarioDePrueba` devuelve un cliente
+  ya autenticado con JWT de verdad).
+- Las keys **no** se hardcodean (ni las demo del stack local): se leen de env vars
+  y la suite falla rápido con instrucciones si faltan.
+- `src/tests/integration/smoke.test.ts` verifica el harness en sí; debe seguir
+  verde en todas las fases del roadmap multi-tienda.

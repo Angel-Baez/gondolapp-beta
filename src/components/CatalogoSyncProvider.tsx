@@ -1,6 +1,6 @@
 "use client";
 
-import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
+import { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
 import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";

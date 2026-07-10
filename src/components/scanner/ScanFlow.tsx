@@ -1,6 +1,5 @@
 "use client";
 
-import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
 import { useHaptics } from "@/hooks/useHaptics";
 import { ProductoEscaneado, useScanProduct } from "@/hooks/useScanProduct";
 import {
@@ -9,6 +8,7 @@ import {
   useEliminarReposicionItemDirecto,
 } from "@/hooks/useReposicion";
 import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
+import { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
 import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useRecentsStore } from "@/store/recents";
 import { ScanMode } from "@/types";

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   AtributosVariante,
   CategoriaAtributo,
@@ -188,7 +189,8 @@ function sanitizarAtributos(atributos?: AtributosVariante): AtributosVariante {
  * el mismo nombre + marca.
  */
 export async function crearProductoManual(
-  dto: CrearProductoDTO
+  dto: CrearProductoDTO,
+  client: SupabaseClient = supabase
 ): Promise<ProductoCompleto> {
   // Los dos checks de existencia son independientes entre sí: se disparan
   // en paralelo para no pagar dos round-trips secuenciales antes de poder
@@ -197,7 +199,7 @@ export async function crearProductoManual(
     { data: existente, error: buscarError },
     { data: baseExistente, error: baseBuscarError },
   ] = await Promise.all([
-    supabase
+    client
       .from("producto_variantes")
       .select("id")
       .eq("codigo_barras", dto.ean)
@@ -205,7 +207,7 @@ export async function crearProductoManual(
     // ilike sin comodines = igualdad case-insensitive: reutiliza la base
     // aunque el tipeo difiera en mayúsculas ("MILEX" → base "Milex"), en
     // vez de chocar con el índice único de la migración 0010.
-    supabase
+    client
       .from("producto_bases")
       .select("*")
       .ilike("nombre", dto.productoBase.nombre.trim())
@@ -220,7 +222,7 @@ export async function crearProductoManual(
 
   let baseRow = baseExistente as ProductoBaseRow | null;
   if (!baseRow) {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("producto_bases")
       .insert({
         nombre: dto.productoBase.nombre.trim(),
@@ -238,7 +240,7 @@ export async function crearProductoManual(
   // trigger de BD (migración 0008), que lo arma desde atributos con el
   // orden de la categoría. Así imports masivos o fixes por SQL nunca lo
   // dejan desincronizado de la búsqueda ilike.
-  const { data: varianteRow, error: varianteError } = await supabase
+  const { data: varianteRow, error: varianteError } = await client
     .from("producto_variantes")
     .insert({
       producto_base_id: baseRow.id,
@@ -304,8 +306,10 @@ export interface DefinicionesAtributos {
  * formulario dinámico, con qué etiqueta/orden y qué valores sugerir.
  * La tabla es diminuta (unas filas por categoría), se trae entera.
  */
-export async function obtenerDefinicionesAtributos(): Promise<DefinicionesAtributos> {
-  const { data, error } = await supabase
+export async function obtenerDefinicionesAtributos(
+  client: SupabaseClient = supabase
+): Promise<DefinicionesAtributos> {
+  const { data, error } = await client
     .from("categoria_atributos")
     .select("categoria, clave, etiqueta, orden, sugerencias")
     .order("orden");
@@ -329,11 +333,13 @@ export async function obtenerDefinicionesAtributos(): Promise<DefinicionesAtribu
 }
 
 /** Marcas y categorías existentes, para autocompletar el formulario de alta manual. */
-export async function obtenerMarcasYCategorias(): Promise<{
+export async function obtenerMarcasYCategorias(
+  client: SupabaseClient = supabase
+): Promise<{
   marcas: string[];
   categorias: string[];
 }> {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("producto_bases")
     .select("marca, categoria");
   if (error) throw error;

@@ -1,9 +1,10 @@
 "use client";
 
+import { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
 import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useQuery } from "@tanstack/react-query";
 
-export const CATALOGO_COMPLETO_KEY = ["catalogo", "completo"] as const;
+export { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
 
 /**
  * Todo el catálogo (bases + variantes + definiciones de atributos) en una

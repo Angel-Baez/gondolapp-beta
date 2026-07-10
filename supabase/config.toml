@@ -1,0 +1,4 @@
+# Config mínima del stack local (`supabase start` + `supabase db reset`
+# aplica supabase/migrations/). El CLI completa el resto con defaults;
+# `supabase init` regeneraría la versión completa si hiciera falta.
+project_id = "gondolapp-beta"

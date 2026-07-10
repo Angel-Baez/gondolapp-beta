@@ -6,6 +6,7 @@ import {
 } from "@/services/catalogo";
 import { AtributosVariante, ProductoParseado } from "@/types";
 import Anthropic from "@anthropic-ai/sdk";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Server-only: usa ANTHROPIC_API_KEY / GEMINI_API_KEY (sin NEXT_PUBLIC_).
 // Importar este módulo solo desde API routes; en el cliente no hay key y el
@@ -291,7 +292,10 @@ async function parsearConGemini(
  * Anthropic (Haiku 4.5) mientras haya key y crédito; Gemini como fallback
  * automático (o único proveedor si solo hay GEMINI_API_KEY).
  */
-export async function parsearProducto(texto: string): Promise<ProductoParseado> {
+export async function parsearProducto(
+  texto: string,
+  client: SupabaseClient = supabase
+): Promise<ProductoParseado> {
   const anthropicConfigurado = Boolean(process.env.ANTHROPIC_API_KEY);
   const geminiConfigurado = Boolean(process.env.GEMINI_API_KEY);
   if (!anthropicConfigurado && !geminiConfigurado) {
@@ -299,12 +303,12 @@ export async function parsearProducto(texto: string): Promise<ProductoParseado> 
   }
 
   const [{ marcas, categorias }, defs, basesResult] = await Promise.all([
-    obtenerMarcasYCategorias(),
-    obtenerDefinicionesAtributos(),
+    obtenerMarcasYCategorias(client),
+    obtenerDefinicionesAtributos(client),
     // El orden estable importa: el system prompt se cachea por prefijo exacto
     // de bytes, y sin .order() Postgres no garantiza orden — cada request
     // generaría un prompt distinto y el caché nunca pegaría.
-    supabase
+    client
       .from("producto_bases")
       .select("nombre, marca, categoria")
       .order("nombre")
