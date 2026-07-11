@@ -35,7 +35,7 @@ export async function countPending(): Promise<number> {
   return (await readQueue()).length;
 }
 
-/** Solo para tests/depuración: vacía la cola sin ejecutar nada. */
+/** Vacía la cola sin ejecutar nada (logout vía limpiarEstadoLocal, tests). */
 export async function clearQueue(): Promise<void> {
   await del(QUEUE_KEY, outboxStore);
   useOutboxStore.getState().setPendingCount(0);
@@ -52,6 +52,25 @@ export function isNetworkError(err: unknown): boolean {
   return false;
 }
 
+/**
+ * Errores de autenticación transitorios: JWT vencido al volver online,
+ * sesión todavía sin refrescar. La operación es válida y va a funcionar
+ * tras el refresh de autoRefreshToken — debe cortar la corrida como un
+ * error de red, NUNCA descartarse (perdería trabajo offline en silencio,
+ * spec §4.3). Un 403 de RLS en cambio es error de datos: reintentar no
+ * lo arregla y sí debe descartarse.
+ */
+export function esErrorDeAuthReintentable(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const e = err as { code?: unknown; status?: unknown; message?: unknown };
+  if (e.code === "PGRST301") return true;
+  if (e.status === 401) return true;
+  return (
+    typeof e.message === "string" &&
+    /jwt (expired|invalid)|token (is )?expired/i.test(e.message)
+  );
+}
+
 let procesando = false;
 
 /**
@@ -60,10 +79,10 @@ let procesando = false;
  * las operaciones siguientes en la misma corrida que referencien ese mismo
  * item (por ejemplo: crear offline → cambiar cantidad offline, en ese orden).
  *
- * Si una operación falla por red, la corrida se corta ahí (la cola queda
- * intacta) para reintentar más tarde. Si falla por otra razón (dato
- * inválido, item ya no existe), se descarta esa operación puntual para no
- * bloquear el resto de la cola.
+ * Si una operación falla por red o por sesión vencida (401/PGRST301), la
+ * corrida se corta ahí (la cola queda intacta) para reintentar más tarde.
+ * Si falla por otra razón (dato inválido, item ya no existe), se descarta
+ * esa operación puntual para no bloquear el resto de la cola.
  */
 export async function processQueue(): Promise<void> {
   if (procesando || !isOnline()) return;
@@ -83,8 +102,9 @@ export async function processQueue(): Promise<void> {
         }
         await writeQueue(resto);
       } catch (err) {
-        if (isNetworkError(err)) break;
-        // Error de datos (no de red): se descarta para no bloquear la cola.
+        if (isNetworkError(err) || esErrorDeAuthReintentable(err)) break;
+        // Error de datos (no de red ni de auth): se descarta para no
+        // bloquear la cola.
         await writeQueue(resto);
       }
     }

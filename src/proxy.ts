@@ -1,3 +1,5 @@
+import { esRutaPublica } from "@/lib/rutasPublicas";
+import { createServerClient } from "@supabase/ssr";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextRequest, NextResponse } from "next/server";
@@ -65,13 +67,78 @@ const createLimiter = redis
     })
   : null;
 
+/**
+ * Refresca la sesión leyendo cookies (@supabase/ssr) y redirige a /login
+ * en rutas protegidas sin usuario. Best-effort a propósito (spec §3.1):
+ * en arranque offline el SW sirve el shell sin pasar por acá, y si Auth no
+ * responde se deja pasar — el gate real de UX es client-side (AuthProvider).
+ */
+async function gateDeSesion(request: NextRequest): Promise<NextResponse> {
+  const pathname = request.nextUrl.pathname;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return NextResponse.next({ request });
+
+  const redirigirALogin = () => {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  };
+
+  // Sin cookie de Supabase no hay sesión que refrescar: redirect directo,
+  // sin pagar el round-trip a Auth.
+  const hayCookieDeSesion = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
+  if (!hayCookieDeSesion) {
+    return esRutaPublica(pathname)
+      ? NextResponse.next({ request })
+      : redirigirALogin();
+  }
+
+  let response = NextResponse.next({ request });
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user && !esRutaPublica(pathname)) {
+      const redirect = redirigirALogin();
+      // Conservar las cookies del refresh (p.ej. limpieza de una sesión inválida).
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
+  } catch {
+    // Auth inalcanzable: dejar pasar (best-effort).
+  }
+  return response;
+}
+
 // 🔄 Nueva convención Next.js 16: export default (antes era "export async function middleware")
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Solo aplicar rate limiting a API routes
+  // Páginas: gate de sesión. API routes: rate limiting (el 401 lo maneja
+  // cada route handler con su cliente por-request).
   if (!pathname.startsWith("/api/")) {
-    return addSecurityHeaders(NextResponse.next());
+    return addSecurityHeaders(await gateDeSesion(request));
   }
 
   // Obtener IP del cliente

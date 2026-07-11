@@ -1,5 +1,6 @@
 "use client";
 
+import { BotonCerrarSesion } from "@/components/BotonCerrarSesion";
 import { OutboxBadge } from "@/components/OutboxBadge";
 import { ScanFlow } from "@/components/scanner/ScanFlow";
 import { ProductSearchSheet } from "@/components/search/ProductSearchSheet";
@@ -99,6 +100,7 @@ function HomePageContent() {
                 </Link>
                 <OutboxBadge />
                 <ThemeToggle />
+                <BotonCerrarSesion />
               </>
             }
             bottomSlot={

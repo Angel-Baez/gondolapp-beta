@@ -1,3 +1,4 @@
+import { crearClienteServidor } from "@/lib/supabaseServer";
 import { construirNombreCompleto, ORDEN_ATRIBUTOS_DEFAULT } from "@/lib/utils";
 import { obtenerDefinicionesAtributos } from "@/services/catalogo";
 import {
@@ -18,6 +19,20 @@ const MAX_TEXTO = 200;
  * señal para que el cliente caiga al formulario manual.
  */
 export async function POST(request: NextRequest) {
+  // Gate 401: protege el gasto de IA detrás de auth (no solo del rate
+  // limit por IP) y da un cliente con el JWT del usuario para que RLS
+  // scopee las lecturas del catálogo.
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: "No autenticado" },
+      { status: 401 }
+    );
+  }
+
   let texto: unknown;
   try {
     ({ texto } = await request.json());
@@ -42,13 +57,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsed = await parsearProducto(texto.trim());
+    const parsed = await parsearProducto(texto.trim(), supabase);
 
     // Preview del nombre con el mismo orden de claves que usará el trigger
     // de BD al crear (definición de la categoría, o default global).
     let orden: readonly string[] = ORDEN_ATRIBUTOS_DEFAULT;
     try {
-      const defs = await obtenerDefinicionesAtributos();
+      const defs = await obtenerDefinicionesAtributos(supabase);
       const categoria = parsed.productoBase.categoria;
       const defsAplicables =
         (categoria && defs.porCategoria[categoria]) ||

@@ -94,6 +94,39 @@ describe("processQueue", () => {
     expect(await countPending()).toBe(1);
   });
 
+  it("corta la corrida sin descartar ante un JWT expirado (PGRST301/401)", async () => {
+    const { enqueueOperation, processQueue, countPending } = await import(
+      "@/lib/outbox/outbox"
+    );
+    const { ejecutarOperacion } = await import("@/lib/outbox/executors");
+    vi.mocked(ejecutarOperacion).mockRejectedValue(
+      Object.assign(new Error("JWT expired"), { code: "PGRST301" })
+    );
+
+    await enqueueOperation("reposicion.eliminarItem", { id: "item-1" });
+    await enqueueOperation("reposicion.eliminarItem", { id: "item-2" });
+    await processQueue();
+
+    // Nada se descarta: el trabajo offline se reintenta tras el refresh.
+    expect(await countPending()).toBe(2);
+    expect(ejecutarOperacion).toHaveBeenCalledTimes(1);
+  });
+
+  it("corta la corrida ante un 401 sin código PGRST", async () => {
+    const { enqueueOperation, processQueue, countPending } = await import(
+      "@/lib/outbox/outbox"
+    );
+    const { ejecutarOperacion } = await import("@/lib/outbox/executors");
+    vi.mocked(ejecutarOperacion).mockRejectedValue(
+      Object.assign(new Error("Unauthorized"), { status: 401 })
+    );
+
+    await enqueueOperation("reposicion.eliminarItem", { id: "item-1" });
+    await processQueue();
+
+    expect(await countPending()).toBe(1);
+  });
+
   it("descarta una operación con error de datos (no de red) y sigue con el resto", async () => {
     const { enqueueOperation, processQueue, countPending } = await import(
       "@/lib/outbox/outbox"

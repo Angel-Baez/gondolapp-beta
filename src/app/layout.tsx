@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthProvider";
 import CatalogoSyncProvider from "@/components/CatalogoSyncProvider";
 import OutboxProvider from "@/components/OutboxProvider";
 import PWAProvider from "./PWAProvider";
@@ -101,6 +102,9 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-canvas text-fg transition-colors">
+        {/* AuthProvider por fuera de QueryProvider: en la Fase 2 el buster
+            del persister y las query keys dependen de la identidad. */}
+        <AuthProvider>
         <QueryProvider>
           <ThemeProvider>
             <PWAProvider />
@@ -123,6 +127,7 @@ export default function RootLayout({
             {children}
           </ThemeProvider>
         </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

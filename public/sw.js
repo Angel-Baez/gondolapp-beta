@@ -1,4 +1,6 @@
-const CACHE_VERSION = "v2";
+// v3: exclusión de *.supabase.co del cache (privacidad multi-usuario) y
+// llegada del login — el bump fuerza el ciclo de update en clientes viejos.
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `gondolapp-${CACHE_VERSION}`;
 const STATIC_CACHE = `gondolapp-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gondolapp-dynamic-${CACHE_VERSION}`;
@@ -89,6 +91,14 @@ self.addEventListener("fetch", (event) => {
 
   // Ignorar hot-reload en desarrollo
   if (url.pathname.includes("_next/webpack-hmr")) {
+    return;
+  }
+
+  // Nunca cachear Supabase (REST/Auth/Storage): el offline de datos lo
+  // maneja el persister de React Query en IDB, aislado por identidad.
+  // Cachear estas respuestas en Cache Storage filtraría datos entre
+  // usuarios del mismo dispositivo (docs/SPECMULTIUSER.md §6).
+  if (url.hostname.endsWith(".supabase.co")) {
     return;
   }
 
