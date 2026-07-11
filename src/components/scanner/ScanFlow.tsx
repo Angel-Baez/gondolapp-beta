@@ -8,7 +8,8 @@ import {
   useEliminarReposicionItemDirecto,
 } from "@/hooks/useReposicion";
 import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
-import { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
+import { useAuth } from "@/components/AuthProvider";
+import { catalogoCompletoKey, SIN_TIENDA } from "@/lib/queryKeys";
 import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useRecentsStore } from "@/store/recents";
 import { ScanMode } from "@/types";
@@ -71,7 +72,14 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
   const eliminarItem = useEliminarReposicionItemDirecto();
   const agregarVencimiento = useAgregarVencimientoItem();
   const { haptic } = useHaptics();
-  const registrarUso = useRecentsStore((s) => s.registrarUso);
+  const { tiendaActiva } = useAuth();
+  const tiendaId = tiendaActiva ?? SIN_TIENDA;
+  const registrarUsoStore = useRecentsStore((s) => s.registrarUso);
+  const registrarUso = useCallback(
+    (p: { varianteId: string; nombre: string; marca?: string; tamano?: string }) =>
+      registrarUsoStore(tiendaId, p),
+    [registrarUsoStore, tiendaId]
+  );
   const queryClient = useQueryClient();
 
   // Precargar el catálogo completo al abrir la cámara: si el código
@@ -81,12 +89,13 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
   // pero cubre el caso de abrir el escáner offline y recuperar señal recién
   // acá — React Query dedupe si ambos disparan casi simultáneo.
   useEffect(() => {
+    if (!tiendaActiva) return;
     queryClient.prefetchQuery({
-      queryKey: CATALOGO_COMPLETO_KEY,
-      queryFn: obtenerCatalogoCompleto,
+      queryKey: catalogoCompletoKey(tiendaActiva),
+      queryFn: () => obtenerCatalogoCompleto(tiendaActiva),
       staleTime: 30 * 60_000,
     });
-  }, []);
+  }, [queryClient, tiendaActiva]);
 
   const runEffect = useCallback(
     (effect: ScanFlowEffect) => {
@@ -199,7 +208,7 @@ export function ScanFlow({ scanMode, onClose, onRequestSearch }: ScanFlowProps) 
     // atrás: invalidar dispara un refetch inmediato en vez de esperar el
     // próximo sync. Más simple que mergear a mano (acá solo tenemos el
     // ProductoEscaneado reducido, no el ProductoCompleto completo).
-    queryClient.invalidateQueries({ queryKey: CATALOGO_COMPLETO_KEY });
+    queryClient.invalidateQueries({ queryKey: catalogoCompletoKey(tiendaId) });
     dispatch({ type: "CREATED", producto });
   };
 

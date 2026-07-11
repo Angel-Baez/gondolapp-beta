@@ -11,6 +11,7 @@ import {
   seleccionarItemsANotificar,
   tienePermiso,
 } from "@/lib/notificacionesVencimiento";
+import { useAuth } from "@/components/AuthProvider";
 import { useNotificacionesStore } from "@/store/notificaciones";
 import { useEffect, useMemo } from "react";
 import { useProductosDeItems } from "./useProductosDeItems";
@@ -23,6 +24,7 @@ import { useVencimientoItems } from "./useVencimiento";
  * para el badge del tab.
  */
 export function useNotificacionesVencimiento() {
+  const { tiendaActiva } = useAuth();
   const { data: items = [] } = useVencimientoItems();
   const { data: productosPorVariante } = useProductosDeItems(
     items.map((i) => i.varianteId)
@@ -39,7 +41,7 @@ export function useNotificacionesVencimiento() {
   }, [urgentes.length]);
 
   useEffect(() => {
-    if (!habilitadas || !tienePermiso()) return;
+    if (!habilitadas || !tienePermiso() || !tiendaActiva) return;
     // Esperar los nombres del catálogo: notificar "Producto" no sirve de nada.
     if (urgentes.length > 0 && !productosPorVariante) return;
 
@@ -52,7 +54,7 @@ export function useNotificacionesVencimiento() {
       fechaVencimiento: item.fechaVencimiento,
     }));
 
-    const registro = leerNotificados();
+    const registro = leerNotificados(tiendaActiva);
     const nuevos = seleccionarItemsANotificar(notificables, registro);
     if (nuevos.length > 0) {
       void mostrarNotificacionVencimientos(nuevos);
@@ -64,8 +66,8 @@ export function useNotificacionesVencimiento() {
       },
       notificables
     );
-    guardarNotificados(actualizado);
-  }, [urgentes, productosPorVariante, habilitadas]);
+    guardarNotificados(tiendaActiva, actualizado);
+  }, [urgentes, productosPorVariante, habilitadas, tiendaActiva]);
 
   return { urgentesCount: urgentes.length };
 }

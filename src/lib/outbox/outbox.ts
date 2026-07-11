@@ -5,14 +5,26 @@ import { outboxStore } from "./db";
 import { ejecutarOperacion } from "./executors";
 import { OutboxOperation, OutboxOperationType, PayloadOf } from "./types";
 
-const QUEUE_KEY = "queue";
+// Cola por usuario (spec §4.3): en un dispositivo compartido, el trabajo
+// offline de un usuario nunca se ejecuta con la sesión de otro. AuthProvider
+// setea el usuario actual; sin usuario (tests, arranque) se usa la clave
+// legacy "queue".
+let usuarioActual: string | null = null;
+
+export function setUsuarioOutbox(userId: string | null): void {
+  usuarioActual = userId;
+}
+
+function queueKey(): string {
+  return usuarioActual ? `queue:${usuarioActual}` : "queue";
+}
 
 async function readQueue(): Promise<OutboxOperation[]> {
-  return (await get<OutboxOperation[]>(QUEUE_KEY, outboxStore)) ?? [];
+  return (await get<OutboxOperation[]>(queueKey(), outboxStore)) ?? [];
 }
 
 async function writeQueue(queue: OutboxOperation[]): Promise<void> {
-  await set(QUEUE_KEY, queue, outboxStore);
+  await set(queueKey(), queue, outboxStore);
   useOutboxStore.getState().setPendingCount(queue.length);
 }
 
@@ -37,7 +49,7 @@ export async function countPending(): Promise<number> {
 
 /** Vacía la cola sin ejecutar nada (logout vía limpiarEstadoLocal, tests). */
 export async function clearQueue(): Promise<void> {
-  await del(QUEUE_KEY, outboxStore);
+  await del(queueKey(), outboxStore);
   useOutboxStore.getState().setPendingCount(0);
 }
 
@@ -99,6 +111,16 @@ export async function processQueue(): Promise<void> {
         const resultado = await ejecutarOperacion(op, resolveId);
         if (resultado?.tempId && resultado.realId) {
           idMap.set(resultado.tempId, resultado.realId);
+          // Persistir el remap también EN la cola: si la corrida se corta
+          // acá (red, 401) y se reanuda en otra sesión, las operaciones
+          // dependientes ya apuntan al id real — antes el idMap era solo
+          // por-corrida y esas operaciones quedaban con un "offline:" sin
+          // resolver que terminaba descartado.
+          for (const pendiente of resto) {
+            if ("id" in pendiente.payload && pendiente.payload.id === resultado.tempId) {
+              pendiente.payload.id = resultado.realId;
+            }
+          }
         }
         await writeQueue(resto);
       } catch (err) {

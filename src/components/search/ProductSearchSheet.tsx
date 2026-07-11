@@ -9,6 +9,8 @@ import {
   useEliminarReposicionItemDirecto,
 } from "@/hooks/useReposicion";
 import { useAgregarVencimientoItem } from "@/hooks/useVencimiento";
+import { useAuth } from "@/components/AuthProvider";
+import { SIN_TIENDA } from "@/lib/queryKeys";
 import { RecentEntry, useRecentsStore } from "@/store/recents";
 import { ProductoCompleto } from "@/services/catalogo";
 import { ScanMode } from "@/types";
@@ -66,7 +68,13 @@ export function ProductSearchSheet({ isOpen, onClose, mode }: ProductSearchSheet
   const actualizarCantidad = useActualizarCantidadReposicion();
   const eliminarItem = useEliminarReposicionItemDirecto();
   const agregarVencimiento = useAgregarVencimientoItem();
-  const registrarUso = useRecentsStore((s) => s.registrarUso);
+  const { tiendaActiva } = useAuth();
+  const registrarUsoStore = useRecentsStore((s) => s.registrarUso);
+  const registrarUso = useCallback(
+    (p: { varianteId: string; nombre: string; marca?: string; tamano?: string }) =>
+      registrarUsoStore(tiendaActiva ?? SIN_TIENDA, p),
+    [registrarUsoStore, tiendaActiva]
+  );
 
   const items = useMemo(() => resultados.map(aSearchItem), [resultados]);
 

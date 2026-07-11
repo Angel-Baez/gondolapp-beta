@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/AuthProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useMarcasCategorias } from "@/hooks/useMarcasCategorias";
 import { ProductoEscaneado } from "@/hooks/useScanProduct";
@@ -44,6 +45,7 @@ export function ManualProductSheet({
   onCreated,
   onClose,
 }: ManualProductSheetProps) {
+  const { tiendaActiva } = useAuth();
   const [modo, setModo] = useState<Modo>("input");
   const [texto, setTexto] = useState("");
   const [parseando, setParseando] = useState(false);
@@ -108,7 +110,7 @@ export function ManualProductSheet({
       const response = await fetch("/api/productos/parsear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto: texto.trim() }),
+        body: JSON.stringify({ texto: texto.trim(), tiendaId: tiendaActiva }),
       });
       const result = await response.json();
       if (!result.success || !result.parsed?.productoBase?.nombre) {
@@ -132,7 +134,7 @@ export function ManualProductSheet({
       const response = await fetch("/api/productos/crear-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dto),
+        body: JSON.stringify({ ...dto, tiendaId: tiendaActiva }),
       });
       const result = await response.json();
 

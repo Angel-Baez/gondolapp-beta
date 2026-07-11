@@ -34,8 +34,9 @@ export async function POST(request: NextRequest) {
   }
 
   let texto: unknown;
+  let tiendaId: unknown;
   try {
-    ({ texto } = await request.json());
+    ({ texto, tiendaId } = await request.json());
   } catch {
     return NextResponse.json(
       { success: false, error: "Body inválido" },
@@ -43,6 +44,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (typeof tiendaId !== "string" || !tiendaId) {
+    return NextResponse.json(
+      { success: false, error: "Falta tiendaId" },
+      { status: 400 }
+    );
+  }
   if (typeof texto !== "string" || !texto.trim()) {
     return NextResponse.json(
       { success: false, error: "Falta el texto del producto" },
@@ -57,13 +64,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsed = await parsearProducto(texto.trim(), supabase);
+    const parsed = await parsearProducto(texto.trim(), tiendaId, supabase);
 
     // Preview del nombre con el mismo orden de claves que usará el trigger
     // de BD al crear (definición de la categoría, o default global).
     let orden: readonly string[] = ORDEN_ATRIBUTOS_DEFAULT;
     try {
-      const defs = await obtenerDefinicionesAtributos(supabase);
+      const defs = await obtenerDefinicionesAtributos(tiendaId, supabase);
       const categoria = parsed.productoBase.categoria;
       const defsAplicables =
         (categoria && defs.porCategoria[categoria]) ||

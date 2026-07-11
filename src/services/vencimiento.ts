@@ -64,11 +64,16 @@ function mapHistorial(row: ItemVencimientoHistorialRow): ItemVencimientoHistoria
   };
 }
 
-/** Lista los items de vencimiento activos (pendientes), con el nivel de alerta calculado. */
-export async function listarItems(): Promise<ItemVencimientoConAlerta[]> {
+/**
+ * Lista los items de vencimiento activos (pendientes), con el nivel de
+ * alerta calculado. Filtra por la tienda ACTIVA además de RLS (que scopea
+ * a "todas mis tiendas" y mezclaría listas en usuarios multi-membresía).
+ */
+export async function listarItems(tiendaId: string): Promise<ItemVencimientoConAlerta[]> {
   const { data, error } = await supabase
     .from("items_vencimiento")
     .select("*")
+    .eq("tienda_id", tiendaId)
     .eq("estado", "pendiente")
     .order("fecha_vencimiento", { ascending: true });
   if (error) throw error;
@@ -163,14 +168,18 @@ export async function retirarItemsMasivo(ids: string[]): Promise<void> {
   throw error;
 }
 
-export async function obtenerHistorial(filtros?: {
-  desde?: Date;
-  hasta?: Date;
-  limite?: number;
-}): Promise<ItemVencimientoHistorial[]> {
+export async function obtenerHistorial(
+  tiendaId: string,
+  filtros?: {
+    desde?: Date;
+    hasta?: Date;
+    limite?: number;
+  }
+): Promise<ItemVencimientoHistorial[]> {
   let query = supabase
     .from("items_vencimiento_historial")
     .select("*")
+    .eq("tienda_id", tiendaId)
     .order("fecha_retiro", { ascending: false });
 
   if (filtros?.desde) query = query.gte("fecha_retiro", filtros.desde.toISOString());
@@ -197,6 +206,7 @@ interface EstadisticasRpcResult {
  * que el top de productos.
  */
 export async function obtenerEstadisticas(
+  tiendaId: string,
   periodo: "semana" | "mes" | "año"
 ): Promise<EstadisticasVencimiento> {
   const ahora = new Date();
@@ -213,70 +223,24 @@ export async function obtenerEstadisticas(
       break;
   }
 
+  // Sin fallback client-side desde la Fase 2: la RPC existe siempre
+  // (migración 0015) y un cálculo local post-scoping agregaría sobre todas
+  // mis tiendas en vez de la activa.
   const { data, error } = await supabase.rpc("obtener_estadisticas_vencimiento", {
+    p_tienda_id: tiendaId,
     p_desde: fechaInicio.toISOString(),
     p_hasta: ahora.toISOString(),
   });
+  if (error) throw error;
 
-  if (!error) {
-    const stats = data as EstadisticasRpcResult;
-    return {
-      periodo,
-      totalRetirados: stats.total_retirados,
-      promedioDiasARetiro: Number(stats.promedio_dias_a_retiro),
-      productosMasRetirados: (stats.productos_mas_retirados ?? []).map((p) => ({
-        productoNombre: p.producto_nombre,
-        cantidad: p.cantidad,
-      })),
-    };
-  }
-
-  // PGRST202: la RPC todavía no existe (migración 0011 sin aplicar).
-  // Fallback al cálculo client-side para no depender del orden de deploy.
-  if (error.code !== "PGRST202") throw error;
-  return obtenerEstadisticasClientSide(periodo, fechaInicio, ahora);
-}
-
-async function obtenerEstadisticasClientSide(
-  periodo: "semana" | "mes" | "año",
-  desde: Date,
-  hasta: Date
-): Promise<EstadisticasVencimiento> {
-  const retirados = await obtenerHistorial({ desde, hasta });
-
-  if (retirados.length === 0) {
-    return {
-      periodo,
-      totalRetirados: 0,
-      productosMasRetirados: [],
-      promedioDiasARetiro: 0,
-    };
-  }
-
-  const productosCount = new Map<string, number>();
-  let totalUnidades = 0;
-  let sumaDias = 0;
-  retirados.forEach((item) => {
-    const unidades = item.cantidad ?? 1;
-    totalUnidades += unidades;
-    const count = productosCount.get(item.productoNombre) || 0;
-    productosCount.set(item.productoNombre, count + unidades);
-
-    const dias = Math.floor(
-      (item.fechaRetiro.getTime() - item.fechaVencimiento.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    sumaDias += dias;
-  });
-
-  const productosMasRetirados = Array.from(productosCount.entries())
-    .map(([productoNombre, cantidad]) => ({ productoNombre, cantidad }))
-    .sort((a, b) => b.cantidad - a.cantidad)
-    .slice(0, 10);
-
+  const stats = data as EstadisticasRpcResult;
   return {
     periodo,
-    totalRetirados: totalUnidades,
-    productosMasRetirados,
-    promedioDiasARetiro: sumaDias / retirados.length,
+    totalRetirados: stats.total_retirados,
+    promedioDiasARetiro: Number(stats.promedio_dias_a_retiro),
+    productosMasRetirados: (stats.productos_mas_retirados ?? []).map((p) => ({
+      productoNombre: p.producto_nombre,
+      cantidad: p.cantidad,
+    })),
   };
 }

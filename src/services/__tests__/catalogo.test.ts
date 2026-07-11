@@ -36,7 +36,7 @@ describe("buscarPorCodigoBarras", () => {
     const { buscarPorCodigoBarras } = await import("@/services/catalogo");
     fromMock.mockImplementation(mockSupabaseFrom({ data: null }));
 
-    const resultado = await buscarPorCodigoBarras("0000000000000");
+    const resultado = await buscarPorCodigoBarras("tienda-test", "0000000000000");
     expect(resultado).toBeNull();
   });
 
@@ -46,7 +46,7 @@ describe("buscarPorCodigoBarras", () => {
       mockSupabaseFrom({ data: { ...varianteRow, producto_bases: baseRow } })
     );
 
-    const resultado = await buscarPorCodigoBarras(varianteRow.codigo_barras);
+    const resultado = await buscarPorCodigoBarras("tienda-test", varianteRow.codigo_barras);
     expect(resultado).not.toBeNull();
     expect(resultado!.variante.codigoBarras).toBe("7791234567890");
     expect(resultado!.base.nombre).toBe("Leche");
@@ -60,7 +60,7 @@ describe("buscarPorCodigoBarras", () => {
       mockSupabaseFrom({ error: new Error("conexión perdida") })
     );
 
-    await expect(buscarPorCodigoBarras("123")).rejects.toThrow("conexión perdida");
+    await expect(buscarPorCodigoBarras("tienda-test", "123")).rejects.toThrow("conexión perdida");
   });
 });
 
@@ -79,7 +79,7 @@ describe("crearProductoManual", () => {
       mockSupabaseFrom({ data: { id: "ya-existe" } }, { data: null })
     );
 
-    await expect(crearProductoManual(dto)).rejects.toThrow("ya existe en el catálogo");
+    await expect(crearProductoManual("tienda-test", dto)).rejects.toThrow("ya existe en el catálogo");
   });
 
   it("reutiliza el producto base si ya existe uno con el mismo nombre+marca", async () => {
@@ -101,7 +101,7 @@ describe("crearProductoManual", () => {
       )
     );
 
-    const resultado = await crearProductoManual(dto);
+    const resultado = await crearProductoManual("tienda-test", dto);
     expect(resultado.base.id).toBe("base-1");
     expect(resultado.variante.id).toBe("variante-nueva");
     expect(fromMock).toHaveBeenCalledTimes(3);
@@ -118,7 +118,12 @@ describe("crearProductoManual", () => {
     fromMock.mockImplementation((tabla: string) => {
       if (tabla === "producto_variantes") {
         return {
-          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+          // .eq(tienda_id).eq(codigo_barras).maybeSingle()
+          select: () => ({
+            eq: () => ({
+              eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
+            }),
+          }),
           insert: (payload: Record<string, unknown>) => {
             payloadInsertado = payload;
             return {
@@ -139,13 +144,17 @@ describe("crearProductoManual", () => {
       }
       return {
         select: () => ({
-          // El lookup de base usa ilike (igualdad case-insensitive, ver 0010)
-          ilike: () => ({ ilike: () => ({ maybeSingle: async () => ({ data: baseRow, error: null }) }) }),
+          // El lookup de base usa .eq(tienda) + ilike (case-insensitive, ver 0010)
+          eq: () => ({
+            ilike: () => ({
+              ilike: () => ({ maybeSingle: async () => ({ data: baseRow, error: null }) }),
+            }),
+          }),
         }),
       };
     });
 
-    await crearProductoManual(dtoSucio);
+    await crearProductoManual("tienda-test", dtoSucio);
 
     expect(payloadInsertado).not.toHaveProperty("nombre_completo");
     expect(payloadInsertado?.atributos).toEqual({ tipo: "Con Palo", tamano: "1kg" });
@@ -172,7 +181,7 @@ describe("crearProductoManual", () => {
       )
     );
 
-    const resultado = await crearProductoManual(dto);
+    const resultado = await crearProductoManual("tienda-test", dto);
     expect(resultado.base.id).toBe("base-nueva");
     expect(fromMock).toHaveBeenCalledTimes(4);
   });
@@ -229,7 +238,7 @@ describe("obtenerDefinicionesAtributos", () => {
       })
     );
 
-    const defs = await obtenerDefinicionesAtributos();
+    const defs = await obtenerDefinicionesAtributos("tienda-test");
 
     expect(defs.default.map((d) => d.clave)).toEqual(["tipo", "sabor"]);
     expect(defs.porCategoria["Ferretería"]).toEqual([
@@ -254,7 +263,7 @@ describe("obtenerMarcasYCategorias", () => {
       })
     );
 
-    const { marcas, categorias } = await obtenerMarcasYCategorias();
+    const { marcas, categorias } = await obtenerMarcasYCategorias("tienda-test");
     expect(marcas).toEqual(["Arcor", "Nestlé"]);
     expect(categorias).toEqual(["Golosinas", "Lácteos"]);
   });
@@ -275,7 +284,7 @@ describe("obtenerCatalogoCompleto", () => {
       )
     );
 
-    const catalogo = await obtenerCatalogoCompleto();
+    const catalogo = await obtenerCatalogoCompleto("tienda-test");
 
     expect(catalogo.bases).toEqual([expect.objectContaining({ id: "base-1", nombre: "Leche" })]);
     expect(catalogo.variantes).toEqual([
@@ -295,7 +304,7 @@ describe("obtenerCatalogoCompleto", () => {
       )
     );
 
-    await expect(obtenerCatalogoCompleto()).rejects.toThrow("bases caídas");
+    await expect(obtenerCatalogoCompleto("tienda-test")).rejects.toThrow("bases caídas");
   });
 
   it("propaga el error si falla la consulta de variantes", async () => {
@@ -308,14 +317,14 @@ describe("obtenerCatalogoCompleto", () => {
       )
     );
 
-    await expect(obtenerCatalogoCompleto()).rejects.toThrow("variantes caídas");
+    await expect(obtenerCatalogoCompleto("tienda-test")).rejects.toThrow("variantes caídas");
   });
 });
 
 describe("buscarProductos", () => {
   it("no consulta la base si el término sanitizado queda muy corto", async () => {
     const { buscarProductos } = await import("@/services/catalogo");
-    const resultado = await buscarProductos(" ,%) (");
+    const resultado = await buscarProductos("tienda-test", " ,%) (");
 
     expect(resultado).toEqual([]);
     expect(fromMock).not.toHaveBeenCalled();
@@ -326,7 +335,7 @@ describe("buscarProductos", () => {
     // Sin sanitizar tiene 4 caracteres (pasaría el mínimo); sanitizado
     // ("a") queda en 1 y debe cortar antes de tocar la base — así se prueba
     // que la sanitización corre ANTES del chequeo de longitud mínima.
-    const resultado = await buscarProductos(",,a,");
+    const resultado = await buscarProductos("tienda-test", ",,a,");
 
     expect(resultado).toEqual([]);
     expect(fromMock).not.toHaveBeenCalled();
@@ -336,7 +345,7 @@ describe("buscarProductos", () => {
 describe("buscarVariantes", () => {
   it("no consulta la base si el término sanitizado queda muy corto", async () => {
     const { buscarVariantes } = await import("@/services/catalogo");
-    const resultado = await buscarVariantes("a,");
+    const resultado = await buscarVariantes("tienda-test", "a,");
 
     expect(resultado).toEqual([]);
     expect(fromMock).not.toHaveBeenCalled();
@@ -364,7 +373,7 @@ describe("buscarVariantes", () => {
       )
     );
 
-    const resultado = await buscarVariantes("leche");
+    const resultado = await buscarVariantes("tienda-test", "leche");
 
     expect(resultado).toHaveLength(2);
     expect(resultado.map((p) => p.variante.id).sort()).toEqual([

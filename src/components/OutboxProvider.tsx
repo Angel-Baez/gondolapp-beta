@@ -1,6 +1,7 @@
 "use client";
 
 import { countPending, processQueue } from "@/lib/outbox/outbox";
+import { supabase } from "@/lib/supabase";
 import { useOutboxStore } from "@/store/outbox";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -20,10 +21,15 @@ export default function OutboxProvider() {
     const sincronizar = async () => {
       const antes = await countPending();
       if (antes === 0) return;
+      // getSession refresca el access token si está por vencer; sin sesión
+      // no se procesa (la cola queda intacta para el próximo login).
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
       await processQueue();
       const despues = await countPending();
-      queryClient.invalidateQueries({ queryKey: ["reposicion"] });
-      queryClient.invalidateQueries({ queryKey: ["vencimiento"] });
+      // Prefijo ["tienda"]: invalida las listas de todas las tiendas (las
+      // keys llevan tienda desde la Fase 2).
+      queryClient.invalidateQueries({ queryKey: ["tienda"] });
       if (despues < antes) {
         toast.success(
           antes - despues === 1

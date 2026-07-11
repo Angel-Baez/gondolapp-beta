@@ -294,6 +294,7 @@ async function parsearConGemini(
  */
 export async function parsearProducto(
   texto: string,
+  tiendaId: string,
   client: SupabaseClient = supabase
 ): Promise<ProductoParseado> {
   const anthropicConfigurado = Boolean(process.env.ANTHROPIC_API_KEY);
@@ -302,15 +303,18 @@ export async function parsearProducto(
     throw new IANoConfiguradaError();
   }
 
+  // Todo el contexto del prompt (marcas, categorías, bases, definiciones)
+  // es de la tienda activa: el catálogo es privado por tienda.
   const [{ marcas, categorias }, defs, basesResult] = await Promise.all([
-    obtenerMarcasYCategorias(client),
-    obtenerDefinicionesAtributos(client),
+    obtenerMarcasYCategorias(tiendaId, client),
+    obtenerDefinicionesAtributos(tiendaId, client),
     // El orden estable importa: el system prompt se cachea por prefijo exacto
     // de bytes, y sin .order() Postgres no garantiza orden — cada request
     // generaría un prompt distinto y el caché nunca pegaría.
     client
       .from("producto_bases")
       .select("nombre, marca, categoria")
+      .eq("tienda_id", tiendaId)
       .order("nombre")
       .order("marca"),
   ]);

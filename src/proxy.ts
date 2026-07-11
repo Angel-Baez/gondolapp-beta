@@ -141,9 +141,13 @@ export default async function proxy(request: NextRequest) {
     return addSecurityHeaders(await gateDeSesion(request));
   }
 
-  // Obtener IP del cliente
+  // Clave del rate limit: usuario si hay cookie de sesión, IP como fallback.
+  // El sub se decodifica SIN verificar firma — spoofearlo solo cambia tu
+  // bucket de rate limit; la autorización real la hace el route handler con
+  // su cliente por-request.
   const ip = getClientIp(request);
-  const identifier = `ip:${ip}`;
+  const sub = extraerSubDeSesion(request);
+  const identifier = sub ? `user:${sub}` : `ip:${ip}`;
 
   // En desarrollo, permitir todo
   if (process.env.NODE_ENV === "development" || !redis) {
@@ -279,6 +283,36 @@ export default async function proxy(request: NextRequest) {
     console.error("❌ Error en rate limiting:", error);
     // En caso de error, permitir la request pero loggear
     return addSecurityHeaders(NextResponse.next());
+  }
+}
+
+function decodificarBase64Url(valor: string): string {
+  return atob(valor.replace(/-/g, "+").replace(/_/g, "/"));
+}
+
+/** sub del JWT de la cookie de Supabase, sin verificar firma (solo rate limit). */
+function extraerSubDeSesion(request: NextRequest): string | null {
+  try {
+    const chunks = request.cookies
+      .getAll()
+      .filter((c) => /^sb-.*-auth-token(\.\d+)?$/.test(c.name))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+      .map((c) => c.value);
+    if (chunks.length === 0) return null;
+
+    let crudo = chunks.join("");
+    if (crudo.startsWith("base64-")) {
+      crudo = decodificarBase64Url(crudo.slice("base64-".length));
+    }
+    const sesion = JSON.parse(crudo) as { access_token?: string };
+    if (!sesion.access_token) return null;
+
+    const payload = JSON.parse(
+      decodificarBase64Url(sesion.access_token.split(".")[1])
+    ) as { sub?: string };
+    return payload.sub ?? null;
+  } catch {
+    return null;
   }
 }
 

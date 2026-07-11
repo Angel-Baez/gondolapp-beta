@@ -5,6 +5,7 @@ import {
 import { clearQueue } from "@/lib/outbox/outbox";
 import { limpiarCachePersistido } from "@/lib/queryPersister";
 import { useRecentsStore } from "@/store/recents";
+import { useSesionStore } from "@/store/sesion";
 
 /**
  * Limpieza local completa al cerrar sesión (docs/SPECMULTIUSER.md §3.2).
@@ -22,6 +23,10 @@ export async function limpiarEstadoLocal(): Promise<void> {
   // Recientes/frecuentes (nombres de productos de la tienda).
   useRecentsStore.setState({ entries: {} });
   useRecentsStore.persist.clearStorage();
+
+  // Tienda activa y rol persistidos (identidad del próximo usuario).
+  useSesionStore.getState().setTienda(null, null);
+  useSesionStore.persist.clearStorage();
 
   // Registro de vencimientos ya notificados + badge del ícono.
   limpiarNotificados();

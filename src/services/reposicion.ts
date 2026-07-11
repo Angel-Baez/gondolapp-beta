@@ -83,10 +83,14 @@ function mapLista(
   };
 }
 
-export async function listarItems(): Promise<ItemReposicion[]> {
+// Las lecturas filtran por la tienda ACTIVA además de RLS: RLS scopea a
+// "todas mis tiendas", y para un usuario con más de una membresía eso
+// mezclaría listas de tiendas distintas.
+export async function listarItems(tiendaId: string): Promise<ItemReposicion[]> {
   const { data, error } = await supabase
     .from("items_reposicion")
     .select("*")
+    .eq("tienda_id", tiendaId)
     .order("agregado_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((row) => mapItem(row as ItemReposicionRow));
@@ -180,19 +184,25 @@ export async function eliminarItemsMasivo(ids: string[]): Promise<void> {
  * insertar items de historial, borrar activos), con riesgo real de quedar
  * a mitad de camino si algún paso fallaba.
  */
-export async function guardarListaActual(): Promise<void> {
-  const { error } = await supabase.rpc("guardar_lista_reposicion");
+export async function guardarListaActual(tiendaId: string): Promise<void> {
+  const { error } = await supabase.rpc("guardar_lista_reposicion", {
+    p_tienda_id: tiendaId,
+  });
   if (error) throw error;
 }
 
-export async function obtenerHistorial(filtros?: {
-  desde?: Date;
-  hasta?: Date;
-  limite?: number;
-}): Promise<ListaReposicionHistorial[]> {
+export async function obtenerHistorial(
+  tiendaId: string,
+  filtros?: {
+    desde?: Date;
+    hasta?: Date;
+    limite?: number;
+  }
+): Promise<ListaReposicionHistorial[]> {
   let query = supabase
     .from("listas_reposicion_historial")
     .select("*")
+    .eq("tienda_id", tiendaId)
     .order("fecha_guardado", { ascending: false });
 
   if (filtros?.desde) query = query.gte("fecha_guardado", filtros.desde.toISOString());
@@ -233,6 +243,7 @@ export async function eliminarListaHistorial(id: string): Promise<void> {
 }
 
 export async function obtenerEstadisticas(
+  tiendaId: string,
   periodo: "semana" | "mes" | "año"
 ): Promise<EstadisticasReposicion> {
   const ahora = new Date();
@@ -249,7 +260,7 @@ export async function obtenerEstadisticas(
       break;
   }
 
-  const listas = await obtenerHistorial({ desde: fechaInicio, hasta: ahora });
+  const listas = await obtenerHistorial(tiendaId, { desde: fechaInicio, hasta: ahora });
 
   if (listas.length === 0) {
     return {

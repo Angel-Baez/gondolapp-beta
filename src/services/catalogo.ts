@@ -79,11 +79,16 @@ function mapProductoCompleto(row: ProductoVarianteConBaseRow): ProductoCompleto 
  * en el camino crítico de "escanear código").
  */
 export async function buscarPorCodigoBarras(
+  tiendaId: string,
   codigoBarras: string
 ): Promise<ProductoCompleto | null> {
+  // El filtro por tienda es obligatorio: el EAN es único POR TIENDA desde
+  // la Fase 2, y para un usuario multi-membresía el maybeSingle() fallaría
+  // con dos matches.
   const { data, error } = await supabase
     .from("producto_variantes")
     .select("*, producto_bases(*)")
+    .eq("tienda_id", tiendaId)
     .eq("codigo_barras", codigoBarras)
     .maybeSingle();
 
@@ -118,13 +123,17 @@ function sanitizarTerminoBusqueda(termino: string): string {
 }
 
 /** Busca productos base por nombre o marca (para autocompletado/administración liviana). */
-export async function buscarProductos(termino: string): Promise<ProductoBase[]> {
+export async function buscarProductos(
+  tiendaId: string,
+  termino: string
+): Promise<ProductoBase[]> {
   const limpio = sanitizarTerminoBusqueda(termino);
   if (limpio.length < 2) return [];
 
   const { data, error } = await supabase
     .from("producto_bases")
     .select("*")
+    .eq("tienda_id", tiendaId)
     .or(`nombre.ilike.%${limpio}%,marca.ilike.%${limpio}%`)
     .limit(20);
 
@@ -138,7 +147,10 @@ export async function buscarProductos(termino: string): Promise<ProductoBase[]> 
  * queries en paralelo (PostgREST no permite `.or()` cruzando la tabla
  * principal y la referenciada en la misma llamada) mergeadas por variante.id.
  */
-export async function buscarVariantes(termino: string): Promise<ProductoCompleto[]> {
+export async function buscarVariantes(
+  tiendaId: string,
+  termino: string
+): Promise<ProductoCompleto[]> {
   const limpio = sanitizarTerminoBusqueda(termino);
   if (limpio.length < 2) return [];
 
@@ -146,11 +158,13 @@ export async function buscarVariantes(termino: string): Promise<ProductoCompleto
     supabase
       .from("producto_variantes")
       .select("*, producto_bases(*)")
+      .eq("tienda_id", tiendaId)
       .ilike("nombre_completo", `%${limpio}%`)
       .limit(15),
     supabase
       .from("producto_variantes")
       .select("*, producto_bases!inner(*)")
+      .eq("tienda_id", tiendaId)
       .or(`nombre.ilike.%${limpio}%,marca.ilike.%${limpio}%`, {
         referencedTable: "producto_bases",
       })
@@ -189,12 +203,14 @@ function sanitizarAtributos(atributos?: AtributosVariante): AtributosVariante {
  * el mismo nombre + marca.
  */
 export async function crearProductoManual(
+  tiendaId: string,
   dto: CrearProductoDTO,
   client: SupabaseClient = supabase
 ): Promise<ProductoCompleto> {
   // Los dos checks de existencia son independientes entre sí: se disparan
   // en paralelo para no pagar dos round-trips secuenciales antes de poder
-  // crear el producto.
+  // crear el producto. Scoped a la tienda: el mismo EAN/base puede existir
+  // en otra tienda.
   const [
     { data: existente, error: buscarError },
     { data: baseExistente, error: baseBuscarError },
@@ -202,6 +218,7 @@ export async function crearProductoManual(
     client
       .from("producto_variantes")
       .select("id")
+      .eq("tienda_id", tiendaId)
       .eq("codigo_barras", dto.ean)
       .maybeSingle(),
     // ilike sin comodines = igualdad case-insensitive: reutiliza la base
@@ -210,6 +227,7 @@ export async function crearProductoManual(
     client
       .from("producto_bases")
       .select("*")
+      .eq("tienda_id", tiendaId)
       .ilike("nombre", dto.productoBase.nombre.trim())
       .ilike("marca", dto.productoBase.marca.trim())
       .maybeSingle(),
@@ -222,9 +240,12 @@ export async function crearProductoManual(
 
   let baseRow = baseExistente as ProductoBaseRow | null;
   if (!baseRow) {
+    // producto_bases es tabla raíz: tienda_id explícito (las variantes lo
+    // derivan por trigger desde la base).
     const { data, error } = await client
       .from("producto_bases")
       .insert({
+        tienda_id: tiendaId,
         nombre: dto.productoBase.nombre.trim(),
         marca: dto.productoBase.marca.trim(),
         categoria: dto.productoBase.categoria?.trim() || null,
@@ -307,11 +328,13 @@ export interface DefinicionesAtributos {
  * La tabla es diminuta (unas filas por categoría), se trae entera.
  */
 export async function obtenerDefinicionesAtributos(
+  tiendaId: string,
   client: SupabaseClient = supabase
 ): Promise<DefinicionesAtributos> {
   const { data, error } = await client
     .from("categoria_atributos")
     .select("categoria, clave, etiqueta, orden, sugerencias")
+    .eq("tienda_id", tiendaId)
     .order("orden");
   if (error) throw error;
 
@@ -334,6 +357,7 @@ export async function obtenerDefinicionesAtributos(
 
 /** Marcas y categorías existentes, para autocompletar el formulario de alta manual. */
 export async function obtenerMarcasYCategorias(
+  tiendaId: string,
   client: SupabaseClient = supabase
 ): Promise<{
   marcas: string[];
@@ -341,7 +365,8 @@ export async function obtenerMarcasYCategorias(
 }> {
   const { data, error } = await client
     .from("producto_bases")
-    .select("marca, categoria");
+    .select("marca, categoria")
+    .eq("tienda_id", tiendaId);
   if (error) throw error;
 
   const marcas = Array.from(
@@ -366,11 +391,13 @@ export interface CatalogoCompleto {
  * cachear entero en IndexedDB. Es la fuente para lookup/búsqueda offline
  * (ver src/lib/catalogoLocal.ts) — reemplaza N round-trips por 1 sync.
  */
-export async function obtenerCatalogoCompleto(): Promise<CatalogoCompleto> {
+export async function obtenerCatalogoCompleto(
+  tiendaId: string
+): Promise<CatalogoCompleto> {
   const [basesResult, variantesResult, definiciones] = await Promise.all([
-    supabase.from("producto_bases").select("*"),
-    supabase.from("producto_variantes").select("*"),
-    obtenerDefinicionesAtributos(),
+    supabase.from("producto_bases").select("*").eq("tienda_id", tiendaId),
+    supabase.from("producto_variantes").select("*").eq("tienda_id", tiendaId),
+    obtenerDefinicionesAtributos(tiendaId),
   ]);
   if (basesResult.error) throw basesResult.error;
   if (variantesResult.error) throw variantesResult.error;
