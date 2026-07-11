@@ -1,15 +1,20 @@
-// v3: exclusión de *.supabase.co del cache (privacidad multi-usuario) y
-// llegada del login — el bump fuerza el ciclo de update en clientes viejos.
-const CACHE_VERSION = "v3";
+// v4: purga el precache envenenado de v3 — "/" se precacheaba en el
+// install y, con el gate de login, guardaba una respuesta redirigida
+// (redirected: true) que el navegador rechaza al servirla offline para
+// una navegación. Ver STATIC_ASSETS y navigationHandler.
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `gondolapp-${CACHE_VERSION}`;
 const STATIC_CACHE = `gondolapp-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gondolapp-dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `gondolapp-images-${CACHE_VERSION}`;
 const API_CACHE = `gondolapp-api-${CACHE_VERSION}`;
 
-// Assets estáticos a cachear en instalación
+// Assets estáticos a cachear en instalación.
+// "/" NO se precachea: con el gate de login, el fetch del install puede
+// correr deslogueado y guardar el redirect a /login (respuesta redirected,
+// inservible para navegaciones offline). La copia buena de "/" la guarda
+// navigationHandler en la primera visita con sesión.
 const STATIC_ASSETS = [
-  "/",
   "/offline.html",
   "/manifest.json",
   "/icon-192x192.png",
@@ -229,21 +234,37 @@ async function staleWhileRevalidate(request, cacheName) {
   return cached || fetchPromise;
 }
 
+// Las respuestas con redirected: true no pueden servirse a una navegación
+// (el navegador las rechaza como error de red). Reconstruir el body en una
+// Response limpia las vuelve utilizables.
+async function sinRedirect(response) {
+  if (!response.redirected) return response;
+  const body = await response.blob();
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
 // Navigation handler con offline fallback
 // Fallback chain: cached page → cached offline.html → hardcoded HTML
 async function navigationHandler(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // No cachear redirects (p.ej. el gate de login): offline servirían la
+    // página equivocada además de romper la navegación.
+    if (response.ok && !response.redirected) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
-    // Try to return cached page
+    // Try to return cached page (saneada por si quedó una redirigida de
+    // versiones anteriores del SW)
     const cached = await caches.match(request);
     if (cached) {
-      return cached;
+      return sinRedirect(cached);
     }
     
     // Return offline page
