@@ -6,14 +6,19 @@ import {
   claseInput,
   MensajeError,
 } from "@/components/auth/AuthCard";
+import { destinoSeguro } from "@/lib/navegacion";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
-export default function RegistroPage() {
+function RegistroContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Adónde seguir post-registro: /unirse?codigo=X cuando viene de una
+  // invitación; sin next, AuthProvider manda la cuenta nueva a /onboarding.
+  const next = destinoSeguro(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +35,6 @@ export default function RegistroPage() {
     });
     setEnviando(false);
     if (signUpError) {
-      // Durante las Fases 1–2 los signups públicos están deshabilitados en
-      // Supabase Auth; se habilitan con el onboarding de la Fase 3.
       setError(
         /signup.*(disabled|not allowed)/i.test(signUpError.message)
           ? "El registro está deshabilitado por ahora. Pedile acceso al encargado."
@@ -40,7 +43,7 @@ export default function RegistroPage() {
       return;
     }
     if (data.session) {
-      router.replace("/");
+      router.replace(next);
       return;
     }
     setPendienteConfirmacion(true);
@@ -95,10 +98,29 @@ export default function RegistroPage() {
         </button>
       </form>
       <div className="mt-4 text-center text-sm">
-        <Link href="/login" className="text-fg-secondary">
+        <Link
+          href={
+            next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`
+          }
+          className="text-fg-secondary"
+        >
           ¿Ya tenés cuenta? <span className="text-accent">Iniciá sesión</span>
         </Link>
       </div>
     </AuthCard>
+  );
+}
+
+export default function RegistroPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-dvh bg-canvas flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      }
+    >
+      <RegistroContent />
+    </Suspense>
   );
 }

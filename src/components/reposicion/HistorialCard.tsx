@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/AuthProvider";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useEliminarListaHistorial } from "@/hooks/useReposicion";
 import { ItemHistorial, ListaReposicionHistorial } from "@/types";
@@ -23,6 +24,10 @@ export function HistorialCard({ lista }: HistorialCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const eliminarLista = useEliminarListaHistorial();
+  // El historial es el registro de auditoría: borrar es de admin (la RLS
+  // ya lo bloquea server-side; acá se oculta la acción, spec Fase 3).
+  const { rol } = useAuth();
+  const puedeEliminar = rol === "admin";
 
   const handleDelete = async () => {
     try {
@@ -181,13 +186,15 @@ export function HistorialCard({ lista }: HistorialCardProps) {
                 icon={Package}
               />
 
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full mt-4 h-12 bg-alert-critico/10 hover:bg-alert-critico/20 text-alert-critico font-semibold rounded-field transition-colors flex items-center justify-center gap-2"
-              >
-                <Trash2 size={18} />
-                <span>Eliminar esta lista</span>
-              </button>
+              {puedeEliminar && (
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full mt-4 h-12 bg-alert-critico/10 hover:bg-alert-critico/20 text-alert-critico font-semibold rounded-field transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} />
+                  <span>Eliminar esta lista</span>
+                </button>
+              )}
             </div>
           </m.div>
         )}

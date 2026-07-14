@@ -354,3 +354,76 @@ describe("invitaciones y multi-membresía", () => {
     expect(varianteId).toBeTruthy();
   });
 });
+
+describe("gestión de equipo (Fase 3, migración 0016)", () => {
+  // Estado heredado del describe anterior: A tiene a userA (admin) y a
+  // userB (empleado, vía canje); B tiene solo a userB (admin).
+
+  it("miembros_de_tienda devuelve los emails a un miembro", async () => {
+    const { data, error } = await userB.client.rpc("miembros_de_tienda", {
+      p_tienda_id: tiendaA,
+    });
+    expect(error).toBeNull();
+    const miembros = data as { user_id: string; email: string; rol: string }[];
+    expect(miembros).toHaveLength(2);
+    expect(miembros.map((m) => m.email)).toEqual(
+      expect.arrayContaining([userA.email, userB.email])
+    );
+    expect(miembros.find((m) => m.user_id === userA.id)?.rol).toBe("admin");
+    expect(miembros.find((m) => m.user_id === userB.id)?.rol).toBe("empleado");
+  });
+
+  it("miembros_de_tienda de una tienda ajena devuelve vacío", async () => {
+    // userA nunca fue miembro de B: ni filas ni error que revele existencia.
+    const { data, error } = await userA.client.rpc("miembros_de_tienda", {
+      p_tienda_id: tiendaB,
+    });
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("el último admin no puede degradarse a empleado", async () => {
+    const { error } = await userA.client
+      .from("tienda_miembros")
+      .update({ rol: "empleado" })
+      .eq("tienda_id", tiendaA)
+      .eq("user_id", userA.id);
+    expect(error).not.toBeNull();
+    expect(error!.message).toMatch(/sin admin/i);
+  });
+
+  it("el último admin no puede salir de la tienda", async () => {
+    const { error } = await userA.client
+      .from("tienda_miembros")
+      .delete()
+      .eq("tienda_id", tiendaA)
+      .eq("user_id", userA.id);
+    expect(error).not.toBeNull();
+    expect(error!.message).toMatch(/sin admin/i);
+  });
+
+  it("con otro admin nombrado, el fundador sí puede salir", async () => {
+    // userA promueve a userB…
+    const { error: promoError } = await userA.client
+      .from("tienda_miembros")
+      .update({ rol: "admin" })
+      .eq("tienda_id", tiendaA)
+      .eq("user_id", userB.id);
+    expect(promoError).toBeNull();
+
+    // …y ahora sí puede irse.
+    const { error: salidaError } = await userA.client
+      .from("tienda_miembros")
+      .delete()
+      .eq("tienda_id", tiendaA)
+      .eq("user_id", userA.id);
+    expect(salidaError).toBeNull();
+
+    // Para userA la tienda A dejó de existir.
+    const { data } = await userA.client
+      .from("tiendas")
+      .select("id")
+      .eq("id", tiendaA);
+    expect(data).toEqual([]);
+  });
+});

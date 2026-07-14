@@ -15,7 +15,7 @@ import { useNotificacionesVencimiento } from "@/hooks/useNotificacionesVencimien
 import { springGentle } from "@/lib/motion";
 import { ActiveView, useUiStore } from "@/store/ui";
 import { AnimatePresence, motion as m } from "framer-motion";
-import { History, Loader2, Search } from "lucide-react";
+import { History, Loader2, Search, Store } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -97,6 +97,13 @@ function HomePageContent() {
                   className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:bg-surface-2 transition-colors"
                 >
                   <History size={22} />
+                </Link>
+                <Link
+                  href="/tienda"
+                  aria-label="Mi tienda y equipo"
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:bg-surface-2 transition-colors"
+                >
+                  <Store size={22} />
                 </Link>
                 <OutboxBadge />
                 <ThemeToggle />

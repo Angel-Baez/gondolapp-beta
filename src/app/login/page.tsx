@@ -6,14 +6,18 @@ import {
   claseInput,
   MensajeError,
 } from "@/components/auth/AuthCard";
+import { destinoSeguro } from "@/lib/navegacion";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Adónde volver post-login (p. ej. /unirse?codigo=X), saneado.
+  const next = destinoSeguro(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +40,7 @@ export default function LoginPage() {
       );
       return;
     }
-    router.replace("/");
+    router.replace(next);
   }
 
   return (
@@ -73,10 +77,31 @@ export default function LoginPage() {
         <Link href="/recuperar" className="text-accent">
           Olvidé mi contraseña
         </Link>
-        <Link href="/registro" className="text-fg-secondary">
+        <Link
+          href={
+            next === "/"
+              ? "/registro"
+              : `/registro?next=${encodeURIComponent(next)}`
+          }
+          className="text-fg-secondary"
+        >
           ¿No tenés cuenta? <span className="text-accent">Registrate</span>
         </Link>
       </div>
     </AuthCard>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-dvh bg-canvas flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
