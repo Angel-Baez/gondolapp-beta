@@ -1,12 +1,14 @@
 "use client";
 
+import { useAuth } from "@/components/AuthProvider";
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
 import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
 import {
-  REPOSICION_ESTADISTICAS_KEY as ESTADISTICAS_KEY,
-  REPOSICION_HISTORIAL_KEY as HISTORIAL_KEY,
-  REPOSICION_ITEMS_KEY as ITEMS_KEY,
+  reposicionEstadisticasKey,
+  reposicionHistorialKey,
+  reposicionItemsKey,
+  SIN_TIENDA,
 } from "@/lib/queryKeys";
 import * as reposicionService from "@/services/reposicion";
 import { EstadoReposicion, ItemReposicion } from "@/types";
@@ -14,8 +16,25 @@ import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/re
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
+/** Keys y tienda activa compartidas por todos los hooks del módulo. */
+function useReposicionScope() {
+  const { tiendaActiva } = useAuth();
+  const tiendaId = tiendaActiva ?? SIN_TIENDA;
+  return {
+    tiendaActiva,
+    ITEMS_KEY: reposicionItemsKey(tiendaId),
+    HISTORIAL_KEY: reposicionHistorialKey(tiendaId),
+    ESTADISTICAS_KEY: reposicionEstadisticasKey(tiendaId),
+  };
+}
+
 export function useReposicionItems() {
-  return useQuery({ queryKey: ITEMS_KEY, queryFn: reposicionService.listarItems });
+  const { tiendaActiva, ITEMS_KEY } = useReposicionScope();
+  return useQuery({
+    queryKey: ITEMS_KEY,
+    queryFn: () => reposicionService.listarItems(tiendaActiva!),
+    enabled: !!tiendaActiva,
+  });
 }
 
 /**
@@ -25,10 +44,11 @@ export function useReposicionItems() {
  */
 async function agregarOffline(
   queryClient: QueryClient,
+  itemsKey: readonly unknown[],
   varianteId: string,
   cantidad: number
 ): Promise<ItemReposicion> {
-  const actuales = queryClient.getQueryData<ItemReposicion[]>(ITEMS_KEY) ?? [];
+  const actuales = queryClient.getQueryData<ItemReposicion[]>(itemsKey) ?? [];
   const existente = actuales.find((i) => i.varianteId === varianteId);
   const ahora = new Date();
 
@@ -67,6 +87,7 @@ async function agregarOffline(
 
 export function useAgregarReposicionItem() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: async ({
@@ -83,7 +104,7 @@ export function useAgregarReposicionItem() {
           if (!isNetworkError(err)) throw err;
         }
       }
-      return agregarOffline(queryClient, varianteId, cantidad);
+      return agregarOffline(queryClient, ITEMS_KEY, varianteId, cantidad);
     },
     onSuccess: (item) => {
       queryClient.setQueryData<ItemReposicion[]>(ITEMS_KEY, (items) => {
@@ -99,6 +120,7 @@ export function useAgregarReposicionItem() {
 
 export function useActualizarCantidadReposicion() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: ({ id, cantidad }: { id: string; cantidad: number }) =>
@@ -124,6 +146,7 @@ export function useActualizarCantidadReposicion() {
 
 export function useCambiarEstadoReposicion() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: ({ id, estado }: { id: string; estado: EstadoReposicion }) =>
@@ -150,6 +173,7 @@ export function useCambiarEstadoReposicion() {
 /** Cambia el estado de varios items a la vez (acción masiva del modo selección). */
 export function useCambiarEstadoMasivo() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: ({ ids, estado }: { ids: string[]; estado: EstadoReposicion }) =>
@@ -176,6 +200,7 @@ export function useCambiarEstadoMasivo() {
 /** Elimina varios items a la vez (acción masiva del modo selección). */
 export function useEliminarItemsMasivo() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: (ids: string[]) =>
@@ -220,6 +245,7 @@ function useEliminarReposicionItem() {
  */
 export function useDecrementarReposicion() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   const actualizarCantidad = useActualizarCantidadReposicion();
   const eliminarItem = useEliminarReposicionItem();
 
@@ -260,13 +286,14 @@ export function useDecrementarReposicion() {
         { duration: 4000 }
       );
     },
-    [queryClient, actualizarCantidad, eliminarItem]
+    [queryClient, ITEMS_KEY, actualizarCantidad, eliminarItem]
   );
 }
 
 /** Borrado directo (sin pasar por el flujo de deshacer), para el ícono de basura. */
 export function useEliminarReposicionItemDirecto() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: (id: string) =>
@@ -292,6 +319,8 @@ export function useEliminarReposicionItemDirecto() {
 
 export function useGuardarListaReposicion() {
   const queryClient = useQueryClient();
+  const { tiendaActiva, ITEMS_KEY, HISTORIAL_KEY, ESTADISTICAS_KEY } =
+    useReposicionScope();
   return useMutation({
     networkMode: "always",
     mutationFn: async () => {
@@ -300,7 +329,10 @@ export function useGuardarListaReposicion() {
           "Necesitás conexión a internet para guardar la lista y cerrar el turno."
         );
       }
-      return reposicionService.guardarListaActual();
+      if (!tiendaActiva) {
+        throw new Error("No hay una tienda activa.");
+      }
+      return reposicionService.guardarListaActual(tiendaActiva);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ITEMS_KEY });
@@ -315,14 +347,17 @@ export function useHistorialReposicion(filtros?: {
   hasta?: Date;
   limite?: number;
 }) {
+  const { tiendaActiva, HISTORIAL_KEY } = useReposicionScope();
   return useQuery({
     queryKey: [...HISTORIAL_KEY, filtros],
-    queryFn: () => reposicionService.obtenerHistorial(filtros),
+    queryFn: () => reposicionService.obtenerHistorial(tiendaActiva!, filtros),
+    enabled: !!tiendaActiva,
   });
 }
 
 export function useEliminarListaHistorial() {
   const queryClient = useQueryClient();
+  const { HISTORIAL_KEY } = useReposicionScope();
   return useMutation({
     mutationFn: (id: string) => reposicionService.eliminarListaHistorial(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: HISTORIAL_KEY }),
@@ -330,8 +365,10 @@ export function useEliminarListaHistorial() {
 }
 
 export function useEstadisticasReposicion(periodo: "semana" | "mes" | "año") {
+  const { tiendaActiva, ESTADISTICAS_KEY } = useReposicionScope();
   return useQuery({
     queryKey: [...ESTADISTICAS_KEY, periodo],
-    queryFn: () => reposicionService.obtenerEstadisticas(periodo),
+    queryFn: () => reposicionService.obtenerEstadisticas(tiendaActiva!, periodo),
+    enabled: !!tiendaActiva,
   });
 }

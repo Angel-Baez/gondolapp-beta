@@ -1,22 +1,38 @@
 "use client";
 
+import { useAuth } from "@/components/AuthProvider";
 import { enqueueOperation, isNetworkError, isOnline } from "@/lib/outbox/outbox";
 import { ejecutarMasivoOEncolar, ejecutarOEncolar } from "@/lib/outbox/mutationHelpers";
 import { crearTempId } from "@/lib/outbox/types";
 import {
-  VENCIMIENTO_ESTADISTICAS_KEY as ESTADISTICAS_KEY,
-  VENCIMIENTO_HISTORIAL_KEY as HISTORIAL_KEY,
-  VENCIMIENTO_ITEMS_KEY as ITEMS_KEY,
+  SIN_TIENDA,
+  vencimientoEstadisticasKey,
+  vencimientoHistorialKey,
+  vencimientoItemsKey,
 } from "@/lib/queryKeys";
 import { calcularNivelAlerta, toDateInputValue } from "@/lib/utils";
 import * as vencimientoService from "@/services/vencimiento";
 import { ItemVencimientoConAlerta } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+/** Keys y tienda activa compartidas por todos los hooks del módulo. */
+function useVencimientoScope() {
+  const { tiendaActiva } = useAuth();
+  const tiendaId = tiendaActiva ?? SIN_TIENDA;
+  return {
+    tiendaActiva,
+    ITEMS_KEY: vencimientoItemsKey(tiendaId),
+    HISTORIAL_KEY: vencimientoHistorialKey(tiendaId),
+    ESTADISTICAS_KEY: vencimientoEstadisticasKey(tiendaId),
+  };
+}
+
 export function useVencimientoItems() {
+  const { tiendaActiva, ITEMS_KEY } = useVencimientoScope();
   return useQuery({
     queryKey: ITEMS_KEY,
-    queryFn: vencimientoService.listarItems,
+    queryFn: () => vencimientoService.listarItems(tiendaActiva!),
+    enabled: !!tiendaActiva,
     // Re-deriva el nivel de alerta al leer: los datos pueden venir del
     // cache persistido (arranque offline) o de una app abierta toda la
     // noche, con un alertaNivel calculado días atrás.
@@ -30,6 +46,7 @@ export function useVencimientoItems() {
 
 export function useAgregarVencimientoItem() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: async ({
@@ -91,6 +108,7 @@ export function useAgregarVencimientoItem() {
 
 export function useActualizarFechaVencimiento() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: ({ id, fechaVencimiento }: { id: string; fechaVencimiento: Date }) =>
@@ -124,6 +142,7 @@ export function useActualizarFechaVencimiento() {
 
 export function useActualizarCantidadVencimiento() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: ({ id, cantidad }: { id: string; cantidad: number }) =>
@@ -149,6 +168,7 @@ export function useActualizarCantidadVencimiento() {
 
 export function useEliminarVencimientoItem() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: (id: string) =>
@@ -175,6 +195,7 @@ export function useEliminarVencimientoItem() {
 /** Retira el item de la góndola: lo archiva en el historial y lo saca de la lista activa. */
 export function useRetirarVencimientoItem() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY, HISTORIAL_KEY, ESTADISTICAS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: (id: string) =>
@@ -206,6 +227,7 @@ export function useRetirarVencimientoItem() {
 /** Retira varios items a la vez (acción masiva del modo selección). */
 export function useRetirarItemsMasivo() {
   const queryClient = useQueryClient();
+  const { ITEMS_KEY, HISTORIAL_KEY, ESTADISTICAS_KEY } = useVencimientoScope();
   return useMutation({
     networkMode: "always",
     mutationFn: (ids: string[]) =>
@@ -239,15 +261,19 @@ export function useHistorialVencimiento(filtros?: {
   hasta?: Date;
   limite?: number;
 }) {
+  const { tiendaActiva, HISTORIAL_KEY } = useVencimientoScope();
   return useQuery({
     queryKey: [...HISTORIAL_KEY, filtros],
-    queryFn: () => vencimientoService.obtenerHistorial(filtros),
+    queryFn: () => vencimientoService.obtenerHistorial(tiendaActiva!, filtros),
+    enabled: !!tiendaActiva,
   });
 }
 
 export function useEstadisticasVencimiento(periodo: "semana" | "mes" | "año") {
+  const { tiendaActiva, ESTADISTICAS_KEY } = useVencimientoScope();
   return useQuery({
     queryKey: [...ESTADISTICAS_KEY, periodo],
-    queryFn: () => vencimientoService.obtenerEstadisticas(periodo),
+    queryFn: () => vencimientoService.obtenerEstadisticas(tiendaActiva!, periodo),
+    enabled: !!tiendaActiva,
   });
 }

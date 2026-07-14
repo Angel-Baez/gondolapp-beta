@@ -1,21 +1,23 @@
 "use client";
 
-import { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
+import { useAuth } from "@/components/AuthProvider";
+import { catalogoCompletoKey, SIN_TIENDA } from "@/lib/queryKeys";
 import { obtenerCatalogoCompleto } from "@/services/catalogo";
 import { useQuery } from "@tanstack/react-query";
 
-export { CATALOGO_COMPLETO_KEY } from "@/lib/queryKeys";
-
 /**
- * Todo el catálogo (bases + variantes + definiciones de atributos) en una
- * sola query, persistida en IndexedDB: es la fuente para lookup/búsqueda
- * offline (ver src/lib/catalogoLocal.ts). staleTime alto porque el
- * catálogo cambia con poca frecuencia comparado con las listas activas.
+ * Todo el catálogo (bases + variantes + definiciones de atributos) de la
+ * tienda activa en una sola query, persistida en IndexedDB: es la fuente
+ * para lookup/búsqueda offline (ver src/lib/catalogoLocal.ts). staleTime
+ * alto porque el catálogo cambia con poca frecuencia comparado con las
+ * listas activas.
  */
 export function useCatalogoCompleto() {
+  const { tiendaActiva } = useAuth();
   return useQuery({
-    queryKey: CATALOGO_COMPLETO_KEY,
-    queryFn: obtenerCatalogoCompleto,
+    queryKey: catalogoCompletoKey(tiendaActiva ?? SIN_TIENDA),
+    queryFn: () => obtenerCatalogoCompleto(tiendaActiva!),
+    enabled: !!tiendaActiva,
     staleTime: 30 * 60_000,
   });
 }

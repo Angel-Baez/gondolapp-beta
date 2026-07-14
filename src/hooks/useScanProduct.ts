@@ -1,7 +1,8 @@
 "use client";
 
+import { useAuth } from "@/components/AuthProvider";
 import { buscarPorCodigoBarrasLocal } from "@/lib/catalogoLocal";
-import { CATALOGO_COMPLETO_KEY, eanQueryKey } from "@/lib/queryKeys";
+import { catalogoCompletoKey, eanQueryKey, SIN_TIENDA } from "@/lib/queryKeys";
 import { buscarPorCodigoBarras, CatalogoCompleto, ProductoCompleto } from "@/services/catalogo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -41,31 +42,34 @@ export type ScanLookupResult =
  * sesión actual (encadenando varios ítems) no pague otro round-trip. */
 const EAN_STALE_TIME = 10 * 60_000;
 
-export { eanQueryKey } from "@/lib/queryKeys";
-
 export function useScanProduct() {
   const queryClient = useQueryClient();
+  const { tiendaActiva } = useAuth();
+  const tiendaId = tiendaActiva ?? SIN_TIENDA;
 
   const scanProduct = useCallback(
     async (barcode: string): Promise<ScanLookupResult> => {
       // Cachea por EAN: sólo "no encontrado" no se cachea, para no
       // bloquear el alta manual del mismo código en la misma sesión.
-      const cached = queryClient.getQueryData<ProductoEscaneado>(eanQueryKey(barcode));
+      const cached = queryClient.getQueryData<ProductoEscaneado>(
+        eanQueryKey(tiendaId, barcode)
+      );
       if (cached) return { status: "found", producto: cached };
+      if (!tiendaActiva) return { status: "error" };
 
       try {
         // Directo a Supabase: antes pasaba por /api/productos/buscar
         // (función de Vercel), un hop extra de latencia en el camino
         // crítico del escaneo que además convertía cualquier caída de
         // red en un falso "no encontrado".
-        const resultado = await buscarPorCodigoBarras(barcode);
+        const resultado = await buscarPorCodigoBarras(tiendaActiva, barcode);
         if (!resultado) return { status: "not_found" };
 
         const producto = aProductoEscaneado(resultado);
-        queryClient.setQueryData(eanQueryKey(barcode), producto, {
+        queryClient.setQueryData(eanQueryKey(tiendaId, barcode), producto, {
           updatedAt: Date.now(),
         });
-        queryClient.setQueryDefaults(eanQueryKey(barcode), {
+        queryClient.setQueryDefaults(eanQueryKey(tiendaId, barcode), {
           staleTime: EAN_STALE_TIME,
         });
         return { status: "found", producto };
@@ -76,15 +80,17 @@ export function useScanProduct() {
         // online (por eso este fallback vive en el catch, no reemplaza la
         // llamada de red) pero evita bloquear un escaneo offline de un
         // producto que sí está en el catálogo cacheado.
-        const catalogo = queryClient.getQueryData<CatalogoCompleto>(CATALOGO_COMPLETO_KEY);
+        const catalogo = queryClient.getQueryData<CatalogoCompleto>(
+          catalogoCompletoKey(tiendaId)
+        );
         if (catalogo) {
           const resultadoLocal = buscarPorCodigoBarrasLocal(catalogo, barcode);
           if (resultadoLocal) {
             const producto = aProductoEscaneado(resultadoLocal);
-            queryClient.setQueryData(eanQueryKey(barcode), producto, {
+            queryClient.setQueryData(eanQueryKey(tiendaId, barcode), producto, {
               updatedAt: Date.now(),
             });
-            queryClient.setQueryDefaults(eanQueryKey(barcode), {
+            queryClient.setQueryDefaults(eanQueryKey(tiendaId, barcode), {
               staleTime: EAN_STALE_TIME,
             });
             return { status: "found", producto };
@@ -93,16 +99,16 @@ export function useScanProduct() {
         return { status: "error" };
       }
     },
-    [queryClient]
+    [queryClient, tiendaActiva, tiendaId]
   );
 
   /** Sembrar el cache tras un alta manual, para que el próximo escaneo del
    * mismo EAN en la sesión no dispare otra consulta. */
   const seedProducto = useCallback(
     (ean: string, producto: ProductoEscaneado) => {
-      queryClient.setQueryData(eanQueryKey(ean), producto);
+      queryClient.setQueryData(eanQueryKey(tiendaId, ean), producto);
     },
-    [queryClient]
+    [queryClient, tiendaId]
   );
 
   return { scanProduct, seedProducto };

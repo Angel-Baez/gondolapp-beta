@@ -80,29 +80,43 @@ export function construirMensaje(items: ItemNotificable[]): {
   };
 }
 
-export function leerNotificados(): RegistroNotificados {
+// Registro por tienda (Fase 2): al cambiar de tienda, la poda del registro
+// de una no debe pisar el de la otra.
+function claveDeTienda(tiendaId: string): string {
+  return `${STORAGE_KEY}:${tiendaId}`;
+}
+
+export function leerNotificados(tiendaId: string): RegistroNotificados {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
+    return JSON.parse(window.localStorage.getItem(claveDeTienda(tiendaId)) ?? "{}");
   } catch {
     return {};
   }
 }
 
-export function guardarNotificados(registro: RegistroNotificados): void {
+export function guardarNotificados(
+  tiendaId: string,
+  registro: RegistroNotificados
+): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(registro));
+    window.localStorage.setItem(claveDeTienda(tiendaId), JSON.stringify(registro));
   } catch {
     // Almacenamiento lleno o bloqueado: se reintenta en el próximo ciclo.
   }
 }
 
-/** Borra el registro de notificados (logout, spec §3.2). */
+/** Borra el registro de notificados de TODAS las tiendas (logout, spec §3.2). */
 export function limpiarNotificados(): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    const aBorrar: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const clave = window.localStorage.key(i);
+      if (clave?.startsWith(STORAGE_KEY)) aBorrar.push(clave);
+    }
+    aBorrar.forEach((clave) => window.localStorage.removeItem(clave));
   } catch {
     // sin acceso a storage: nada que borrar
   }

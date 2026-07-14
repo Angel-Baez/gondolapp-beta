@@ -38,19 +38,23 @@ describe("deserializarConFechas", () => {
 });
 
 describe("esQueryPersistible", () => {
-  it("persiste las listas activas, el catálogo completo y los EAN resueltos", () => {
-    expect(esQueryPersistible(["reposicion", "items"])).toBe(true);
-    expect(esQueryPersistible(["vencimiento", "items"])).toBe(true);
-    expect(esQueryPersistible(["catalogo", "completo"])).toBe(true);
-    expect(esQueryPersistible(["producto", "ean", "779..."])).toBe(true);
+  const T = ["tienda", "tienda-test"] as const;
+
+  it("persiste las listas activas, el catálogo completo y los EAN resueltos (con prefijo de tienda)", () => {
+    expect(esQueryPersistible([...T, "reposicion", "items"])).toBe(true);
+    expect(esQueryPersistible([...T, "vencimiento", "items"])).toBe(true);
+    expect(esQueryPersistible([...T, "catalogo", "completo"])).toBe(true);
+    expect(esQueryPersistible([...T, "producto", "ean", "779..."])).toBe(true);
   });
 
   it("no persiste historial, estadísticas ni otras queries", () => {
-    expect(esQueryPersistible(["reposicion", "historial"])).toBe(false);
-    expect(esQueryPersistible(["vencimiento", "estadisticas", "mes"])).toBe(false);
+    expect(esQueryPersistible([...T, "reposicion", "historial"])).toBe(false);
+    expect(esQueryPersistible([...T, "vencimiento", "estadisticas", "mes"])).toBe(false);
     expect(esQueryPersistible(["marcas-categorias"])).toBe(false);
-    // Reemplazada por ["catalogo","completo"]: useProductosDeItems ya no
-    // dispara un useQuery propio, deriva del catálogo completo vía useMemo.
-    expect(esQueryPersistible(["catalogo", "por-variante-ids", ["v1"]])).toBe(false);
+  });
+
+  it("no persiste keys sin prefijo de tienda (shape pre-Fase 2)", () => {
+    expect(esQueryPersistible(["reposicion", "items"])).toBe(false);
+    expect(esQueryPersistible(["catalogo", "completo"])).toBe(false);
   });
 });

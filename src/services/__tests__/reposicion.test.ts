@@ -33,7 +33,7 @@ describe("listarItems", () => {
     const { listarItems } = await import("@/services/reposicion");
     fromMock.mockImplementation(mockSupabaseFrom({ data: [itemRow()] }));
 
-    const items = await listarItems();
+    const items = await listarItems("tienda-test");
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ id: "item-1", varianteId: "variante-1", cantidad: 3, estado: "pendiente" });
     expect(items[0].agregadoAt).toBeInstanceOf(Date);
@@ -121,8 +121,10 @@ describe("guardarListaActual", () => {
     const { guardarListaActual } = await import("@/services/reposicion");
     rpcMock.mockResolvedValue({ data: "lista-1", error: null });
 
-    await guardarListaActual();
-    expect(rpcMock).toHaveBeenCalledWith("guardar_lista_reposicion");
+    await guardarListaActual("tienda-test");
+    expect(rpcMock).toHaveBeenCalledWith("guardar_lista_reposicion", {
+      p_tienda_id: "tienda-test",
+    });
     expect(fromMock).not.toHaveBeenCalled();
   });
 
@@ -130,7 +132,7 @@ describe("guardarListaActual", () => {
     const { guardarListaActual } = await import("@/services/reposicion");
     rpcMock.mockResolvedValue({ data: null, error: new Error("No hay items para guardar") });
 
-    await expect(guardarListaActual()).rejects.toThrow("No hay items para guardar");
+    await expect(guardarListaActual("tienda-test")).rejects.toThrow("No hay items para guardar");
   });
 });
 
@@ -139,7 +141,7 @@ describe("obtenerHistorial", () => {
     const { obtenerHistorial } = await import("@/services/reposicion");
     fromMock.mockImplementation(mockSupabaseFrom({ data: [] }));
 
-    const listas = await obtenerHistorial();
+    const listas = await obtenerHistorial("tienda-test");
     expect(listas).toEqual([]);
     expect(fromMock).toHaveBeenCalledTimes(1); // no consulta items si no hay listas
   });
@@ -177,7 +179,7 @@ describe("obtenerHistorial", () => {
       )
     );
 
-    const listas = await obtenerHistorial();
+    const listas = await obtenerHistorial("tienda-test");
     expect(listas).toHaveLength(1);
     expect(listas[0].items).toHaveLength(1);
     expect(listas[0].resumen.totalRepuestos).toBe(1);

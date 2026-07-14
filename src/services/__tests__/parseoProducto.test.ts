@@ -131,7 +131,7 @@ describe("parsearProducto", () => {
     const { parsearProducto, IANoConfiguradaError } = await import(
       "@/services/parseoProducto"
     );
-    await expect(parsearProducto("Leche Milex 2200g")).rejects.toThrow(
+    await expect(parsearProducto("Leche Milex 2200g", "tienda-test")).rejects.toThrow(
       IANoConfiguradaError
     );
     expect(createMock).not.toHaveBeenCalled();
@@ -150,7 +150,7 @@ describe("parsearProducto", () => {
     );
     const { parsearProducto } = await import("@/services/parseoProducto");
 
-    const parsed = await parsearProducto("leche milex 2200 gramos");
+    const parsed = await parsearProducto("leche milex 2200 gramos", "tienda-test");
 
     expect(parsed.productoBase).toEqual({
       nombre: "Leche Milex",
@@ -182,7 +182,7 @@ describe("parsearProducto", () => {
     const { parsearProducto, ParseoInvalidoError } = await import(
       "@/services/parseoProducto"
     );
-    await expect(parsearProducto("algo")).rejects.toThrow(ParseoInvalidoError);
+    await expect(parsearProducto("algo", "tienda-test")).rejects.toThrow(ParseoInvalidoError);
   });
 
   it("usa Gemini directamente cuando solo hay GEMINI_API_KEY", async () => {
@@ -199,7 +199,7 @@ describe("parsearProducto", () => {
     );
     const { parsearProducto } = await import("@/services/parseoProducto");
 
-    const parsed = await parsearProducto("leche milex 2200g");
+    const parsed = await parsearProducto("leche milex 2200g", "tienda-test");
 
     expect(createMock).not.toHaveBeenCalled();
     expect(parsed.productoBase.nombre).toBe("Leche Milex");
@@ -232,7 +232,7 @@ describe("parsearProducto", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { parsearProducto } = await import("@/services/parseoProducto");
 
-    const parsed = await parsearProducto("compota gerber");
+    const parsed = await parsearProducto("compota gerber", "tienda-test");
 
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -249,7 +249,7 @@ describe("parsearProducto", () => {
     createMock.mockRejectedValue(new Error("rate limited"));
     const { parsearProducto } = await import("@/services/parseoProducto");
 
-    await expect(parsearProducto("algo")).rejects.toThrow("rate limited");
+    await expect(parsearProducto("algo", "tienda-test")).rejects.toThrow("rate limited");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -272,6 +272,6 @@ describe("parsearProducto", () => {
     const { parsearProducto, ParseoInvalidoError } = await import(
       "@/services/parseoProducto"
     );
-    await expect(parsearProducto("algo")).rejects.toThrow(ParseoInvalidoError);
+    await expect(parsearProducto("algo", "tienda-test")).rejects.toThrow(ParseoInvalidoError);
   });
 });

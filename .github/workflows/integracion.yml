@@ -1,0 +1,49 @@
+name: Integración - Aislamiento RLS
+
+# Corre la suite de integración contra un stack real de Supabase
+# (docs/SPECMULTIUSER.md §2.4): levanta Postgres + Auth + PostgREST en el
+# runner, aplica supabase/migrations/ y ejecuta src/tests/integration/.
+# Es el gate de la Fase 2 multi-tienda: ninguna policy floja pasa a main.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  aislamiento:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Levantar stack local (aplica supabase/migrations/)
+        run: supabase start
+
+      - name: Exportar keys del stack local
+        run: |
+          eval "$(supabase status --output env)"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      - name: Suite de integración (aislamiento RLS)
+        run: npm run test:integration

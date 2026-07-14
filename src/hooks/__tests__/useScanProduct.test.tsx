@@ -1,12 +1,21 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CATALOGO_COMPLETO_KEY } from "@/hooks/useCatalogoCompleto";
-import { eanQueryKey, useScanProduct } from "@/hooks/useScanProduct";
+import { catalogoCompletoKey, eanQueryKey } from "@/lib/queryKeys";
+import { useScanProduct } from "@/hooks/useScanProduct";
 import type { CatalogoCompleto, ProductoCompleto } from "@/services/catalogo";
 
 vi.mock("@/services/catalogo", () => ({
   buscarPorCodigoBarras: vi.fn(),
+}));
+
+vi.mock("@/components/AuthProvider", () => ({
+  useAuth: () => ({
+    user: { id: "user-test" },
+    cargando: false,
+    tiendaActiva: "tienda-test",
+    rol: "admin",
+  }),
 }));
 
 const PRODUCTO: ProductoCompleto = {
@@ -50,7 +59,7 @@ describe("useScanProduct", () => {
     expect(res.status).toBe("found");
     if (res.status !== "found") throw new Error("unreachable");
     expect(res.producto.variante.id).toBe("var-1");
-    expect(queryClient.getQueryData(eanQueryKey("7790000000001"))).toBeTruthy();
+    expect(queryClient.getQueryData(eanQueryKey("tienda-test", "7790000000001"))).toBeTruthy();
 
     // Segundo escaneo del mismo EAN: sale del cache, sin otro round-trip
     await result.current.scanProduct("7790000000001");
@@ -88,7 +97,7 @@ describe("useScanProduct", () => {
       variantes: [PRODUCTO.variante],
       definiciones: { default: [], porCategoria: {} },
     };
-    queryClient.setQueryData(CATALOGO_COMPLETO_KEY, catalogo);
+    queryClient.setQueryData(catalogoCompletoKey("tienda-test"), catalogo);
     const { result } = setup(queryClient);
 
     const res = await result.current.scanProduct("7790000000001");
@@ -109,7 +118,7 @@ describe("useScanProduct", () => {
       variantes: [],
       definiciones: { default: [], porCategoria: {} },
     };
-    queryClient.setQueryData(CATALOGO_COMPLETO_KEY, catalogo);
+    queryClient.setQueryData(catalogoCompletoKey("tienda-test"), catalogo);
     const { result } = setup(queryClient);
 
     const res = await result.current.scanProduct("7790000000001");

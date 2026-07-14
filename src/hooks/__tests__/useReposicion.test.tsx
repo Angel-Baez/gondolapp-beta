@@ -20,6 +20,18 @@ vi.mock("@/services/reposicion", () => ({
 // real de Supabase. Se mockea acá para no depender de env vars en este test.
 vi.mock("@/lib/supabase", () => ({ supabase: {} }));
 
+// Los hooks scopean las query keys por la tienda activa del AuthProvider.
+vi.mock("@/components/AuthProvider", () => ({
+  useAuth: () => ({
+    user: { id: "user-test" },
+    cargando: false,
+    tiendaActiva: "tienda-test",
+    rol: "admin",
+  }),
+}));
+
+const ITEMS_KEY = ["tienda", "tienda-test", "reposicion", "items"];
+
 vi.mock("react-hot-toast", () => {
   let ultimoRenderProp: ((t: { id: string }) => React.ReactNode) | null = null;
   const toastFn = Object.assign(
@@ -74,7 +86,7 @@ describe("useDecrementarReposicion", () => {
     const { useDecrementarReposicion } = await import("@/hooks/useReposicion");
     const { eliminarItem } = await import("@/services/reposicion");
     const queryClient = new QueryClient();
-    queryClient.setQueryData(["reposicion", "items"], [ITEM]);
+    queryClient.setQueryData(ITEMS_KEY, [ITEM]);
 
     const { result } = renderHook(() => useDecrementarReposicion(), {
       wrapper: wrapper(queryClient),
@@ -83,7 +95,7 @@ describe("useDecrementarReposicion", () => {
     act(() => result.current(ITEM));
 
     // Optimista: desaparece del cache de inmediato
-    expect(queryClient.getQueryData(["reposicion", "items"])).toEqual([]);
+    expect(queryClient.getQueryData(ITEMS_KEY)).toEqual([]);
     expect(eliminarItem).not.toHaveBeenCalled();
 
     // Pasado el tiempo de "deshacer", se confirma el borrado real
@@ -102,20 +114,20 @@ describe("useDecrementarReposicion", () => {
       __getUltimoRenderProp: () => (t: { id: string }) => React.ReactNode;
     };
     const queryClient = new QueryClient();
-    queryClient.setQueryData(["reposicion", "items"], [ITEM]);
+    queryClient.setQueryData(ITEMS_KEY, [ITEM]);
 
     const { result } = renderHook(() => useDecrementarReposicion(), {
       wrapper: wrapper(queryClient),
     });
 
     act(() => result.current(ITEM));
-    expect(queryClient.getQueryData(["reposicion", "items"])).toEqual([]);
+    expect(queryClient.getQueryData(ITEMS_KEY)).toEqual([]);
 
     const renderProp = toastModule.__getUltimoRenderProp();
     render(<>{renderProp({ id: "toast-1" })}</>);
     act(() => screen.getByText("Deshacer").click());
 
-    expect(queryClient.getQueryData(["reposicion", "items"])).toEqual([ITEM]);
+    expect(queryClient.getQueryData(ITEMS_KEY)).toEqual([ITEM]);
 
     await act(async () => {
       vi.advanceTimersByTime(5000);

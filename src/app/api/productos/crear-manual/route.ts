@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: CrearProductoDTO = await request.json();
+    const body: CrearProductoDTO & { tiendaId?: unknown } = await request.json();
 
     if (!body.ean || !body.productoBase?.nombre || !body.productoBase?.marca) {
       return NextResponse.json(
@@ -68,6 +68,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    // Tienda activa del cliente: producto_bases es tabla raíz y necesita
+    // tienda_id explícito; la membresía la valida el WITH CHECK de RLS.
+    if (typeof body.tiendaId !== "string" || !body.tiendaId) {
+      return NextResponse.json(
+        { success: false, error: "Falta tiendaId" },
+        { status: 400 }
+      );
+    }
+    const tiendaId = body.tiendaId;
 
     const atributosCrudos = body.variante?.atributos ?? {};
     if (!esObjetoPlanoDeStrings(atributosCrudos)) {
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
     // perder el alta por un fallo del lookup sería peor que un valor sin canon.
     let atributos = atributosCrudos;
     try {
-      const defs = await obtenerDefinicionesAtributos(supabase);
+      const defs = await obtenerDefinicionesAtributos(tiendaId, supabase);
       const categoria = body.productoBase.categoria?.trim();
       const defsAplicables =
         (categoria && defs.porCategoria[categoria]) || defs.default;
@@ -91,6 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const producto = await crearProductoManual(
+      tiendaId,
       {
         ...body,
         variante: { ...body.variante, atributos },
@@ -148,9 +158,25 @@ export async function GET() {
       );
     }
 
+    // Endpoint deprecado sin body: usa la primera membresía del usuario.
+    const { data: membresia } = await supabase
+      .from("tienda_miembros")
+      .select("tienda_id")
+      .limit(1)
+      .maybeSingle();
+    if (!membresia) {
+      return NextResponse.json({
+        success: true,
+        marcas: [],
+        categorias: [],
+        atributosDefault: [],
+        atributosPorCategoria: {},
+      });
+    }
+
     const [{ marcas, categorias }, defs] = await Promise.all([
-      obtenerMarcasYCategorias(supabase),
-      obtenerDefinicionesAtributos(supabase),
+      obtenerMarcasYCategorias(membresia.tienda_id, supabase),
+      obtenerDefinicionesAtributos(membresia.tienda_id, supabase),
     ]);
     return NextResponse.json({
       success: true,

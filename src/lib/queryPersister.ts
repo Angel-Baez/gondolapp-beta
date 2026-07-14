@@ -48,13 +48,15 @@ export function deserializarConFechas(cached: string) {
  * sin señal: las dos listas activas, el catálogo completo (bases +
  * variantes + definiciones, ver useCatalogoCompleto) y los EAN ya
  * resueltos. Historial y estadísticas se consultan con calma y online.
+ * Las keys llevan prefijo de tienda desde la Fase 2 (ver queryKeys.ts).
  */
 export function esQueryPersistible(queryKey: readonly unknown[]): boolean {
+  if (queryKey[0] !== "tienda" || typeof queryKey[1] !== "string") return false;
   return (
-    (queryKey[0] === "reposicion" && queryKey[1] === "items") ||
-    (queryKey[0] === "vencimiento" && queryKey[1] === "items") ||
-    (queryKey[0] === "catalogo" && queryKey[1] === "completo") ||
-    (queryKey[0] === "producto" && queryKey[1] === "ean")
+    (queryKey[2] === "reposicion" && queryKey[3] === "items") ||
+    (queryKey[2] === "vencimiento" && queryKey[3] === "items") ||
+    (queryKey[2] === "catalogo" && queryKey[3] === "completo") ||
+    (queryKey[2] === "producto" && queryKey[3] === "ean")
   );
 }
 
