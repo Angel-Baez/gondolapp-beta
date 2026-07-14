@@ -402,7 +402,10 @@ create function generar_codigo_invitacion(
 returns text
 language plpgsql
 security definer
-set search_path = public
+-- extensions en el search_path: gen_random_bytes (pgcrypto) vive en el
+-- schema extensions en Supabase; un schema inexistente se ignora, así que
+-- también funciona donde pgcrypto quedó en public.
+set search_path = public, extensions
 as $$
 declare
   -- Sin caracteres ambiguos (0/O, 1/I/L): el caso de uso es dictarlo en voz
