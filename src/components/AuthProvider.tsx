@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -22,6 +23,13 @@ interface AuthContextValue {
    * tienda_miembros. */
   tiendaActiva: string | null;
   rol: RolTienda | null;
+  /** true solo cuando la membresía se consultó ONLINE y vino vacía: el
+   * usuario está logueado pero no pertenece a ninguna tienda (cuenta nueva
+   * o expulsado). Un fetch fallido (offline) NO lo activa. */
+  sinTienda: boolean;
+  /** Re-consulta tienda_miembros (post crear tienda / canjear código /
+   * salir de la tienda). */
+  refrescarMembresia: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -29,6 +37,8 @@ const AuthContext = createContext<AuthContextValue>({
   cargando: true,
   tiendaActiva: null,
   rol: null,
+  sinTienda: false,
+  refrescarMembresia: async () => {},
 });
 
 export function useAuth(): AuthContextValue {
@@ -58,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [rol, setRol] = useState<RolTienda | null>(
     () => useSesionStore.getState().rol
   );
+  const [sinTienda, setSinTienda] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -83,39 +94,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const refrescarMembresia = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("tienda_miembros")
+      .select("tienda_id, rol");
+    // Error (típicamente red/offline): conservar el estado persistido y no
+    // declarar "sin tienda" — el cache local sigue siendo operable.
+    if (error || !data) return;
+    const persistida = useSesionStore.getState().tiendaActivaId;
+    const elegida =
+      data.find((m) => m.tienda_id === persistida) ?? data[0] ?? null;
+    const tiendaId = elegida?.tienda_id ?? null;
+    const rolElegido = (elegida?.rol as RolTienda | undefined) ?? null;
+    setTiendaActiva(tiendaId);
+    setRol(rolElegido);
+    setSinTienda(data.length === 0);
+    useSesionStore.getState().setTienda(tiendaId, rolElegido);
+  }, []);
+
   // Resolver la membresía cuando hay usuario; sin red queda el persistido.
   useEffect(() => {
     setUsuarioOutbox(user?.id ?? null);
     if (!user) {
       setTiendaActiva(null);
       setRol(null);
+      setSinTienda(false);
       return;
     }
-
-    let activo = true;
-    supabase
-      .from("tienda_miembros")
-      .select("tienda_id, rol")
-      .then(({ data, error }) => {
-        if (!activo || error || !data) return;
-        const persistida = useSesionStore.getState().tiendaActivaId;
-        const elegida =
-          data.find((m) => m.tienda_id === persistida) ?? data[0] ?? null;
-        const tiendaId = elegida?.tienda_id ?? null;
-        const rolElegido = (elegida?.rol as RolTienda | undefined) ?? null;
-        setTiendaActiva(tiendaId);
-        setRol(rolElegido);
-        useSesionStore.getState().setTienda(tiendaId, rolElegido);
-      });
-    return () => {
-      activo = false;
-    };
-  }, [user]);
+    refrescarMembresia();
+  }, [user, refrescarMembresia]);
 
   useEffect(() => {
     if (cargando || user) return;
     if (!esRutaPublica(pathname)) router.replace("/login");
   }, [cargando, user, pathname, router]);
+
+  // Cuenta sin membresía en ruta protegida → onboarding (crear tienda o
+  // canjear código). /unirse es pública y queda fuera: quien llega por un
+  // link de invitación canjea ahí mismo.
+  useEffect(() => {
+    if (cargando || !user || !sinTienda) return;
+    if (!esRutaPublica(pathname) && pathname !== "/onboarding") {
+      router.replace("/onboarding");
+    }
+  }, [cargando, user, sinTienda, pathname, router]);
 
   // Sin sesión en ruta protegida: no renderizar el contenido mientras el
   // redirect a /login está en vuelo (evita el flash de la app vacía).
@@ -124,7 +146,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, cargando, tiendaActiva, rol }}>
+    <AuthContext.Provider
+      value={{ user, cargando, tiendaActiva, rol, sinTienda, refrescarMembresia }}
+    >
       {children}
     </AuthContext.Provider>
   );

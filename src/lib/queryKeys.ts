@@ -36,3 +36,16 @@ export function catalogoCompletoKey(tiendaId: string) {
 export function eanQueryKey(tiendaId: string, ean: string) {
   return ["tienda", tiendaId, "producto", "ean", ean] as const;
 }
+
+// Gestión de equipo (Fase 3). No entran en esQueryPersistible a propósito:
+// miembros/invitaciones se consultan online (la pantalla /tienda no es un
+// flujo offline) y los emails no deben quedar en el cache IDB.
+export function tiendaMetaKey(tiendaId: string) {
+  return ["tienda", tiendaId, "meta"] as const;
+}
+export function miembrosKey(tiendaId: string) {
+  return ["tienda", tiendaId, "equipo", "miembros"] as const;
+}
+export function invitacionesKey(tiendaId: string) {
+  return ["tienda", tiendaId, "equipo", "invitaciones"] as const;
+}
