@@ -17,7 +17,7 @@ export interface QuickAdjustCardProps {
   onUndo: () => void;
 }
 
-const CHIPS = [2, 3, 6, 12];
+const CHIPS = [2, 3, 6, 12, 24, 48];
 
 /**
  * Card flotante sobre la cámara para ajustar la cantidad de un producto
@@ -101,7 +101,7 @@ export function QuickAdjustCard({
                 </m.button>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {CHIPS.map((n) => (
                   <button
                     key={n}
