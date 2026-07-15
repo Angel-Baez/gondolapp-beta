@@ -1,6 +1,6 @@
 "use client";
 
-import { BotonCerrarSesion } from "@/components/BotonCerrarSesion";
+import { useAuth } from "@/components/AuthProvider";
 import { OutboxBadge } from "@/components/OutboxBadge";
 import { ScanFlow } from "@/components/scanner/ScanFlow";
 import { ProductSearchSheet } from "@/components/search/ProductSearchSheet";
@@ -15,7 +15,7 @@ import { useNotificacionesVencimiento } from "@/hooks/useNotificacionesVencimien
 import { springGentle } from "@/lib/motion";
 import { ActiveView, useUiStore } from "@/store/ui";
 import { AnimatePresence, motion as m } from "framer-motion";
-import { History, Loader2, Search, Store } from "lucide-react";
+import { History, Loader2, Search, Store, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -48,6 +48,7 @@ function HomePageContent() {
   const { activeView, setActiveView, scannerOpen, openScanner, closeScanner } =
     useUiStore();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { rol } = useAuth();
   // Badge del ícono/tab + notificaciones locales de items urgentes.
   const { urgentesCount } = useNotificacionesVencimiento();
 
@@ -98,16 +99,24 @@ function HomePageContent() {
                 >
                   <History size={22} />
                 </Link>
+                {rol === "admin" && (
+                  <Link
+                    href="/tienda"
+                    aria-label="Mi tienda y equipo"
+                    className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:bg-surface-2 transition-colors"
+                  >
+                    <Store size={22} />
+                  </Link>
+                )}
                 <Link
-                  href="/tienda"
-                  aria-label="Mi tienda y equipo"
+                  href="/perfil"
+                  aria-label="Tu perfil"
                   className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:bg-surface-2 transition-colors"
                 >
-                  <Store size={22} />
+                  <UserRound size={22} />
                 </Link>
                 <OutboxBadge />
                 <ThemeToggle />
-                <BotonCerrarSesion />
               </>
             }
             bottomSlot={

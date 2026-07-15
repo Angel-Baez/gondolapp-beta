@@ -30,6 +30,28 @@ function useEquipoScope() {
   };
 }
 
+/** Nombre propio (perfiles). Key por usuario, no por tienda: el perfil es
+ * de la cuenta. */
+export function useMiPerfil() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["perfil", user?.id ?? "anon"],
+    queryFn: () => equipoService.obtenerMiNombre(user!.id),
+    enabled: !!user,
+  });
+}
+
+export function useActualizarMiNombre() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nombre: string) =>
+      equipoService.actualizarMiNombre(user!.id, nombre),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["perfil", user?.id] }),
+  });
+}
+
 export function useNombreTienda() {
   const { tiendaActiva, META_KEY } = useEquipoScope();
   return useQuery({

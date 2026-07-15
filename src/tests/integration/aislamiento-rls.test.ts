@@ -295,13 +295,19 @@ describe("invitaciones y multi-membresía", () => {
     }
   });
 
-  it("multi-membresía: guardar la lista de A no toca los items de B", async () => {
-    // B (ahora miembro de A y de B) tiene pendientes en ambas tiendas.
-    const { error: aggError } = await userB.client.rpc("agregar_item_reposicion", {
+  it("multi-membresía + privacidad: guardar la lista de A archiva SOLO lo propio", async () => {
+    // B (ahora miembro de A y de B) tiene pendientes propios en ambas
+    // tiendas; A además tiene el item de la admin (invisible para B).
+    const { error: aggAError } = await userB.client.rpc("agregar_item_reposicion", {
+      p_variante_id: varianteA,
+      p_cantidad: 3,
+    });
+    expect(aggAError).toBeNull();
+    const { error: aggBError } = await userB.client.rpc("agregar_item_reposicion", {
       p_variante_id: varianteB,
       p_cantidad: 5,
     });
-    expect(aggError).toBeNull();
+    expect(aggBError).toBeNull();
 
     const { error: guardarError } = await userB.client.rpc(
       "guardar_lista_reposicion",
@@ -309,13 +315,20 @@ describe("invitaciones y multi-membresía", () => {
     );
     expect(guardarError).toBeNull();
 
-    // Los items de A se archivaron…
-    const { data: itemsA } = await userB.client
+    // Los items PROPIOS de B en A se archivaron…
+    const { data: itemsBenA } = await userB.client
       .from("items_reposicion")
       .select("id")
       .eq("tienda_id", tiendaA);
-    expect(itemsA).toEqual([]);
-    // …y los de B siguen pendientes (el WHERE por tienda de la RPC).
+    expect(itemsBenA).toEqual([]);
+    // …los de la admin en A siguen pendientes (lista privada por usuario)…
+    const { data: itemsAdminA } = await userA.client
+      .from("items_reposicion")
+      .select("id")
+      .eq("tienda_id", tiendaA);
+    expect(itemsAdminA).toHaveLength(1);
+    expect(itemsAdminA![0].id).toBe(itemReposicionA);
+    // …y los de B en la tienda B siguen intactos (el WHERE por tienda).
     const { data: itemsB } = await userB.client
       .from("items_reposicion")
       .select("id")
@@ -355,22 +368,117 @@ describe("invitaciones y multi-membresía", () => {
   });
 });
 
-describe("gestión de equipo (Fase 3, migración 0016)", () => {
+describe("privacidad de la lista de reposición (migración 0017)", () => {
+  // Estado heredado: A tiene a userA (admin, con un item pendiente) y a
+  // userB (empleado, sin items en A tras el guardado anterior).
+
+  it("un miembro no ve, edita ni borra los items pendientes de otro", async () => {
+    const { data: visibles } = await userB.client
+      .from("items_reposicion")
+      .select("id")
+      .eq("id", itemReposicionA);
+    expect(visibles).toEqual([]);
+
+    const { data: actualizados } = await userB.client
+      .from("items_reposicion")
+      .update({ cantidad: 99 })
+      .eq("id", itemReposicionA)
+      .select();
+    expect(actualizados).toEqual([]);
+
+    const { data: borrados } = await userB.client
+      .from("items_reposicion")
+      .delete()
+      .eq("id", itemReposicionA)
+      .select();
+    expect(borrados).toEqual([]);
+  });
+
+  it("no se puede insertar un item a nombre de otro (WITH CHECK)", async () => {
+    const { error } = await userB.client.from("items_reposicion").insert({
+      variante_id: varianteA,
+      cantidad: 1,
+      agregado_por: userA.id,
+    });
+    expect(error).not.toBeNull();
+  });
+
+  it("dos usuarios pueden tener la misma variante pendiente (unicidad por usuario)", async () => {
+    // Ana ya tiene varianteA pendiente; B agrega la suya sin mergear la ajena.
+    const { data, error } = await userB.client.rpc("agregar_item_reposicion", {
+      p_variante_id: varianteA,
+      p_cantidad: 1,
+    });
+    expect(error).toBeNull();
+    expect((data as { id: string }).id).not.toBe(itemReposicionA);
+
+    // El item de Ana quedó como estaba (cantidad 2, sin merge cruzado).
+    const { data: deAna } = await userA.client
+      .from("items_reposicion")
+      .select("cantidad")
+      .eq("id", itemReposicionA)
+      .single();
+    expect(deAna!.cantidad).toBe(2);
+
+    // Limpieza: B borra su propio item.
+    await userB.client
+      .from("items_reposicion")
+      .delete()
+      .eq("id", (data as { id: string }).id);
+  });
+
+  it("los nombres de perfil son visibles entre compañeros de tienda", async () => {
+    const { data, error } = await userB.client
+      .from("perfiles")
+      .select("nombre")
+      .eq("user_id", userA.id);
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0].nombre).toBe(userA.email.split("@")[0]);
+  });
+});
+
+describe("gestión de equipo (Fase 3, migraciones 0016/0017)", () => {
   // Estado heredado del describe anterior: A tiene a userA (admin) y a
   // userB (empleado, vía canje); B tiene solo a userB (admin).
 
-  it("miembros_de_tienda devuelve los emails a un miembro", async () => {
-    const { data, error } = await userB.client.rpc("miembros_de_tienda", {
+  it("miembros_de_tienda es admin-only: el admin ve nombres y emails", async () => {
+    const { data, error } = await userA.client.rpc("miembros_de_tienda", {
       p_tienda_id: tiendaA,
     });
     expect(error).toBeNull();
-    const miembros = data as { user_id: string; email: string; rol: string }[];
+    const miembros = data as {
+      user_id: string;
+      email: string;
+      nombre: string;
+      rol: string;
+    }[];
     expect(miembros).toHaveLength(2);
     expect(miembros.map((m) => m.email)).toEqual(
       expect.arrayContaining([userA.email, userB.email])
     );
     expect(miembros.find((m) => m.user_id === userA.id)?.rol).toBe("admin");
     expect(miembros.find((m) => m.user_id === userB.id)?.rol).toBe("empleado");
+    expect(miembros.find((m) => m.user_id === userB.id)?.nombre).toBe(
+      userB.email.split("@")[0]
+    );
+  });
+
+  it("miembros_de_tienda devuelve vacío a un empleado", async () => {
+    const { data, error } = await userB.client.rpc("miembros_de_tienda", {
+      p_tienda_id: tiendaA,
+    });
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it("un empleado no enumera las membresías ajenas de su tienda", async () => {
+    const { data } = await userB.client
+      .from("tienda_miembros")
+      .select("user_id")
+      .eq("tienda_id", tiendaA);
+    expect(data).toHaveLength(1);
+    expect(data![0].user_id).toBe(userB.id);
   });
 
   it("miembros_de_tienda de una tienda ajena devuelve vacío", async () => {

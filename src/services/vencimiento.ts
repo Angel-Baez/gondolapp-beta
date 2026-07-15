@@ -16,6 +16,9 @@ interface ItemVencimientoRow {
   estado: "pendiente" | "retirado";
   agregado_at: string;
   resuelto_at: string | null;
+  // Embed de PostgREST vía la FK agregado_por → perfiles (0017); solo
+  // presente en los selects que lo piden.
+  perfiles?: { nombre: string } | null;
 }
 
 interface ItemVencimientoHistorialRow {
@@ -42,6 +45,7 @@ function mapItem(row: ItemVencimientoRow): ItemVencimiento {
     estado: row.estado,
     agregadoAt: new Date(row.agregado_at),
     resueltoAt: row.resuelto_at ? new Date(row.resuelto_at) : undefined,
+    agregadoPorNombre: row.perfiles?.nombre ?? undefined,
   };
 }
 
@@ -72,7 +76,7 @@ function mapHistorial(row: ItemVencimientoHistorialRow): ItemVencimientoHistoria
 export async function listarItems(tiendaId: string): Promise<ItemVencimientoConAlerta[]> {
   const { data, error } = await supabase
     .from("items_vencimiento")
-    .select("*")
+    .select("*, perfiles(nombre)")
     .eq("tienda_id", tiendaId)
     .eq("estado", "pendiente")
     .order("fecha_vencimiento", { ascending: true });

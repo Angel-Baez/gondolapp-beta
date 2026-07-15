@@ -117,6 +117,10 @@ export function VencimientoItem({
             {item.cantidad && <span className="font-medium">Cantidad: {item.cantidad}</span>}
 
             {item.lote && <span className="text-fg-secondary">Lote: {item.lote}</span>}
+
+            {item.agregadoPorNombre && (
+              <span className="text-fg-tertiary">por {item.agregadoPorNombre}</span>
+            )}
           </div>
         </div>
 

@@ -12,6 +12,7 @@ import type { RolTienda } from "@/store/sesion";
 export interface MiembroTienda {
   userId: string;
   email: string;
+  nombre: string;
   rol: RolTienda;
   creadoAt: Date;
 }
@@ -30,6 +31,7 @@ export interface InvitacionTienda {
 interface MiembroRow {
   user_id: string;
   email: string;
+  nombre: string;
   rol: RolTienda;
   creado_at: string;
 }
@@ -76,9 +78,33 @@ export async function listarMiembros(
   return ((data ?? []) as MiembroRow[]).map((row) => ({
     userId: row.user_id,
     email: row.email,
+    nombre: row.nombre,
     rol: row.rol,
     creadoAt: new Date(row.creado_at),
   }));
+}
+
+/** Nombre propio (tabla perfiles): lo ven los compañeros en la atribución
+ * de items y listas. */
+export async function obtenerMiNombre(userId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("perfiles")
+    .select("nombre")
+    .eq("user_id", userId)
+    .single();
+  if (error) throw error;
+  return data.nombre as string;
+}
+
+export async function actualizarMiNombre(
+  userId: string,
+  nombre: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("perfiles")
+    .update({ nombre: nombre.trim() })
+    .eq("user_id", userId);
+  if (error) throw error;
 }
 
 export async function cambiarRolMiembro(
