@@ -26,6 +26,8 @@ interface ListaHistorialRow {
   total_pendientes: number;
   duracion_minutos: number | null;
   ubicacion: string | null;
+  // Embed de PostgREST vía la FK guardada_por → perfiles (0017).
+  perfiles?: { nombre: string } | null;
 }
 
 interface ItemHistorialRow {
@@ -76,6 +78,7 @@ function mapLista(
       totalPendientes: row.total_pendientes,
     },
     items: items.map(mapItemHistorial),
+    guardadaPorNombre: row.perfiles?.nombre ?? undefined,
     metadata: {
       duracionMinutos: row.duracion_minutos ?? undefined,
       ubicacion: row.ubicacion ?? undefined,
@@ -201,7 +204,7 @@ export async function obtenerHistorial(
 ): Promise<ListaReposicionHistorial[]> {
   let query = supabase
     .from("listas_reposicion_historial")
-    .select("*")
+    .select("*, perfiles(nombre)")
     .eq("tienda_id", tiendaId)
     .order("fecha_guardado", { ascending: false });
 

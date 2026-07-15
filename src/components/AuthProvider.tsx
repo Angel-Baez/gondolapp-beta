@@ -95,9 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refrescarMembresia = useCallback(async () => {
+    const uid = (await supabase.auth.getSession()).data.session?.user?.id;
+    if (!uid) return;
+    // Filtrar por user_id es imprescindible, no defensivo: RLS le muestra a
+    // un admin TODAS las membresías de su tienda — sin el eq(), data[0]
+    // puede ser la fila de otro miembro y el rol adoptado sería el ajeno.
     const { data, error } = await supabase
       .from("tienda_miembros")
-      .select("tienda_id, rol");
+      .select("tienda_id, rol")
+      .eq("user_id", uid);
     // Error (típicamente red/offline): conservar el estado persistido y no
     // declarar "sin tienda" — el cache local sigue siendo operable.
     if (error || !data) return;

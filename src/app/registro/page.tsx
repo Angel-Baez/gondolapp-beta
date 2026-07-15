@@ -19,6 +19,7 @@ function RegistroContent() {
   // Adónde seguir post-registro: /unirse?codigo=X cuando viene de una
   // invitación; sin next, AuthProvider manda la cuenta nueva a /onboarding.
   const next = destinoSeguro(searchParams.get("next"));
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,9 @@ function RegistroContent() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      // El trigger de DB (0017) crea el perfil con este nombre; es lo que
+      // ven los compañeros en "agregado por" / "guardada por".
+      options: { data: { nombre: nombre.trim() } },
     });
     setEnviando(false);
     if (signUpError) {
@@ -69,6 +73,16 @@ function RegistroContent() {
   return (
     <AuthCard titulo="Crear cuenta" subtitulo="Para el equipo de tu tienda">
       <form onSubmit={onSubmit} className="space-y-3">
+        <input
+          type="text"
+          autoComplete="name"
+          required
+          maxLength={60}
+          placeholder="Tu nombre (lo ve tu equipo)"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          className={claseInput}
+        />
         <input
           type="email"
           autoComplete="email"

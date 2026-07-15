@@ -79,6 +79,7 @@ export interface ItemVencimiento {
   estado: EstadoVencimiento;
   agregadoAt: Date;
   resueltoAt?: Date;
+  agregadoPorNombre?: string; // Nombre del perfil de quien lo registró (0017)
 }
 
 // Item de vencimiento con el nivel de alerta calculado al leer
@@ -143,6 +144,7 @@ export interface ListaReposicionHistorial {
     totalPendientes: number;
   };
   items: ItemHistorial[];
+  guardadaPorNombre?: string; // Nombre del perfil de quien la guardó (0017)
   metadata: {
     duracionMinutos?: number; // Tiempo que tomó completar la lista
     ubicacion?: string; // Opcional: góndola/sección

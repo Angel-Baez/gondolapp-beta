@@ -20,7 +20,6 @@ import {
   Check,
   Copy,
   Loader2,
-  LogOut,
   Pencil,
   Plus,
   ShieldCheck,
@@ -29,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const MENSAJE_ULTIMO_ADMIN = "La tienda no puede quedarse sin admin";
@@ -186,12 +185,15 @@ function SeccionEquipo({ esAdmin }: { esAdmin: boolean }) {
             <div key={m.userId} className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="text-body text-fg truncate">
-                  {m.email}
+                  {m.nombre}
                   {esYo && (
                     <span className="text-fg-tertiary text-footnote ml-1.5">
                       (vos)
                     </span>
                   )}
+                </div>
+                <div className="text-footnote text-fg-tertiary truncate">
+                  {m.email}
                 </div>
                 <div className="mt-1">
                   <ChipRol rol={m.rol} />
@@ -445,81 +447,35 @@ function useRevocarInvitacionConToast() {
   };
 }
 
-function SeccionSalir() {
-  const router = useRouter();
-  const { user, refrescarMembresia } = useAuth();
-  const quitar = useQuitarMiembro();
-  const [confirmando, setConfirmando] = useState(false);
-
-  const onSalir = async () => {
-    if (!user) return;
-    try {
-      await quitar.mutateAsync(user.id);
-      await refrescarMembresia();
-      router.replace("/onboarding");
-    } catch (err) {
-      toast.error(mensajeDeError(err, "No se pudo salir de la tienda"));
-      setConfirmando(false);
-    }
-  };
-
-  return (
-    <>
-      <button
-        onClick={() => setConfirmando(true)}
-        className="w-full h-12 bg-alert-critico/10 hover:bg-alert-critico/20 text-alert-critico font-semibold rounded-field transition-colors flex items-center justify-center gap-2"
-      >
-        <LogOut size={18} />
-        <span>Salir de la tienda</span>
-      </button>
-
-      <BottomSheet
-        isOpen={confirmando}
-        onClose={() => setConfirmando(false)}
-        title="Salir de la tienda"
-      >
-        <div className="space-y-4">
-          <p className="text-body text-fg-secondary">
-            Vas a perder el acceso a las listas y el catálogo de esta tienda.
-            Para volver, alguien del equipo tiene que invitarte de nuevo.
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setConfirmando(false)}
-              disabled={quitar.isPending}
-              className="flex-1 bg-surface-2 hover:bg-border text-fg-secondary font-semibold h-12 px-4 rounded-field transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={onSalir}
-              disabled={quitar.isPending}
-              className="flex-1 bg-alert-critico text-white font-semibold h-12 px-4 rounded-field transition-colors disabled:opacity-50"
-            >
-              {quitar.isPending ? "Saliendo..." : "Salir"}
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
-    </>
-  );
-}
-
 export default function TiendaPage() {
-  const { rol } = useAuth();
+  const router = useRouter();
+  const { cargando, rol } = useAuth();
   const esAdmin = rol === "admin";
+
+  // Pantalla exclusiva de admins: un empleado ni la ve (además del
+  // hardening server-side de la 0017, que le devuelve vacío igual).
+  useEffect(() => {
+    if (!cargando && rol === "empleado") router.replace("/");
+  }, [cargando, rol, router]);
+
+  if (!esAdmin) {
+    return (
+      <div className="h-dvh bg-canvas flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <AppShell
       renderHeader={() => (
-        <PageHeader title="Mi tienda" subtitle="Equipo e invitaciones" />
+        <PageHeader title="Mi tienda" subtitle="Equipo e invitaciones" backHref="/perfil" />
       )}
     >
       <div className="pb-8">
         <SeccionNombre esAdmin={esAdmin} />
         <SeccionEquipo esAdmin={esAdmin} />
-        {esAdmin && <SeccionInvitaciones />}
-        <SeccionSalir />
+        <SeccionInvitaciones />
       </div>
     </AppShell>
   );

@@ -116,6 +116,12 @@ export function HistorialCard({ lista }: HistorialCardProps) {
             <div className="flex-1">
               <div className="text-footnote text-fg-secondary mb-1">
                 {formatearFecha(lista.fechaGuardado)}
+                {lista.guardadaPorNombre && (
+                  <span className="text-fg-tertiary">
+                    {" "}
+                    · por {lista.guardadaPorNombre}
+                  </span>
+                )}
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 <div className="bg-accent-soft text-accent px-3 py-1 rounded-chip text-caption font-semibold">
