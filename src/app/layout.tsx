@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import CatalogoSyncProvider from "@/components/CatalogoSyncProvider";
 import OutboxProvider from "@/components/OutboxProvider";
+import RealtimeProvider from "@/components/RealtimeProvider";
 import PWAProvider from "./PWAProvider";
 import { QueryProvider } from "./QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -109,6 +110,7 @@ export default function RootLayout({
           <ThemeProvider>
             <PWAProvider />
             <OutboxProvider />
+            <RealtimeProvider />
             <CatalogoSyncProvider />
             <Toaster
               position="top-center"
