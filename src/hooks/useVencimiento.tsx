@@ -33,6 +33,12 @@ export function useVencimientoItems() {
     queryKey: ITEMS_KEY,
     queryFn: () => vencimientoService.listarItems(tiendaActiva!),
     enabled: !!tiendaActiva,
+    // Colaboración en vivo (Fase 4, §7): la lista de vencimientos es
+    // compartida por la tienda; refetch al foco + cada 30 s (solo con
+    // pestaña visible) trae los cambios de otros empleados. El realtime
+    // lo complementa con invalidación inmediata.
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
     // Re-deriva el nivel de alerta al leer: los datos pueden venir del
     // cache persistido (arranque offline) o de una app abierta toda la
     // noche, con un alertaNivel calculado días atrás.

@@ -34,6 +34,11 @@ export function useReposicionItems() {
     queryKey: ITEMS_KEY,
     queryFn: () => reposicionService.listarItems(tiendaActiva!),
     enabled: !!tiendaActiva,
+    // Colaboración en vivo (Fase 4, §7): la lista es privada por usuario,
+    // así que esto sirve al caso multi-dispositivo con la misma cuenta.
+    // refetchIntervalInBackground default false → solo con pestaña visible.
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 }
 
